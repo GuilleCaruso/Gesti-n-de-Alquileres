@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestión Inmobiliaria</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Estilos para una scrollbar más delgada y estilizada */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+        .transition-all { transition: all 0.3s ease-in-out; }
+        /* Ocultar flechas en input de tipo number */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+          -webkit-appearance: none; 
+          margin: 0; 
+        }
+        input[type=number] { -moz-appearance: textfield; }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+
+    <div class="flex h-screen">
+        <!-- Barra de Navegación Lateral (Sidebar) -->
+        <aside class="bg-gray-800 text-white w-64 space-y-6 py-7 px-2 fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-200 ease-in-out z-30">
+            <a href="#" class="text-white flex items-center space-x-2 px-4">
+                <i class="fas fa-building text-2xl"></i>
+                <span class="text-2xl font-extrabold">InmoGest</span>
+            </a>
+            <nav>
+                <a href="#dashboard" class="nav-link block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 bg-gray-700">
+                    <i class="fas fa-tachometer-alt w-6 mr-2"></i>Dashboard
+                </a>
+                <a href="#propiedades" class="nav-link block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">
+                    <i class="fas fa-home w-6 mr-2"></i>Propiedades
+                </a>
+                <a href="#personas" class="nav-link block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">
+                    <i class="fas fa-users w-6 mr-2"></i>Personas
+                </a>
+                <a href="#contratos" class="nav-link block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">
+                    <i class="fas fa-file-signature w-6 mr-2"></i>Contratos
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Contenido Principal -->
+        <main class="flex-1 p-6 md:p-10 overflow-y-auto">
+            <div id="main-content-area">
+                <!-- El contenido de la sección activa se renderizará aquí -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Modales -->
+    <div id="modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-40">
+        <div id="modal-content" class="bg-white p-8 rounded-lg shadow-2xl w-full max-w-md mx-auto"></div>
+    </div>
+    <div id="confirm-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
+        <div class="bg-white p-8 rounded-lg shadow-2xl w-full max-w-sm mx-auto">
+            <h2 class="text-xl font-bold mb-4">Confirmar Eliminación</h2>
+            <p class="mb-6">¿Estás seguro? Esta acción no se puede deshacer.</p>
+            <div class="flex items-center justify-end">
+                <button id="cancel-delete-btn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded mr-2">Cancelar</button>
+                <button id="confirm-delete-btn" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">Eliminar</button>
+            </div>
+        </div>
+    </div>
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, addDoc, getDoc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDQFTvKLmUnLXa5GCAx8PQORmFolnssX04",
+            authDomain: "mi-app-inmobiliaria-3d461.firebaseapp.com",
+            projectId: "mi-app-inmobiliaria-3d461",
+            storageBucket: "mi-app-inmobiliaria-3d461.appspot.com",
+            messagingSenderId: "401339260242",
+            appId: "1:401339260242:web:49502eee63772e7433ee8b"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        
+        let state = {
+            currentSection: 'dashboard',
+            currentItemId: null,
+            data: { propiedades: [], personas: [], contratos: [] },
+            isAuthReady: false
+        };
+
+        const mainContentArea = document.getElementById('main-content-area');
+        const modal = document.getElementById('modal');
+        const modalContent = document.getElementById('modal-content');
+        const confirmModal = document.getElementById('confirm-modal');
+
+        function navigateTo(sectionId, itemId = null) {
+            state.currentSection = sectionId;
+            state.currentItemId = itemId;
+            
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('bg-gray-700');
+                if (link.getAttribute('href') === `#${sectionId}`) {
+                    link.classList.add('bg-gray-700');
+                }
+            });
+            renderCurrentSection();
+        }
+
+        function renderCurrentSection() {
+            if (!state.isAuthReady) {
+                 mainContentArea.innerHTML = `<div class="text-center py-10"><i class="fas fa-spinner fa-spin text-4xl text-gray-500"></i><p class="mt-4">Conectando...</p></div>`;
+                 return;
+            }
+            
+            if (state.currentItemId) {
+                renderDetailView();
+            } else {
+                renderTableView();
+            }
+        }
+        
+        function renderTableView() {
+            if (state.currentSection === 'dashboard') {
+                renderDashboard();
+                return;
+            }
+
+            const sectionConfig = {
+                propiedades: { title: 'Propiedades', headers: ['Dirección', 'Tipo', 'Descripción', 'Precio Alquiler', 'Acciones'], renderRow: renderPropiedadRow },
+                personas: { title: 'Personas', headers: ['Nombre Completo', 'DNI', 'Email', 'Teléfono', 'Rol', 'Acciones'], renderRow: renderPersonaRow },
+                contratos: { title: 'Contratos', headers: ['Propiedad', 'Inquilino', 'Fecha Inicio', 'Fecha Fin', 'Monto Mensual', 'Estado', 'Acciones'], renderRow: renderContratoRow }
+            };
+
+            const config = sectionConfig[state.currentSection];
+            if (!config) return;
+
+            const data = state.data[state.currentSection];
+            const tableHeaders = config.headers.map(h => `<th class="py-3 px-6 text-left">${h}</th>`).join('');
+            const tableRows = data.length > 0 ? data.map(item => config.renderRow(item)).join('') : `<tr><td colspan="${config.headers.length}" class="text-center py-4">No hay registros.</td></tr>`;
+
+            mainContentArea.innerHTML = `
+                <div class="flex justify-between items-center mb-6">
+                    <h1 class="text-3xl font-bold text-gray-800">Gestión de ${config.title}</h1>
+                    <button onclick="window.openModal('${state.currentSection}')" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-all">
+                        <i class="fas fa-plus mr-2"></i>Nuevo ${config.title.slice(0, -1)}
+                    </button>
+                </div>
+                <div class="bg-white shadow-md rounded-lg overflow-hidden">
+                    <table class="min-w-full bg-white">
+                        <thead class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal"><tr>${tableHeaders}</tr></thead>
+                        <tbody class="text-gray-600 text-sm font-light">${tableRows}</tbody>
+                    </table>
+                </div>`;
+        }
+        
+        function renderDashboard() {
+            const hoy = new Date();
+            const limite30dias = new Date();
+            limite30dias.setDate(hoy.getDate() + 30);
+
+            const contratosPorActualizar = state.data.contratos.filter(c => {
+                if (!c.fecha_actualizacion) return false;
+                const fechaActualizacion = new Date(c.fecha_actualizacion);
+                return fechaActualizacion >= hoy && fechaActualizacion <= limite30dias;
+            });
+
+            let alertasHtml = `<div class="p-4"><p class="text-gray-500">No hay actualizaciones próximas.</p></div>`;
+            if (contratosPorActualizar.length > 0) {
+                alertasHtml = contratosPorActualizar.map(c => {
+                    const propiedad = state.data.propiedades.find(p => p.id === c.propiedad_id) || { direccion: 'N/A' };
+                    const inquilino = state.data.personas.find(p => p.id === c.inquilino_id) || { nombre: 'N/A', apellido: '' };
+                    const fecha = new Date(c.fecha_actualizacion).toLocaleDateString('es-ES', {timeZone: 'UTC'});
+                    return `<div class="flex justify-between items-center p-4 border-b">
+                                <div>
+                                    <p class="font-semibold">${propiedad.direccion}</p>
+                                    <p class="text-sm text-gray-600">Inquilino: ${inquilino.nombre} ${inquilino.apellido}</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="font-bold text-blue-600">${fecha}</p>
+                                    <p class="text-sm text-gray-500">Fecha de Actualización</p>
+                                </div>
+                            </div>`;
+                }).join('');
+            }
+            
+            mainContentArea.innerHTML = `
+                <h1 class="text-3xl font-bold text-gray-800 mb-6">Dashboard</h1>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 bg-white rounded-lg shadow p-6">
+                        <h2 class="text-xl font-bold text-gray-700 mb-4">Próximas Actualizaciones de Contratos</h2>
+                        <div class="divide-y">${alertasHtml}</div>
+                    </div>
+                </div>`;
+        }
+
+        function renderDetailView() {
+            if (state.currentSection !== 'contratos' || !state.currentItemId) {
+                navigateTo(state.currentSection);
+                return;
+            }
+
+            const contrato = state.data.contratos.find(c => c.id === state.currentItemId);
+            if (!contrato) {
+                mainContentArea.innerHTML = `<p>Contrato no encontrado.</p>`;
+                return;
+            }
+            
+            const propiedad = state.data.propiedades.find(p => p.id === contrato.propiedad_id) || {};
+            const inquilino = state.data.personas.find(p => p.id === contrato.inquilino_id) || {};
+
+            let mesesHtml = '';
+            const fechaInicio = new Date(contrato.fecha_inicio + 'T00:00:00');
+            const fechaFin = new Date(contrato.fecha_fin + 'T00:00:00');
+            let fechaActual = new Date(fechaInicio.getFullYear(), fechaInicio.getMonth(), 1);
+
+            while(fechaActual <= fechaFin) {
+                const mesKey = `${fechaActual.getFullYear()}-${(fechaActual.getMonth() + 1).toString().padStart(2, '0')}`;
+                const mesNombre = fechaActual.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
+                const estadoActual = (contrato.pagos && contrato.pagos[mesKey]) ? contrato.pagos[mesKey] : 'Pendiente';
+                
+                const statusColors = {
+                    'Pagado': 'bg-green-100 text-green-800',
+                    'Pago Parcial': 'bg-yellow-100 text-yellow-800',
+                    'Pendiente': 'bg-red-100 text-red-800'
+                };
+
+                mesesHtml += `
+                    <div class="flex justify-between items-center p-3 border-b">
+                        <span class="capitalize">${mesNombre}</span>
+                        <select onchange="window.updatePaymentStatus('${contrato.id}', '${mesKey}', this.value)" class="rounded-lg px-2 py-1 text-sm font-semibold ${statusColors[estadoActual]}">
+                            <option value="Pendiente" ${estadoActual === 'Pendiente' ? 'selected' : ''}>Pendiente</option>
+                            <option value="Pago Parcial" ${estadoActual === 'Pago Parcial' ? 'selected' : ''}>Pago Parcial</option>
+                            <option value="Pagado" ${estadoActual === 'Pagado' ? 'selected' : ''}>Pagado</option>
+                        </select>
+                    </div>
+                `;
+                fechaActual.setMonth(fechaActual.getMonth() + 1);
+            }
+
+            mainContentArea.innerHTML = `
+                <div class="mb-6">
+                    <button onclick="navigateTo('contratos')" class="text-blue-600 hover:underline"><i class="fas fa-arrow-left mr-2"></i>Volver a Contratos</button>
+                </div>
+                <div class="bg-white rounded-lg shadow-lg p-8">
+                    <h1 class="text-2xl font-bold text-gray-800 mb-4">Detalle del Contrato</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                        <div><p class="text-sm text-gray-500">Propiedad</p><p class="font-semibold">${propiedad.direccion || 'N/A'}</p></div>
+                        <div><p class="text-sm text-gray-500">Inquilino</p><p class="font-semibold">${inquilino.nombre || ''} ${inquilino.apellido || ''}</p></div>
+                        <div><p class="text-sm text-gray-500">Fecha de Inicio</p><p class="font-semibold">${new Date(contrato.fecha_inicio).toLocaleDateString('es-ES',{timeZone:'UTC'})}</p></div>
+                        <div><p class="text-sm text-gray-500">Fecha de Fin</p><p class="font-semibold">${new Date(contrato.fecha_fin).toLocaleDateString('es-ES',{timeZone:'UTC'})}</p></div>
+                        <div><p class="text-sm text-gray-500">Monto Mensual</p><p class="font-semibold">$${parseFloat(contrato.monto).toFixed(2)}</p></div>
+                    </div>
+                    
+                    <h2 class="text-xl font-bold text-gray-700 mt-10 mb-4">Estado de Pagos</h2>
+                    <div class="border rounded-lg">${mesesHtml}</div>
+                </div>
+            `;
+        }
+
+        window.updatePaymentStatus = async (contractId, monthKey, newStatus) => {
+            const docRef = doc(db, "contratos", contractId);
+            try {
+                await setDoc(docRef, { 
+                    pagos: { [monthKey]: newStatus }
+                }, { merge: true });
+            } catch (error) {
+                console.error("Error al actualizar el estado de pago:", error);
+            }
+        };
+
+        function renderPropiedadRow(p) {
+            return `<tr class="border-b border-gray-200 hover:bg-gray-100">
+                <td class="py-3 px-6">${p.direccion}</td>
+                <td class="py-3 px-6">${p.tipo}</td>
+                <td class="py-3 px-6">${p.descripcion}</td>
+                <td class="py-3 px-6 text-right">$${parseFloat(p.precio_alquiler).toFixed(2)}</td>
+                ${renderActionsCell('propiedades', p.id)}
+            </tr>`;
+        }
+        function renderPersonaRow(p) {
+            return `<tr class="border-b border-gray-200 hover:bg-gray-100">
+                <td class="py-3 px-6">${p.nombre} ${p.apellido}</td>
+                <td class="py-3 px-6">${p.dni}</td>
+                <td class="py-3 px-6">${p.email}</td>
+                <td class="py-3 px-6">${p.telefono}</td>
+                <td class="py-3 px-6"><span class="bg-purple-200 text-purple-600 py-1 px-3 rounded-full text-xs">${p.rol}</span></td>
+                ${renderActionsCell('personas', p.id)}
+            </tr>`;
+        }
+        function renderContratoRow(c) {
+            const prop = state.data.propiedades.find(p => p.id === c.propiedad_id) || {};
+            const inq = state.data.personas.find(p => p.id === c.inquilino_id) || {};
+            const estadoClass = c.estado === 'Activo' ? 'bg-green-200 text-green-600' : 'bg-red-200 text-red-600';
+            return `<tr class="border-b border-gray-200 hover:bg-gray-100">
+                <td class="py-3 px-6">${prop.direccion || 'N/A'}</td>
+                <td class="py-3 px-6">${inq.nombre || ''} ${inq.apellido || ''}</td>
+                <td class="py-3 px-6">${new Date(c.fecha_inicio).toLocaleDateString('es-ES',{timeZone:'UTC'})}</td>
+                <td class="py-3 px-6">${new Date(c.fecha_fin).toLocaleDateString('es-ES',{timeZone:'UTC'})}</td>
+                <td class="py-3 px-6 text-right">$${parseFloat(c.monto).toFixed(2)}</td>
+                <td class="py-3 px-6 text-center"><span class="${estadoClass} py-1 px-3 rounded-full text-xs">${c.estado}</span></td>
+                ${renderActionsCell('contratos', c.id)}
+            </tr>`;
+        }
+        function renderActionsCell(type, id) {
+            const viewAction = type === 'contratos' ? `<div onclick="navigateTo('${type}', '${id}')" class="w-4 mr-2 transform hover:text-purple-500 hover:scale-110 cursor-pointer"><i class="fas fa-eye"></i></div>` : `<div class="w-4 mr-2 text-gray-300 cursor-not-allowed"><i class="fas fa-eye"></i></div>`;
+            return `<td class="py-3 px-6 text-center">
+                <div class="flex item-center justify-center">
+                    ${viewAction}
+                    <div onclick="window.openModal('${type}', '${id}')" class="w-4 mr-2 transform hover:text-purple-500 hover:scale-110 cursor-pointer"><i class="fas fa-pencil-alt"></i></div>
+                    <div onclick="window.confirmDelete('${type}', '${id}')" class="w-4 mr-2 transform hover:text-purple-500 hover:scale-110 cursor-pointer"><i class="fas fa-trash-alt"></i></div>
+                </div>
+            </td>`;
+        }
+
+        window.openModal = async (type, id = null) => {
+            let data = {};
+            if (id) {
+                const docSnap = await getDoc(doc(db, type, id));
+                if (docSnap.exists()) data = docSnap.data();
+            }
+            const formConfig = {
+                propiedades: getPropiedadForm(data, id),
+                personas: getPersonaForm(data, id),
+                contratos: getContratoForm(data, id)
+            };
+            modalContent.innerHTML = formConfig[type];
+            modal.classList.remove('hidden');
+            modalContent.querySelector('form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                handleSave(type, id);
+            });
+        };
+        window.closeModal = () => { modal.classList.add('hidden'); modalContent.innerHTML = ''; };
+
+        function getPropiedadForm(data, id) { return `<h2 class="text-2xl font-bold mb-4">${id ? 'Editar' : 'Nueva'} Propiedad</h2><form><input type="hidden" id="docId" value="${id||''}"><div class="mb-4"><label class="block text-gray-700 text-sm font-bold mb-2" for="direccion">Dirección</label><input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" id="direccion" type="text" value="${data.direccion||''}" required></div><div class="mb-4"><label class="block text-gray-700 text-sm font-bold mb-2" for="tipo">Tipo</label><select id="tipo" class="shadow border rounded w-full py-2 px-3 text-gray-700" required><option value="Departamento" ${data.tipo==='Departamento'?'selected':''}>Departamento</option><option value="Casa" ${data.tipo==='Casa'?'selected':''}>Casa</option><option value="Oficina" ${data.tipo==='Oficina'?'selected':''}>Oficina</option></select></div><div class="mb-4"><label class="block text-gray-700 text-sm font-bold mb-2" for="descripcion">Descripción</label><textarea class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" id="descripcion" rows="3">${data.descripcion||''}</textarea></div><div class="mb-4"><label class="block text-gray-700 text-sm font-bold mb-2" for="precio_alquiler">Precio Alquiler ($)</label><input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" id="precio_alquiler" type="number" step="0.01" value="${data.precio_alquiler||''}" required></div>${getFormButtons()}</form>`;}
+        function getPersonaForm(data, id) { return `<h2 class="text-2xl font-bold mb-4">${id ? 'Editar' : 'Nueva'} Persona</h2><form><input type="hidden" id="docId" value="${id||''}"><div class="grid grid-cols-2 gap-4"><div class="mb-4"><label class="block text-gray-700 text-sm font-bold mb-2" for="nombre">Nombre</label><input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" id="nombre" type="text" value="${data.nombre||''}" required></div><div class="mb-4"><label class="block text-gray-700 text-sm font-bold mb-2" for="apellido">Apellido</label><input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" id="apellido" type="text" value="${data.apellido||''}" required></div></div><div class="mb-4"><label class="block text-gray-700 text-sm font-bold mb-2" for="dni">DNI</label><input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" id="dni" type="text" value="${data.dni||''}" required></div><div class="mb-4"><label class="block text-gray-700 text-sm font-bold mb-2" for="email">Email</label><input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" id="email" type="email" value="${data.email||''}" required></div><div class="mb-4"><label class="block text-gray-700 text-sm font-bold mb-2" for="telefono">Teléfono</label><input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" id="telefono" type="tel" value="${data.telefono||''}"></div><div class="mb-4"><label class="block text-gray-700 text-sm font-bold mb-2" for="rol">Rol</label><select id="rol" class="shadow border rounded w-full py-2 px-3 text-gray-700" required><option value="Inquilino" ${data.rol==='Inquilino'?'selected':''}>Inquilino</option><option value="Propietario" ${data.rol==='Propietario'?'selected':''}>Propietario</option><option value="Garante" ${data.rol==='Garante'?'selected':''}>Garante</option></select></div>${getFormButtons()}</form>`;}
+        function getContratoForm(data, id) {
+            const props = state.data.propiedades.map(p => `<option value="${p.id}" ${data.propiedad_id === p.id ? 'selected' : ''}>${p.direccion}</option>`).join('');
+            const inqs = state.data.personas.filter(p => p.rol === 'Inquilino').map(p => `<option value="${p.id}" ${data.inquilino_id === p.id ? 'selected' : ''}>${p.nombre} ${p.apellido}</option>`).join('');
+            return `<h2 class="text-2xl font-bold mb-4">${id ? 'Editar' : 'Nuevo'} Contrato</h2><form><input type="hidden" id="docId" value="${id || ''}"><div class="mb-4"><label class="block text-gray-700 text-sm font-bold mb-2" for="contrato-propiedad">Propiedad</label><select id="contrato-propiedad" class="shadow border rounded w-full py-2 px-3 text-gray-700" required>${props}</select></div><div class="mb-4"><label class="block text-gray-700 text-sm font-bold mb-2" for="contrato-inquilino">Inquilino</label><select id="contrato-inquilino" class="shadow border rounded w-full py-2 px-3 text-gray-700" required>${inqs}</select></div><div class="grid grid-cols-2 gap-4"><div class="mb-4"><label class="block text-gray-700 text-sm font-bold mb-2" for="fecha-inicio">Fecha Inicio</label><input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" id="fecha-inicio" type="date" value="${data.fecha_inicio||''}" required></div><div class="mb-4"><label class="block text-gray-700 text-sm font-bold mb-2" for="fecha-fin">Fecha Fin</label><input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" id="fecha-fin" type="date" value="${data.fecha_fin||''}" required></div></div><div class="mb-4"><label class="block text-gray-700 text-sm font-bold mb-2" for="contrato-monto">Monto Mensual ($)</label><input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" id="contrato-monto" type="number" step="0.01" value="${data.monto||''}" required></div>${getFormButtons()}</form>`;
+        }
+        function getFormButtons() { return `<div class="flex items-center justify-end mt-6"><button type="button" onclick="window.closeModal()" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded mr-2">Cancelar</button><button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Guardar</button></div>`; }
+        
+        async function handleSave(type, id) {
+            let data;
+            if (type === 'contratos') {
+                const fechaInicioValue = document.getElementById('fecha-inicio').value;
+                const fechaInicio = new Date(fechaInicioValue + 'T00:00:00');
+                const fechaActualizacion = new Date(new Date(fechaInicio).setFullYear(fechaInicio.getFullYear() + 1));
+                data = {
+                    propiedad_id: document.getElementById('contrato-propiedad').value,
+                    inquilino_id: document.getElementById('contrato-inquilino').value,
+                    fecha_inicio: fechaInicioValue,
+                    fecha_fin: document.getElementById('fecha-fin').value,
+                    monto: parseFloat(document.getElementById('contrato-monto').value),
+                    estado: 'Activo',
+                    fecha_actualizacion: fechaActualizacion.toISOString().split('T')[0],
+                    pagos: {}
+                };
+                 if(id) {
+                    const docSnap = await getDoc(doc(db, "contratos", id));
+                    if(docSnap.exists() && docSnap.data().pagos) {
+                        data.pagos = docSnap.data().pagos;
+                    }
+                }
+            } else if (type === 'propiedades') {
+                data = { direccion: document.getElementById('direccion').value, tipo: document.getElementById('tipo').value, descripcion: document.getElementById('descripcion').value, precio_alquiler: parseFloat(document.getElementById('precio_alquiler').value) };
+            } else if (type === 'personas') {
+                data = { nombre: document.getElementById('nombre').value, apellido: document.getElementById('apellido').value, dni: document.getElementById('dni').value, email: document.getElementById('email').value, telefono: document.getElementById('telefono').value, rol: document.getElementById('rol').value };
+            }
+
+            try {
+                if (id) {
+                    await setDoc(doc(db, type, id), data);
+                } else {
+                    await addDoc(collection(db, type), data);
+                }
+                closeModal();
+            } catch (error) {
+                console.error("Error guardando el documento: ", error);
+            }
+        }
+
+        window.confirmDelete = (type, id) => {
+            confirmModal.classList.remove('hidden');
+            const confirmBtn = document.getElementById('confirm-delete-btn');
+            const cancelBtn = document.getElementById('cancel-delete-btn');
+            const newConfirmBtn = confirmBtn.cloneNode(true);
+            confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+            newConfirmBtn.addEventListener('click', () => handleDelete(type, id));
+            cancelBtn.addEventListener('click', () => confirmModal.classList.add('hidden'));
+        };
+        async function handleDelete(type, id) {
+            try {
+                await deleteDoc(doc(db, type, id));
+                confirmModal.classList.add('hidden');
+                if (state.currentItemId === id) navigateTo(type);
+            } catch (error) { console.error("Error eliminando el documento: ", error); }
+        }
+
+        function setupRealtimeListeners() {
+            ['propiedades', 'personas', 'contratos'].forEach(colName => {
+                onSnapshot(collection(db, colName), (snapshot) => {
+                    state.data[colName] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    renderCurrentSection();
+                }, (error) => console.error(`Error en listener de ${colName}:`, error));
+            });
+        }
+        
+        function init() {
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    navigateTo(e.currentTarget.getAttribute('href').substring(1));
+                });
+            });
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    if (!state.isAuthReady) {
+                        state.isAuthReady = true;
+                        setupRealtimeListeners();
+                    }
+                } else {
+                    signInAnonymously(auth).catch((error) => {
+                        console.error("Error de autenticación anónima:", error);
+                        mainContentArea.innerHTML = `<div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4" role="alert"><p class="font-bold">Error de Configuración</p><p>No se pudo conectar a la base de datos. Asegúrate de que el método de inicio de sesión <strong>"Anónimo"</strong> esté habilitado en tu consola de Firebase.</p></div>`;
+                    });
+                }
+            });
+        }
+        init();
+    </script>
+</body>
+</html>
