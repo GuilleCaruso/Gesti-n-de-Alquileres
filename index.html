@@ -44,6 +44,10 @@
                 <a href="#contratos" class="nav-link block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">
                     <i class="fas fa-file-signature w-6 mr-2"></i>Contratos
                 </a>
+                <!-- Enlace agregado para el módulo de incidencias -->
+                <a href="#incidencias" class="nav-link block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">
+                    <i class="fas fa-tools w-6 mr-2"></i>Incidencias
+                </a>
             </nav>
         </aside>
 
@@ -91,7 +95,8 @@
         let state = {
             currentSection: 'dashboard',
             currentItemId: null,
-            data: { propiedades: [], personas: [], contratos: [] },
+            // Agregamos "incidencias" al estado para gestionar el nuevo módulo
+            data: { propiedades: [], personas: [], contratos: [], incidencias: [] },
             isAuthReady: false
         };
 
@@ -119,6 +124,12 @@
                  return;
             }
             
+            // Si estamos en la sección de incidencias, utilizamos una vista personalizada
+            if (state.currentSection === 'incidencias') {
+                renderIncidencias();
+                return;
+            }
+
             if (state.currentItemId) {
                 renderDetailView();
             } else {
@@ -405,8 +416,138 @@
             } catch (error) { console.error("Error eliminando el documento: ", error); }
         }
 
+        // Funciones para el módulo de incidencias
+        function renderIncidencias() {
+            const incidencias = state.data.incidencias;
+            const contratos = state.data.contratos;
+            const incidenciasHtml = incidencias.map((inc) => {
+                const contrato = contratos.find(c => c.id === inc.contrato_id);
+                const propiedad = contrato ? state.data.propiedades.find(p => p.id === contrato.propiedad_id) : null;
+                const direccion = propiedad?.direccion || "N/A";
+                return `
+                    <tr class="border-b border-gray-200 hover:bg-gray-100">
+                        <td class="py-3 px-6">${direccion}</td>
+                        <td class="py-3 px-6">${inc.descripcion}</td>
+                        <td class="py-3 px-6">${inc.estado}</td>
+                        <td class="py-3 px-6 text-right">$${parseFloat(inc.costo || 0).toFixed(2)}</td>
+                        <td class="py-3 px-6 text-center">
+                            <div class="flex item-center justify-center">
+                                <div onclick="window.openIncidenciaModal('${inc.id}')" class="w-4 mr-2 transform hover:text-purple-500 hover:scale-110 cursor-pointer"><i class="fas fa-pencil-alt"></i></div>
+                                <div onclick="window.deleteIncidencia('${inc.id}')" class="w-4 mr-2 transform hover:text-purple-500 hover:scale-110 cursor-pointer"><i class="fas fa-trash-alt"></i></div>
+                            </div>
+                        </td>
+                    </tr>`;
+            }).join('');
+            mainContentArea.innerHTML = `
+                <div class="flex justify-between items-center mb-6">
+                    <h1 class="text-3xl font-bold text-gray-800">Gestión de Incidencias</h1>
+                    <button onclick="window.openIncidenciaModal()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-all">
+                        <i class="fas fa-plus mr-2"></i>Nueva Incidencia
+                    </button>
+                </div>
+                <div class="bg-white shadow-md rounded-lg overflow-hidden">
+                    <table class="min-w-full bg-white">
+                        <thead class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                            <tr>
+                                <th class="py-3 px-6 text-left">Propiedad</th>
+                                <th class="py-3 px-6 text-left">Descripción</th>
+                                <th class="py-3 px-6 text-left">Estado</th>
+                                <th class="py-3 px-6 text-right">Costo</th>
+                                <th class="py-3 px-6 text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-gray-600 text-sm font-light">
+                            ${incidenciasHtml || '<tr><td colspan="5" class="text-center py-4">No hay incidencias registradas.</td></tr>'}
+                        </tbody>
+                    </table>
+                </div>`;
+        }
+
+        async function openIncidenciaModal(id = null) {
+            let data = { descripcion: '', estado: 'Nuevo', costo: '', contrato_id: '' };
+            if (id) {
+                const docSnap = await getDoc(doc(db, 'incidencias', id));
+                if (docSnap.exists()) data = docSnap.data();
+            }
+            const contratos = state.data.contratos.map(c => {
+                const prop = state.data.propiedades.find(p => p.id === c.propiedad_id);
+                const inq = state.data.personas.find(p => p.id === c.inquilino_id);
+                return `<option value="${c.id}" ${data.contrato_id === c.id ? 'selected' : ''}>${prop?.direccion || 'N/A'} - ${inq?.nombre || ''} ${inq?.apellido || ''}</option>`;
+            }).join('');
+            modalContent.innerHTML = `
+                <h2 class="text-2xl font-bold mb-4">${id ? 'Editar' : 'Nueva'} Incidencia</h2>
+                <form id="incidencia-form">
+                    <input type="hidden" name="id" value="${id || ''}">
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Contrato</label>
+                        <select name="contrato_id" class="shadow border rounded w-full py-2 px-3 text-gray-700" required>${contratos}</select>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Descripción</label>
+                        <textarea name="descripcion" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" rows="3" required>${data.descripcion}</textarea>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Estado</label>
+                        <select name="estado" class="shadow border rounded w-full py-2 px-3 text-gray-700" required>
+                            <option ${data.estado === 'Nuevo' ? 'selected' : ''}>Nuevo</option>
+                            <option ${data.estado === 'En proceso' ? 'selected' : ''}>En proceso</option>
+                            <option ${data.estado === 'Solucionado' ? 'selected' : ''}>Solucionado</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Costo ($)</label>
+                        <input name="costo" type="number" step="0.01" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" value="${data.costo || ''}">
+                    </div>
+                    <div class="flex items-center justify-end mt-6">
+                        <button type="button" onclick="window.closeModal()" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded mr-2">Cancelar</button>
+                        <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Guardar</button>
+                    </div>
+                </form>
+            `;
+            modal.classList.remove('hidden');
+            document.getElementById('incidencia-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                saveIncidencia(new FormData(e.target));
+            });
+        }
+
+        async function saveIncidencia(formData) {
+            const id = formData.get('id');
+            const data = {
+                contrato_id: formData.get('contrato_id'),
+                descripcion: formData.get('descripcion'),
+                estado: formData.get('estado'),
+                costo: parseFloat(formData.get('costo')) || 0
+            };
+            try {
+                if (id) {
+                    await setDoc(doc(db, 'incidencias', id), data, { merge: true });
+                } else {
+                    await addDoc(collection(db, 'incidencias'), data);
+                }
+                window.closeModal();
+            } catch (e) {
+                console.error('Error guardando incidencia', e);
+            }
+        }
+
+        async function deleteIncidencia(id) {
+            if (confirm('¿Seguro que querés eliminar esta incidencia?')) {
+                try {
+                    await deleteDoc(doc(db, 'incidencias', id));
+                } catch (e) {
+                    console.error('Error eliminando incidencia', e);
+                }
+            }
+        }
+
+        // Exponemos las funciones para incidencias para que puedan ser utilizadas desde el HTML
+        window.openIncidenciaModal = openIncidenciaModal;
+        window.deleteIncidencia = deleteIncidencia;
+
         function setupRealtimeListeners() {
-            ['propiedades', 'personas', 'contratos'].forEach(colName => {
+            // Incluimos la colección "incidencias" en los listeners en tiempo real
+            ['propiedades', 'personas', 'contratos', 'incidencias'].forEach(colName => {
                 onSnapshot(collection(db, colName), (snapshot) => {
                     state.data[colName] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     renderCurrentSection();
