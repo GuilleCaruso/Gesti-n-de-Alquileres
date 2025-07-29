@@ -77,7 +77,8 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, addDoc, getDoc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, addDoc, getDoc, setDoc, deleteDoc, onSnapshot, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDQFTvKLmUnLXa5GCAx8PQORmFolnssX04",
@@ -91,6 +92,7 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const storage = getStorage(app);
         
         let state = {
             currentSection: 'dashboard',
@@ -498,6 +500,10 @@
                         <label class="block text-gray-700 text-sm font-bold mb-2">Costo ($)</label>
                         <input name="costo" type="number" step="0.01" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" value="${data.costo || ''}">
                     </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Archivo adjunto</label>
+                        <input type="file" name="archivo" id="incidencia-archivo" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" />
+                    </div>
                     <div class="flex items-center justify-end mt-6">
                         <button type="button" onclick="window.closeModal()" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded mr-2">Cancelar</button>
                         <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Guardar</button>
@@ -505,29 +511,45 @@
                 </form>
             `;
             modal.classList.remove('hidden');
-            document.getElementById('incidencia-form').addEventListener('submit', (e) => {
-                e.preventDefault();
-                saveIncidencia(new FormData(e.target));
-            });
+            document.getElementById('incidencia-form').addEventListener('submit', saveIncidencia);
         }
 
-        async function saveIncidencia(formData) {
-            const id = formData.get('id');
-            const data = {
-                contrato_id: formData.get('contrato_id'),
-                descripcion: formData.get('descripcion'),
-                estado: formData.get('estado'),
-                costo: parseFloat(formData.get('costo')) || 0
+        // Reemplazamos saveIncidencia para permitir subir archivos a Firebase Storage
+        async function saveIncidencia(e) {
+            e.preventDefault();
+            const form = e.target;
+            const contratoId = form['contrato_id'].value;
+            const descripcion = form['descripcion'].value;
+            const estado = form['estado'].value;
+            const costo = form['costo'].value;
+            const archivoInput = form['archivo'];
+
+            const incidenciaData = {
+                contrato_id: contratoId,
+                descripcion,
+                estado,
+                costo: costo ? parseFloat(costo) : 0,
+                creado_en: Timestamp.now()
             };
+
             try {
-                if (id) {
-                    await setDoc(doc(db, 'incidencias', id), data, { merge: true });
-                } else {
-                    await addDoc(collection(db, 'incidencias'), data);
+                const incidenciaRef = await addDoc(collection(db, 'incidencias'), incidenciaData);
+
+                if (archivoInput && archivoInput.files && archivoInput.files[0]) {
+                    const file = archivoInput.files[0];
+                    const storagePath = `incidencias/${incidenciaRef.id}/${file.name}`;
+                    const fileRef = ref(storage, storagePath);
+                    await uploadBytes(fileRef, file);
+                    const archivoUrl = await getDownloadURL(fileRef);
+                    await setDoc(incidenciaRef, { archivo_url: archivoUrl }, { merge: true });
                 }
+
+                alert('Incidencia guardada correctamente');
+                form.reset();
                 window.closeModal();
-            } catch (e) {
-                console.error('Error guardando incidencia', e);
+            } catch (error) {
+                console.error('Error al guardar la incidencia:', error);
+                alert('Hubo un error al guardar la incidencia.');
             }
         }
 
