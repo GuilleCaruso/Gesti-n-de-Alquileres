@@ -48,6 +48,10 @@
                 <a href="#incidencias" class="nav-link block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">
                     <i class="fas fa-tools w-6 mr-2"></i>Incidencias
                 </a>
+                <!-- Enlace agregado para el módulo de liquidaciones -->
+                <a href="#liquidaciones" class="nav-link block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">
+                    <i class="fas fa-file-invoice-dollar w-6 mr-2"></i>Liquidaciones
+                </a>
             </nav>
         </aside>
 
@@ -77,7 +81,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, addDoc, getDoc, setDoc, deleteDoc, onSnapshot, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, addDoc, getDoc, setDoc, deleteDoc, onSnapshot, Timestamp, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 
         const firebaseConfig = {
@@ -129,6 +133,11 @@
             // Si estamos en la sección de incidencias, utilizamos una vista personalizada
             if (state.currentSection === 'incidencias') {
                 renderIncidencias();
+                return;
+            }
+            // Si estamos en la sección de liquidaciones, utilizamos una vista personalizada
+            if (state.currentSection === 'liquidaciones') {
+                renderLiquidaciones();
                 return;
             }
 
@@ -566,6 +575,144 @@
         // Exponemos las funciones para incidencias para que puedan ser utilizadas desde el HTML
         window.openIncidenciaModal = openIncidenciaModal;
         window.deleteIncidencia = deleteIncidencia;
+
+        // ------------------------------------------------------------------
+        // Funciones y vista para el módulo de liquidaciones
+        // CONFIGURACIÓN: porcentaje de comisión (puede hacerse variable en el futuro)
+        const COMISION_PORC = 5;
+
+        /**
+         * Rellena los selectores de propietario, mes y año para la sección de liquidaciones.
+         * Lista los propietarios (personas con rol "Propietario") y carga los meses/años actuales.
+         */
+        async function poblarSelectoresLiquidacion() {
+            const propietariosSel = document.getElementById('liquidacion-propietario');
+            propietariosSel.innerHTML = "<option value=''>Seleccione propietario...</option>";
+            // Obtener todas las personas con rol de propietario
+            const personasSnap = await getDocs(query(collection(db, 'personas'), where("rol", "==", "Propietario")));
+            personasSnap.forEach(docu => {
+                const p = docu.data();
+                propietariosSel.innerHTML += `<option value="${docu.id}">${p.nombre} ${p.apellido || ''}</option>`;
+            });
+            // Meses en español
+            const meses = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+            const mesSel = document.getElementById('liquidacion-mes');
+            mesSel.innerHTML = meses.map((m,i) => `<option value="${i+1}">${m}</option>`).join('');
+            mesSel.value = (new Date().getMonth()+1);
+            // Años (actual y cinco anteriores)
+            const anioSel = document.getElementById('liquidacion-anio');
+            const anioActual = new Date().getFullYear();
+            anioSel.innerHTML = '';
+            for(let y = anioActual; y >= anioActual-5; y--) {
+                anioSel.innerHTML += `<option value="${y}">${y}</option>`;
+            }
+        }
+
+        /**
+         * Calcula la liquidación mensual del propietario seleccionado para un mes y año dados.
+         * Suma pagos de contratos activos, descuenta la comisión y los costos de incidencias.
+         */
+        async function calcularLiquidacion() {
+            const propietarioId = document.getElementById('liquidacion-propietario').value;
+            const mes = parseInt(document.getElementById('liquidacion-mes').value);
+            const anio = parseInt(document.getElementById('liquidacion-anio').value);
+            if(!propietarioId) {
+                alert("Seleccione un propietario.");
+                return;
+            }
+            // Obtener propiedades del propietario
+            const propiedadesSnap = await getDocs(query(collection(db, 'propiedades'), where("propietario_id", "==", propietarioId)));
+            const propiedades = [];
+            propiedadesSnap.forEach(docu => propiedades.push({id: docu.id, ...docu.data()}));
+            if(propiedades.length === 0) {
+                mostrarResultado("Este propietario no tiene propiedades registradas.");
+                return;
+            }
+            // Obtener contratos activos de esas propiedades
+            const contratosSnap = await getDocs(query(collection(db, 'contratos'), where("propiedad_id", "in", propiedades.map(p=>p.id)), where("estado", "==", "activo")));
+            const contratos = [];
+            contratosSnap.forEach(docu => contratos.push({id: docu.id, ...docu.data()}));
+            if(contratos.length === 0) {
+                mostrarResultado("No hay contratos activos para este propietario.");
+                return;
+            }
+            let ingresosTotales = 0;
+            let pagosPorContrato = [];
+            // Calcular pagos recibidos por cada contrato en el mes/año seleccionados
+            for(const contrato of contratos) {
+                const pagosSnap = await getDocs(query(collection(db, `contratos/${contrato.id}/pagos`), where("mes", "==", mes), where("anio", "==", anio), where("estado", "==", "Pagado")));
+                let sumaPagos = 0;
+                pagosSnap.forEach(pg => {
+                    sumaPagos += pg.data().monto || contrato.monto_mensual;
+                });
+                if(sumaPagos > 0) {
+                    ingresosTotales += sumaPagos;
+                    pagosPorContrato.push({contrato, sumaPagos});
+                }
+            }
+            // Calcular comisión
+            const comision = Math.round(ingresosTotales * (COMISION_PORC/100));
+            // Calcular costos de incidencias en el periodo
+            let incidenciasTotales = 0;
+            for(const contrato of contratos) {
+                const incSnap = await getDocs(query(collection(db, 'incidencias'), where("contrato_id", "==", contrato.id)));
+                incSnap.forEach(inc => {
+                    const data = inc.data();
+                    if(data.costo && data.creado_en && data.creado_en.toDate) {
+                        const fecha = data.creado_en.toDate();
+                        if(fecha.getMonth()+1 === mes && fecha.getFullYear() === anio) {
+                            incidenciasTotales += data.costo;
+                        }
+                    }
+                });
+            }
+            const totalTransferir = ingresosTotales - comision - incidenciasTotales;
+            // Mostrar resultado
+            mostrarResultado(`
+                <h3 class="font-bold mb-2">Resumen de liquidación</h3>
+                <ul class="mb-2">
+                  ${propiedades.map(p=>`<li>🏠 ${p.direccion || p.nombre || p.id}</li>`).join('')}
+                </ul>
+                <div class="mb-2">Ingresos por alquileres: <b>$${ingresosTotales.toLocaleString()}</b></div>
+                <div class="mb-2">Comisión (${COMISION_PORC}%): <b>-$${comision.toLocaleString()}</b></div>
+                <div class="mb-2">Costos incidencias: <b>-$${incidenciasTotales.toLocaleString()}</b></div>
+                <div class="font-bold text-lg">Total a transferir: $${totalTransferir.toLocaleString()}</div>
+            `);
+            document.getElementById('liquidacion-imprimir').classList.remove('hidden');
+        }
+
+        /**
+         * Actualiza el contenedor de resultados de liquidación con el HTML proporcionado.
+         */
+        function mostrarResultado(html) {
+            const resultContainer = document.getElementById('liquidacion-resultado');
+            if(resultContainer) {
+                resultContainer.innerHTML = html;
+            }
+        }
+
+        /**
+         * Renderiza la sección de liquidaciones, cargando el formulario y configurando los eventos necesarios.
+         */
+        function renderLiquidaciones() {
+            mainContentArea.innerHTML = `
+                <section id="liquidaciones-section" class="p-4">
+                  <h2 class="text-xl font-bold mb-4">Liquidación mensual por propietario</h2>
+                  <div class="mb-4 flex gap-2">
+                    <select id="liquidacion-propietario" class="border rounded p-2"></select>
+                    <select id="liquidacion-mes" class="border rounded p-2"></select>
+                    <select id="liquidacion-anio" class="border rounded p-2"></select>
+                    <button id="liquidacion-buscar" class="bg-blue-500 text-white px-4 rounded">Calcular</button>
+                  </div>
+                  <div id="liquidacion-resultado" class="bg-gray-50 p-4 rounded shadow"></div>
+                  <button id="liquidacion-imprimir" class="mt-4 bg-green-600 text-white px-4 rounded hidden">Imprimir</button>
+                </section>
+            `;
+            // Poblar selectores y asignar eventos de cálculo e impresión
+            poblarSelectoresLiquidacion();
+            document.getElementById('liquidacion-buscar').onclick = calcularLiquidacion;
+            document.getElementById('liquidacion-imprimir').onclick = () => window.print();
+        }
 
         function setupRealtimeListeners() {
             // Incluimos la colección "incidencias" en los listeners en tiempo real
