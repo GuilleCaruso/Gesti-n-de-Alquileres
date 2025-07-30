@@ -83,6 +83,10 @@
         <div class="bg-white p-8 rounded-lg shadow-2xl w-full max-w-2xl mx-auto">
             <h2 class="text-2xl font-bold mb-4">Detalle de Contrato</h2>
             <div id="detalle-contrato-info" class="mb-4 text-sm space-y-1"></div>
+            <!-- Sección de Aumentos: información del contrato relacionada con aumentos y botón para aplicarlo -->
+            <h3 class="text-xl font-bold my-2">Aumentos</h3>
+            <div id="aumentos-info" class="mb-4 text-sm"></div>
+            <button id="aplicar-aumento-btn" class="bg-purple-500 hover:bg-purple-600 text-white py-2 px-4 rounded mb-4 hidden">Aplicar Aumento</button>
             <h3 class="text-xl font-bold my-2">Pagos</h3>
             <table class="min-w-full mb-4 text-sm">
                 <thead class="bg-gray-200">
@@ -122,7 +126,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, addDoc, getDoc, setDoc, deleteDoc, onSnapshot, Timestamp, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, addDoc, getDoc, setDoc, deleteDoc, onSnapshot, Timestamp, query, where, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 
         const firebaseConfig = {
@@ -418,7 +422,12 @@ function getPropiedadForm(data, id) {
         function getContratoForm(data, id) {
             const props = state.data.propiedades.map(p => `<option value="${p.id}" ${data.propiedad_id === p.id ? 'selected' : ''}>${p.direccion}</option>`).join('');
             const inqs = state.data.personas.filter(p => p.rol === 'Inquilino').map(p => `<option value="${p.id}" ${data.inquilino_id === p.id ? 'selected' : ''}>${p.nombre} ${p.apellido}</option>`).join('');
-            return `<h2 class="text-2xl font-bold mb-4">${id ? 'Editar' : 'Nuevo'} Contrato</h2><form><input type="hidden" id="docId" value="${id || ''}"><div class="mb-4"><label class="block text-gray-700 text-sm font-bold mb-2" for="contrato-propiedad">Propiedad</label><select id="contrato-propiedad" class="shadow border rounded w-full py-2 px-3 text-gray-700" required>${props}</select></div><div class="mb-4"><label class="block text-gray-700 text-sm font-bold mb-2" for="contrato-inquilino">Inquilino</label><select id="contrato-inquilino" class="shadow border rounded w-full py-2 px-3 text-gray-700" required>${inqs}</select></div><div class="grid grid-cols-2 gap-4"><div class="mb-4"><label class="block text-gray-700 text-sm font-bold mb-2" for="fecha-inicio">Fecha Inicio</label><input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" id="fecha-inicio" type="date" value="${data.fecha_inicio||''}" required></div><div class="mb-4"><label class="block text-gray-700 text-sm font-bold mb-2" for="fecha-fin">Fecha Fin</label><input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" id="fecha-fin" type="date" value="${data.fecha_fin||''}" required></div></div><div class="mb-4"><label class="block text-gray-700 text-sm font-bold mb-2" for="contrato-monto">Monto Mensual ($)</label><input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" id="contrato-monto" type="number" step="0.01" value="${data.monto||''}" required></div>${getFormButtons()}</form>`;
+            return `<h2 class="text-2xl font-bold mb-4">${id ? 'Editar' : 'Nuevo'} Contrato</h2><form><input type="hidden" id="docId" value="${id || ''}"><div class="mb-4"><label class="block text-gray-700 text-sm font-bold mb-2" for="contrato-propiedad">Propiedad</label><select id="contrato-propiedad" class="shadow border rounded w-full py-2 px-3 text-gray-700" required>${props}</select></div><div class="mb-4"><label class="block text-gray-700 text-sm font-bold mb-2" for="contrato-inquilino">Inquilino</label><select id="contrato-inquilino" class="shadow border rounded w-full py-2 px-3 text-gray-700" required>${inqs}</select></div><div class="grid grid-cols-2 gap-4"><div class="mb-4"><label class="block text-gray-700 text-sm font-bold mb-2" for="fecha-inicio">Fecha Inicio</label><input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" id="fecha-inicio" type="date" value="${data.fecha_inicio||''}" required></div><div class="mb-4"><label class="block text-gray-700 text-sm font-bold mb-2" for="fecha-fin">Fecha Fin</label><input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" id="fecha-fin" type="date" value="${data.fecha_fin||''}" required></div></div><div class="mb-4"><label class="block text-gray-700 text-sm font-bold mb-2" for="contrato-monto">Monto Mensual ($)</label><input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" id="contrato-monto" type="number" step="0.01" value="${data.monto||''}" required></div>` +
+                // Campos de aumento de alquiler
+                `<div class="mb-4"><label class="block text-gray-700 text-sm font-bold mb-2" for="tipo-aumento">Tipo de Aumento</label><select id="tipo-aumento" class="shadow border rounded w-full py-2 px-3 text-gray-700"><option value="">Sin aumentos</option><option value="ICL" ${data.aumento?.tipo === 'ICL' ? 'selected' : ''}>ICL</option><option value="IPC" ${data.aumento?.tipo === 'IPC' ? 'selected' : ''}>IPC</option><option value="Cuatrimestral" ${data.aumento?.tipo === 'Cuatrimestral' ? 'selected' : ''}>Cuatrimestral</option><option value="Porcentaje fijo" ${data.aumento?.tipo === 'Porcentaje fijo' ? 'selected' : ''}>Porcentaje fijo</option></select></div>` +
+                `<div class="mb-4"><label class="block text-gray-700 text-sm font-bold mb-2" for="frecuencia-aumento">Frecuencia (meses)</label><input id="frecuencia-aumento" type="number" min="1" step="1" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" value="${data.aumento?.frecuencia || ''}"></div>` +
+                `<div class="mb-4"><label class="block text-gray-700 text-sm font-bold mb-2" for="fecha-inicio-aumento">Fecha Inicio Aumento</label><input id="fecha-inicio-aumento" type="date" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" value="${data.aumento?.fecha_inicio || ''}"></div>` +
+                `${getFormButtons()}</form>`;
         }
         function getFormButtons() { return `<div class="flex items-center justify-end mt-6"><button type="button" onclick="window.closeModal()" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded mr-2">Cancelar</button><button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Guardar</button></div>`; }
         
@@ -438,10 +447,27 @@ function getPropiedadForm(data, id) {
                     fecha_actualizacion: fechaActualizacion.toISOString().split('T')[0],
                     pagos: {}
                 };
-                 if(id) {
+                // Capturamos la configuración de aumento, si se definió
+                const tipoAumento = document.getElementById('tipo-aumento')?.value;
+                const frecuenciaAumento = document.getElementById('frecuencia-aumento')?.value;
+                const fechaInicioAumento = document.getElementById('fecha-inicio-aumento')?.value;
+                if (tipoAumento) {
+                    data.aumento = {
+                        tipo: tipoAumento,
+                        frecuencia: frecuenciaAumento ? parseInt(frecuenciaAumento) : null,
+                        fecha_inicio: fechaInicioAumento || null
+                    };
+                    // Inicializamos historial de aumentos si no existe
+                    data.historialAumentos = [];
+                }
+                if(id) {
                     const docSnap = await getDoc(doc(db, "contratos", id));
-                    if(docSnap.exists() && docSnap.data().pagos) {
-                        data.pagos = docSnap.data().pagos;
+                    if(docSnap.exists()) {
+                        const existing = docSnap.data();
+                        // preservamos pagos existentes
+                        if(existing.pagos) data.pagos = existing.pagos;
+                        // preservamos historial de aumentos existentes
+                        if(existing.historialAumentos && !data.historialAumentos) data.historialAumentos = existing.historialAumentos;
                     }
                 }
             } else if (type === 'propiedades') {
@@ -796,6 +822,25 @@ function getPropiedadForm(data, id) {
                 <p><strong>Monto mensual:</strong> $${parseFloat(contrato.monto || contrato.monto_mensual || 0).toFixed(2)}</p>
             `;
             document.getElementById('detalle-contrato-info').innerHTML = infoHtml;
+            // Mostrar información de aumentos si existe
+            const aumentosDiv = document.getElementById('aumentos-info');
+            const aplicarAumentoBtn = document.getElementById('aplicar-aumento-btn');
+            if (aumentosDiv && aplicarAumentoBtn) {
+                aumentosDiv.innerHTML = '';
+                aplicarAumentoBtn.classList.add('hidden');
+                if (contrato.aumento) {
+                    const aum = contrato.aumento;
+                    let html = `<p><strong>Tipo:</strong> ${aum.tipo || '-'}</p>`;
+                    html += `<p><strong>Frecuencia:</strong> ${aum.frecuencia || '-'} meses</p>`;
+                    html += `<p><strong>Fecha inicio:</strong> ${aum.fecha_inicio || '-'}</p>`;
+                    // Historial de aumentos
+                    if (contrato.historialAumentos && contrato.historialAumentos.length) {
+                        html += '<p class="font-semibold mt-2">Historial de Aumentos:</p><ul class="list-disc ml-4">' + contrato.historialAumentos.map(h => `<li>${h.fecha}: $${parseFloat(h.monto).toFixed(2)}</li>`).join('') + '</ul>';
+                    }
+                    aumentosDiv.innerHTML = html;
+                    aplicarAumentoBtn.classList.remove('hidden');
+                }
+            }
             // Cargamos pagos desde la subcolección "pagos"
             const pagosTbody = document.getElementById('pagos-list');
             pagosTbody.innerHTML = '';
@@ -845,6 +890,40 @@ function getPropiedadForm(data, id) {
                 alert('Hubo un error al guardar el pago');
             }
         });
+
+        // Botón para aplicar aumento de alquiler si está configurado en el contrato
+        const aplicarAumentoBtn = document.getElementById('aplicar-aumento-btn');
+        if (aplicarAumentoBtn) {
+            aplicarAumentoBtn.addEventListener('click', async () => {
+                try {
+                    const contratoRef = doc(db, 'contratos', currentContratoId);
+                    const contratoSnap = await getDoc(contratoRef);
+                    if (!contratoSnap.exists()) {
+                        alert('Contrato no encontrado');
+                        return;
+                    }
+                    const c = contratoSnap.data();
+                    if (!c.aumento) {
+                        alert('Este contrato no tiene aumento configurado');
+                        return;
+                    }
+                    // Calculamos un nuevo monto aplicando un incremento del 10% por defecto
+                    const montoActual = c.monto || c.monto_mensual || 0;
+                    let nuevoMonto = parseFloat(montoActual) * 1.10;
+                    nuevoMonto = parseFloat(nuevoMonto.toFixed(2));
+                    const historial = Array.isArray(c.historialAumentos) ? [...c.historialAumentos] : [];
+                    const fechaHoy = new Date().toISOString().split('T')[0];
+                    historial.push({ fecha: fechaHoy, monto: nuevoMonto });
+                    await updateDoc(contratoRef, { monto: nuevoMonto, historialAumentos: historial });
+                    alert('Aumento aplicado correctamente');
+                    // Recargar detalles para reflejar cambios
+                    window.openDetalleContrato(currentContratoId);
+                } catch (err) {
+                    console.error('Error al aplicar aumento:', err);
+                    alert('Hubo un error al aplicar el aumento');
+                }
+            });
+        }
 
         function setupRealtimeListeners() {
             // Incluimos la colección "incidencias" en los listeners en tiempo real
