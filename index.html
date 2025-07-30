@@ -6,6 +6,8 @@
     <title>Sistema de Gestión Inmobiliaria</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+        <!-- Librería jsPDF para generación de PDFs -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         /* Estilos para una scrollbar más delgada y estilizada */
         ::-webkit-scrollbar { width: 8px; }
@@ -95,6 +97,7 @@
                         <th class="py-2 px-4 text-left">Año</th>
                         <th class="py-2 px-4 text-left">Monto</th>
                         <th class="py-2 px-4 text-left">Estado</th>
+                        <th class="py-2 px-4 text-left">Recibo</th>
                     </tr>
                 </thead>
                 <tbody id="pagos-list"></tbody>
@@ -848,7 +851,8 @@ function getPropiedadForm(data, id) {
                 const pagosSnap = await getDocs(collection(db, `contratos/${contratoId}/pagos`));
                 pagosSnap.forEach(pg => {
                     const p = pg.data();
-                    pagosTbody.innerHTML += `<tr class="border-t"><td class="py-1 px-4">${p.mes}</td><td class="py-1 px-4">${p.anio}</td><td class="py-1 px-4">$${parseFloat(p.monto).toFixed(2)}</td><td class="py-1 px-4">${p.estado}</td></tr>`;
+                    const pagoId = pg.id;
+                    pagosTbody.innerHTML += `<tr class="border-t"><td class="py-1 px-4">${p.mes}</td><td class="py-1 px-4">${p.anio}</td><td class="py-1 px-4">$${parseFloat(p.monto).toFixed(2)}</td><td class="py-1 px-4">${p.estado}</td><td class="py-1 px-4"><button class="text-blue-600 underline" onclick="window.generarRecibo('${contratoId}','${pagoId}')">PDF</button></td></tr>`;
                 });
             } catch (error) {
                 console.error('Error cargando pagos:', error);
@@ -924,6 +928,58 @@ function getPropiedadForm(data, id) {
                 }
             });
         }
+
+        // Función para generar un recibo de pago en PDF. Utiliza jsPDF para componer el documento con la información del contrato,
+        // la propiedad, el inquilino y el pago seleccionado. El archivo generado se descarga automáticamente en el navegador.
+        window.generarRecibo = async (contratoId, pagoId) => {
+            try {
+                // Cargamos datos del contrato y del pago
+                const contratoRef = doc(db, 'contratos', contratoId);
+                const contratoSnap = await getDoc(contratoRef);
+                if (!contratoSnap.exists()) {
+                    alert('Contrato no encontrado');
+                    return;
+                }
+                const contrato = contratoSnap.data();
+                const pagoRef = doc(db, `contratos/${contratoId}/pagos`, pagoId);
+                const pagoSnap = await getDoc(pagoRef);
+                if (!pagoSnap.exists()) {
+                    alert('Pago no encontrado');
+                    return;
+                }
+                const pago = pagoSnap.data();
+                // Buscamos información de propiedad e inquilino desde el estado en memoria
+                const prop = state.data.propiedades.find(p => p.id === contrato.propiedad_id) || {};
+                const inquilino = state.data.personas.find(p => p.id === contrato.inquilino_id) || {};
+                // Configuramos jsPDF
+                const { jsPDF } = window.jspdf;
+                const docPdf = new jsPDF();
+                let y = 10;
+                docPdf.setFontSize(18);
+                docPdf.text('Recibo de Alquiler', 105, y, { align: 'center' });
+                y += 10;
+                docPdf.setFontSize(12);
+                docPdf.text(`Propiedad: ${prop.direccion || 'N/D'}`, 10, y);
+                y += 7;
+                docPdf.text(`Inquilino: ${(inquilino.nombre || '') + ' ' + (inquilino.apellido || '')}`, 10, y);
+                y += 7;
+                docPdf.text(`Contrato ID: ${contratoId}`, 10, y);
+                y += 7;
+                docPdf.text(`Periodo: ${pago.mes}/${pago.anio}`, 10, y);
+                y += 7;
+                docPdf.text(`Monto pagado: $${parseFloat(pago.monto).toFixed(2)}`, 10, y);
+                y += 7;
+                docPdf.text(`Estado del pago: ${pago.estado}`, 10, y);
+                y += 7;
+                docPdf.text(`Fecha de emisión: ${new Date().toLocaleDateString()}`, 10, y);
+                // Guardamos el archivo con un nombre descriptivo
+                const fileName = `Recibo_${contratoId}_${pago.mes}_${pago.anio}.pdf`;
+                docPdf.save(fileName);
+            } catch (err) {
+                console.error('Error generando recibo:', err);
+                alert('Ocurrió un error al generar el recibo');
+            }
+        };
 
         function setupRealtimeListeners() {
             // Incluimos la colección "incidencias" en los listeners en tiempo real
