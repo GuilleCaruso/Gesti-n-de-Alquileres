@@ -77,6 +77,47 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal Detalle Contrato: muestra la información del contrato y permite registrar pagos -->
+    <div id="modal-detalle-contrato" class="hidden fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white p-8 rounded-lg shadow-2xl w-full max-w-2xl mx-auto">
+            <h2 class="text-2xl font-bold mb-4">Detalle de Contrato</h2>
+            <div id="detalle-contrato-info" class="mb-4 text-sm space-y-1"></div>
+            <h3 class="text-xl font-bold my-2">Pagos</h3>
+            <table class="min-w-full mb-4 text-sm">
+                <thead class="bg-gray-200">
+                    <tr>
+                        <th class="py-2 px-4 text-left">Mes</th>
+                        <th class="py-2 px-4 text-left">Año</th>
+                        <th class="py-2 px-4 text-left">Monto</th>
+                        <th class="py-2 px-4 text-left">Estado</th>
+                    </tr>
+                </thead>
+                <tbody id="pagos-list"></tbody>
+            </table>
+            <!-- Formulario para nuevo pago (se muestra al hacer clic en Agregar Pago) -->
+            <div id="nuevo-pago-form-container" class="mb-4 hidden">
+                <h4 class="text-lg font-bold mb-2">Nuevo Pago</h4>
+                <form id="nuevo-pago-form" class="space-y-2">
+                    <input type="number" id="pago-mes" class="shadow border rounded w-full py-2 px-3 text-gray-700" placeholder="Mes (1-12)" min="1" max="12" required>
+                    <input type="number" id="pago-anio" class="shadow border rounded w-full py-2 px-3 text-gray-700" placeholder="Año (e.g. 2025)" required>
+                    <input type="number" id="pago-monto" step="0.01" class="shadow border rounded w-full py-2 px-3 text-gray-700" placeholder="Monto" required>
+                    <select id="pago-estado" class="shadow border rounded w-full py-2 px-3 text-gray-700" required>
+                        <option value="Pagado">Pagado</option>
+                        <option value="Pendiente">Pendiente</option>
+                    </select>
+                    <div class="flex justify-end gap-2">
+                        <button type="button" id="cancelar-pago-btn" class="bg-gray-500 hover:bg-gray-600 text-white py-1 px-3 rounded">Cancelar</button>
+                        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white py-1 px-3 rounded">Guardar Pago</button>
+                    </div>
+                </form>
+            </div>
+            <div class="flex justify-end gap-2">
+                <button id="agregar-pago-btn" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded">Agregar Pago</button>
+                <button id="cerrar-detalle-contrato-btn" class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded">Cerrar</button>
+            </div>
+        </div>
+    </div>
     
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -105,6 +146,9 @@
             data: { propiedades: [], personas: [], contratos: [], incidencias: [] },
             isAuthReady: false
         };
+
+        // Identificador del contrato actualmente abierto en el modal de detalle
+        let currentContratoId = null;
 
         const mainContentArea = document.getElementById('main-content-area');
         const modal = document.getElementById('modal');
@@ -331,7 +375,8 @@
             </tr>`;
         }
         function renderActionsCell(type, id) {
-            const viewAction = type === 'contratos' ? `<div onclick="navigateTo('${type}', '${id}')" class="w-4 mr-2 transform hover:text-purple-500 hover:scale-110 cursor-pointer"><i class="fas fa-eye"></i></div>` : `<div class="w-4 mr-2 text-gray-300 cursor-not-allowed"><i class="fas fa-eye"></i></div>`;
+            // Para contratos utilizamos una vista detallada personalizada mediante openDetalleContrato
+            const viewAction = type === 'contratos' ? `<div onclick="window.openDetalleContrato('${id}')" class="w-4 mr-2 transform hover:text-purple-500 hover:scale-110 cursor-pointer"><i class="fas fa-eye"></i></div>` : `<div class="w-4 mr-2 text-gray-300 cursor-not-allowed"><i class="fas fa-eye"></i></div>`;
             return `<td class="py-3 px-6 text-center">
                 <div class="flex item-center justify-center">
                     ${viewAction}
@@ -361,7 +406,14 @@
         };
         window.closeModal = () => { modal.classList.add('hidden'); modalContent.innerHTML = ''; };
 
-        function getPropiedadForm(data, id) { return `<h2 class="text-2xl font-bold mb-4">${id ? 'Editar' : 'Nueva'} Propiedad</h2><form><input type="hidden" id="docId" value="${id||''}"><div class="mb-4"><label class="block text-gray-700 text-sm font-bold mb-2" for="direccion">Dirección</label><input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" id="direccion" type="text" value="${data.direccion||''}" required></div><div class="mb-4"><label class="block text-gray-700 text-sm font-bold mb-2" for="tipo">Tipo</label><select id="tipo" class="shadow border rounded w-full py-2 px-3 text-gray-700" required><option value="Departamento" ${data.tipo==='Departamento'?'selected':''}>Departamento</option><option value="Casa" ${data.tipo==='Casa'?'selected':''}>Casa</option><option value="Oficina" ${data.tipo==='Oficina'?'selected':''}>Oficina</option></select></div><div class="mb-4"><label class="block text-gray-700 text-sm font-bold mb-2" for="descripcion">Descripción</label><textarea class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" id="descripcion" rows="3">${data.descripcion||''}</textarea></div><div class="mb-4"><label class="block text-gray-700 text-sm font-bold mb-2" for="precio_alquiler">Precio Alquiler ($)</label><input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" id="precio_alquiler" type="number" step="0.01" value="${data.precio_alquiler||''}" required></div>${getFormButtons()}</form>`;}
+function getPropiedadForm(data, id) {
+    // Generamos opciones para seleccionar al propietario. Solo listamos personas con rol Propietario
+    const propietariosOpts = state.data.personas
+        .filter(p => p.rol === 'Propietario')
+        .map(p => `<option value="${p.id}" ${data.propietario_id === p.id ? 'selected' : ''}>${p.nombre} ${p.apellido || ''}</option>`)
+        .join('');
+    return `<h2 class="text-2xl font-bold mb-4">${id ? 'Editar' : 'Nueva'} Propiedad</h2><form><input type="hidden" id="docId" value="${id||''}"><div class="mb-4"><label class="block text-gray-700 text-sm font-bold mb-2" for="direccion">Dirección</label><input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" id="direccion" type="text" value="${data.direccion||''}" required></div><div class="mb-4"><label class="block text-gray-700 text-sm font-bold mb-2" for="tipo">Tipo</label><select id="tipo" class="shadow border rounded w-full py-2 px-3 text-gray-700" required><option value="Departamento" ${data.tipo==='Departamento'?'selected':''}>Departamento</option><option value="Casa" ${data.tipo==='Casa'?'selected':''}>Casa</option><option value="Oficina" ${data.tipo==='Oficina'?'selected':''}>Oficina</option></select></div><div class="mb-4"><label class="block text-gray-700 text-sm font-bold mb-2" for="descripcion">Descripción</label><textarea class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" id="descripcion" rows="3">${data.descripcion||''}</textarea></div><div class="mb-4"><label class="block text-gray-700 text-sm font-bold mb-2" for="precio_alquiler">Precio Alquiler ($)</label><input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" id="precio_alquiler" type="number" step="0.01" value="${data.precio_alquiler||''}" required></div><div class="mb-4"><label class="block text-gray-700 text-sm font-bold mb-2" for="propietario_id">Propietario</label><select id="propietario_id" class="shadow border rounded w-full py-2 px-3 text-gray-700"><option value="">Seleccione propietario...</option>${propietariosOpts}</select></div>${getFormButtons()}</form>`;
+}
         function getPersonaForm(data, id) { return `<h2 class="text-2xl font-bold mb-4">${id ? 'Editar' : 'Nueva'} Persona</h2><form><input type="hidden" id="docId" value="${id||''}"><div class="grid grid-cols-2 gap-4"><div class="mb-4"><label class="block text-gray-700 text-sm font-bold mb-2" for="nombre">Nombre</label><input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" id="nombre" type="text" value="${data.nombre||''}" required></div><div class="mb-4"><label class="block text-gray-700 text-sm font-bold mb-2" for="apellido">Apellido</label><input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" id="apellido" type="text" value="${data.apellido||''}" required></div></div><div class="mb-4"><label class="block text-gray-700 text-sm font-bold mb-2" for="dni">DNI</label><input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" id="dni" type="text" value="${data.dni||''}" required></div><div class="mb-4"><label class="block text-gray-700 text-sm font-bold mb-2" for="email">Email</label><input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" id="email" type="email" value="${data.email||''}" required></div><div class="mb-4"><label class="block text-gray-700 text-sm font-bold mb-2" for="telefono">Teléfono</label><input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" id="telefono" type="tel" value="${data.telefono||''}"></div><div class="mb-4"><label class="block text-gray-700 text-sm font-bold mb-2" for="rol">Rol</label><select id="rol" class="shadow border rounded w-full py-2 px-3 text-gray-700" required><option value="Inquilino" ${data.rol==='Inquilino'?'selected':''}>Inquilino</option><option value="Propietario" ${data.rol==='Propietario'?'selected':''}>Propietario</option><option value="Garante" ${data.rol==='Garante'?'selected':''}>Garante</option></select></div>${getFormButtons()}</form>`;}
         function getContratoForm(data, id) {
             const props = state.data.propiedades.map(p => `<option value="${p.id}" ${data.propiedad_id === p.id ? 'selected' : ''}>${p.direccion}</option>`).join('');
@@ -393,7 +445,14 @@
                     }
                 }
             } else if (type === 'propiedades') {
-                data = { direccion: document.getElementById('direccion').value, tipo: document.getElementById('tipo').value, descripcion: document.getElementById('descripcion').value, precio_alquiler: parseFloat(document.getElementById('precio_alquiler').value) };
+                // Guardamos también el propietario seleccionado. Si no hay ninguno, se almacena null
+                data = {
+                    direccion: document.getElementById('direccion').value,
+                    tipo: document.getElementById('tipo').value,
+                    descripcion: document.getElementById('descripcion').value,
+                    precio_alquiler: parseFloat(document.getElementById('precio_alquiler').value),
+                    propietario_id: document.getElementById('propietario_id').value || null
+                };
             } else if (type === 'personas') {
                 data = { nombre: document.getElementById('nombre').value, apellido: document.getElementById('apellido').value, dni: document.getElementById('dni').value, email: document.getElementById('email').value, telefono: document.getElementById('telefono').value, rol: document.getElementById('rol').value };
             }
@@ -713,6 +772,79 @@
             document.getElementById('liquidacion-buscar').onclick = calcularLiquidacion;
             document.getElementById('liquidacion-imprimir').onclick = () => window.print();
         }
+
+        /**
+         * Abre el modal de detalle de contrato, muestra información básica y lista los pagos asociados.
+         * Permite luego registrar nuevos pagos.
+         * @param {string} contratoId Identificador del contrato
+         */
+        window.openDetalleContrato = async (contratoId) => {
+            currentContratoId = contratoId;
+            // Ocultamos el formulario de nuevo pago por defecto
+            const nuevoPagoContainer = document.getElementById('nuevo-pago-form-container');
+            if (nuevoPagoContainer) nuevoPagoContainer.classList.add('hidden');
+            // Buscamos el contrato en el estado actual
+            const contrato = state.data.contratos.find(c => c.id === contratoId) || null;
+            if (!contrato) return;
+            const prop = state.data.propiedades.find(p => p.id === contrato.propiedad_id) || {};
+            const inquilino = state.data.personas.find(p => p.id === contrato.inquilino_id) || {};
+            const infoHtml = `
+                <p><strong>Propiedad:</strong> ${prop.direccion || 'N/A'}</p>
+                <p><strong>Inquilino:</strong> ${(inquilino.nombre || '') + ' ' + (inquilino.apellido || '')}</p>
+                <p><strong>Fecha inicio:</strong> ${contrato.fecha_inicio || ''}</p>
+                <p><strong>Fecha fin:</strong> ${contrato.fecha_fin || ''}</p>
+                <p><strong>Monto mensual:</strong> $${parseFloat(contrato.monto || contrato.monto_mensual || 0).toFixed(2)}</p>
+            `;
+            document.getElementById('detalle-contrato-info').innerHTML = infoHtml;
+            // Cargamos pagos desde la subcolección "pagos"
+            const pagosTbody = document.getElementById('pagos-list');
+            pagosTbody.innerHTML = '';
+            try {
+                const pagosSnap = await getDocs(collection(db, `contratos/${contratoId}/pagos`));
+                pagosSnap.forEach(pg => {
+                    const p = pg.data();
+                    pagosTbody.innerHTML += `<tr class="border-t"><td class="py-1 px-4">${p.mes}</td><td class="py-1 px-4">${p.anio}</td><td class="py-1 px-4">$${parseFloat(p.monto).toFixed(2)}</td><td class="py-1 px-4">${p.estado}</td></tr>`;
+                });
+            } catch (error) {
+                console.error('Error cargando pagos:', error);
+            }
+            // Mostrar modal
+            document.getElementById('modal-detalle-contrato').classList.remove('hidden');
+        };
+
+        // Eventos para botones del modal de detalle de contrato. Se registran una sola vez al cargar la app.
+        document.getElementById('cerrar-detalle-contrato-btn').addEventListener('click', () => {
+            document.getElementById('modal-detalle-contrato').classList.add('hidden');
+        });
+        document.getElementById('agregar-pago-btn').addEventListener('click', () => {
+            document.getElementById('nuevo-pago-form-container').classList.remove('hidden');
+        });
+        document.getElementById('cancelar-pago-btn').addEventListener('click', () => {
+            document.getElementById('nuevo-pago-form').reset();
+            document.getElementById('nuevo-pago-form-container').classList.add('hidden');
+        });
+        document.getElementById('nuevo-pago-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const mes = parseInt(document.getElementById('pago-mes').value);
+            const anio = parseInt(document.getElementById('pago-anio').value);
+            const monto = parseFloat(document.getElementById('pago-monto').value);
+            const estado = document.getElementById('pago-estado').value;
+            if (!mes || !anio || isNaN(monto) || !estado) {
+                alert('Complete todos los campos del pago');
+                return;
+            }
+            try {
+                await addDoc(collection(db, `contratos/${currentContratoId}/pagos`), { mes, anio, monto, estado });
+                // limpiamos formulario y ocultamos
+                document.getElementById('nuevo-pago-form').reset();
+                document.getElementById('nuevo-pago-form-container').classList.add('hidden');
+                // recargar listado de pagos
+                window.openDetalleContrato(currentContratoId);
+            } catch (err) {
+                console.error('Error al guardar el pago:', err);
+                alert('Hubo un error al guardar el pago');
+            }
+        });
 
         function setupRealtimeListeners() {
             // Incluimos la colección "incidencias" en los listeners en tiempo real
