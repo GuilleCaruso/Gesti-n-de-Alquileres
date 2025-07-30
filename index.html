@@ -54,6 +54,10 @@
                 <a href="#liquidaciones" class="nav-link block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">
                     <i class="fas fa-file-invoice-dollar w-6 mr-2"></i>Liquidaciones
                 </a>
+                <!-- Enlace agregado para el módulo de servicios -->
+                <a href="#servicios" onclick="navigateToSection('servicios-section')" class="nav-link block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">
+                    <i class="fas fa-lightbulb w-6 mr-2"></i>Servicios
+                </a>
             </nav>
         </aside>
 
@@ -173,6 +177,32 @@
                 }
             });
             renderCurrentSection();
+            // Al navegar a cualquier sección dinámica, ocultamos la sección de servicios y mostramos el área principal
+            const serviciosSectionEl = document.getElementById('servicios-section');
+            if (serviciosSectionEl) {
+                serviciosSectionEl.classList.add('hidden');
+                mainContentArea.classList.remove('hidden');
+            }
+        }
+
+        // Navegación para secciones estáticas (Servicios)
+        function navigateToSection(sectionId) {
+            // ocultar el contenido dinámico y otras secciones
+            const mainContentArea = document.getElementById('main-content-area');
+            if (mainContentArea) mainContentArea.classList.add('hidden');
+            document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+            const target = document.getElementById(sectionId);
+            if (target) {
+                target.classList.remove('hidden');
+            }
+            // actualizar el estado activo en el menú lateral
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('bg-gray-700');
+            });
+            const linkMatch = document.querySelector("a[onclick*=\"navigateToSection('" + sectionId + "')\"]");
+            if (linkMatch) {
+                linkMatch.classList.add('bg-gray-700');
+            }
         }
 
         function renderCurrentSection() {
@@ -1013,6 +1043,219 @@ function getPropiedadForm(data, id) {
             });
         }
         init();
+    </script>
+
+    <!-- ==== SECCIÓN SPA: Módulo de Servicios ==== -->
+    <section id="servicios-section" class="hidden p-4">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-2xl font-bold">Servicios públicos</h2>
+        <button class="bg-blue-600 text-white px-3 py-1 rounded" onclick="abrirModalServicio()">+ Nuevo servicio</button>
+      </div>
+      <!-- Filtros -->
+      <div class="flex gap-2 mb-4">
+        <select id="filtro-propiedad" class="border rounded p-1"></select>
+        <select id="filtro-contrato" class="border rounded p-1"></select>
+        <button onclick="renderServicios()" class="bg-gray-100 px-2 rounded">Filtrar</button>
+        <button onclick="limpiarFiltrosServicios()" class="bg-gray-100 px-2 rounded">Limpiar</button>
+      </div>
+      <!-- Tabla de servicios -->
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-xs border" id="tabla-servicios">
+          <thead>
+            <tr>
+              <th class="border px-2 py-1">Propiedad</th>
+              <th class="border px-2 py-1">Contrato</th>
+              <th class="border px-2 py-1">Tipo</th>
+              <th class="border px-2 py-1">Monto</th>
+              <th class="border px-2 py-1">Vencimiento</th>
+              <th class="border px-2 py-1">Estado</th>
+              <th class="border px-2 py-1">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="servicios-lista"></tbody>
+        </table>
+      </div>
+      <!-- Modal NUEVO/EDITAR SERVICIO -->
+      <dialog id="modal-servicio" class="rounded p-4 max-w-md w-[95vw]">
+        <form id="form-servicio" class="flex flex-col gap-3">
+          <input type="hidden" name="servicio_id" id="servicio-id" />
+          <div>
+            <label class="block text-xs">Propiedad</label>
+            <select name="propiedad_id" id="servicio-propiedad" class="w-full border p-1 rounded" required></select>
+          </div>
+          <div>
+            <label class="block text-xs">Contrato (opcional)</label>
+            <select name="contrato_id" id="servicio-contrato" class="w-full border p-1 rounded"></select>
+          </div>
+          <div>
+            <label class="block text-xs">Tipo de servicio</label>
+            <select name="tipo" id="servicio-tipo" class="w-full border p-1 rounded" required>
+              <option value="">Seleccionar...</option>
+              <option value="Luz">Luz</option>
+              <option value="Gas">Gas</option>
+              <option value="Agua">Agua</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs">Monto</label>
+            <input name="monto" id="servicio-monto" type="number" min="1" step="0.01" class="w-full border p-1 rounded" required />
+          </div>
+          <div>
+            <label class="block text-xs">Fecha de vencimiento</label>
+            <input name="vencimiento" id="servicio-vencimiento" type="date" class="w-full border p-1 rounded" required />
+          </div>
+          <div>
+            <label class="block text-xs">Estado</label>
+            <select name="estado" id="servicio-estado" class="w-full border p-1 rounded" required>
+              <option value="Pendiente">Pendiente</option>
+              <option value="Pagado">Pagado</option>
+            </select>
+          </div>
+          <div class="flex justify-end gap-2 mt-2">
+            <button type="button" onclick="cerrarModalServicio()" class="px-2 py-1 rounded border">Cancelar</button>
+            <button type="submit" class="bg-blue-600 text-white px-2 py-1 rounded">Guardar</button>
+          </div>
+        </form>
+      </dialog>
+    </section>
+
+    <!-- ==== SCRIPTS PARA MÓDULO DE SERVICIOS ==== -->
+    <script type="module">
+    // Firebase imports para el módulo de servicios
+    import { getFirestore, collection, doc, getDoc, getDocs, setDoc, deleteDoc, query, orderBy, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    const db = getFirestore(app);
+
+    // Cargar selects de propiedades y contratos
+    async function cargarPropiedadesEnSelect(selectId, selected) {
+      const snap = await getDocs(collection(db, "propiedades"));
+      const sel = document.getElementById(selectId);
+      sel.innerHTML = `<option value="">Seleccionar...</option>`;
+      snap.forEach(docu => {
+        const p = docu.data();
+        sel.innerHTML += `<option value="${docu.id}"${docu.id===selected?' selected':''}>${p.direccion||p.nombre||docu.id}</option>`;
+      });
+    }
+    async function cargarContratosEnSelect(selectId, selected, propiedadId = "") {
+      let qy = collection(db, "contratos");
+      if (propiedadId) qy = query(qy, where("propiedad_id", "==", propiedadId));
+      const snap = await getDocs(qy);
+      const sel = document.getElementById(selectId);
+      sel.innerHTML = `<option value="">Ninguno</option>`;
+      snap.forEach(docu => {
+        const c = docu.data();
+        sel.innerHTML += `<option value="${docu.id}"${docu.id===selected?' selected':''}>${c.nombre||docu.id}</option>`;
+      });
+    }
+    document.getElementById("servicio-propiedad").onchange = e => {
+      cargarContratosEnSelect("servicio-contrato", "", e.target.value);
+    };
+
+    // Filtros en tabla
+    window.limpiarFiltrosServicios = () => {
+      document.getElementById("filtro-propiedad").value = "";
+      document.getElementById("filtro-contrato").value = "";
+      renderServicios();
+    };
+
+    // Modal NUEVO/EDITAR
+    window.abrirModalServicio = async function(servicio = null) {
+      await cargarPropiedadesEnSelect("servicio-propiedad", servicio?.propiedad_id || "");
+      await cargarContratosEnSelect("servicio-contrato", servicio?.contrato_id || "", servicio?.propiedad_id || "");
+      document.getElementById("servicio-id").value = servicio?.id || "";
+      document.getElementById("servicio-propiedad").value = servicio?.propiedad_id || "";
+      document.getElementById("servicio-contrato").value = servicio?.contrato_id || "";
+      document.getElementById("servicio-tipo").value = servicio?.tipo || "";
+      document.getElementById("servicio-monto").value = servicio?.monto || "";
+      document.getElementById("servicio-vencimiento").value = servicio?.vencimiento || "";
+      document.getElementById("servicio-estado").value = servicio?.estado || "Pendiente";
+      document.getElementById("modal-servicio").showModal();
+    };
+    window.cerrarModalServicio = () => document.getElementById("modal-servicio").close();
+
+    // Guardar (create/update)
+    document.getElementById("form-servicio").onsubmit = async function(e) {
+      e.preventDefault();
+      const propiedad_id = e.target["propiedad_id"].value;
+      const contrato_id = e.target["contrato_id"].value || null;
+      const tipo = e.target["tipo"].value;
+      const monto = parseFloat(e.target["monto"].value);
+      const vencimiento = e.target["vencimiento"].value;
+      const estado = e.target["estado"].value;
+      if (!propiedad_id || !tipo || !vencimiento || isNaN(monto) || monto <= 0) {
+        alert("Completá todos los campos obligatorios y monto válido");
+        return;
+      }
+      const servicio_id = document.getElementById("servicio-id").value;
+      let servicioRef = servicio_id ? doc(db, "servicios", servicio_id) : doc(collection(db, "servicios"));
+      const data = { propiedad_id, contrato_id, tipo, monto, vencimiento, estado };
+      await setDoc(servicioRef, data, { merge: true });
+      cerrarModalServicio();
+      alert("Servicio guardado correctamente.");
+      renderServicios();
+    };
+
+    // Listar y renderizar servicios
+    async function renderServicios() {
+      await cargarPropiedadesEnSelect("filtro-propiedad", "");
+      await cargarContratosEnSelect("filtro-contrato", "");
+      let qy = collection(db, "servicios");
+      const filtroProp = document.getElementById("filtro-propiedad").value;
+      const filtroCon = document.getElementById("filtro-contrato").value;
+      if (filtroProp) qy = query(qy, where("propiedad_id", "==", filtroProp));
+      if (filtroCon) qy = query(qy, where("contrato_id", "==", filtroCon));
+      qy = query(qy, orderBy("vencimiento", "desc"));
+      const snap = await getDocs(qy);
+      let html = "";
+      for (const docu of snap.docs) {
+        const s = docu.data();
+        html += `
+          <tr>
+            <td class="border px-2 py-1">${await nombrePropiedad(s.propiedad_id)}</td>
+            <td class="border px-2 py-1">${await nombreContrato(s.contrato_id)}</td>
+            <td class="border px-2 py-1">${s.tipo}</td>
+            <td class="border px-2 py-1">$${s.monto}</td>
+            <td class="border px-2 py-1">${s.vencimiento}</td>
+            <td class="border px-2 py-1">
+              <span class="${s.estado==='Pagado'?'text-green-600':'text-yellow-700'}">${s.estado}</span>
+            </td>
+            <td class="border px-2 py-1 flex gap-2">
+              <button onclick="editarServicio('${docu.id}')" class="text-xs px-1 bg-blue-100 rounded">Editar</button>
+              <button onclick="eliminarServicio('${docu.id}')" class="text-xs px-1 bg-red-100 rounded">Eliminar</button>
+            </td>
+          </tr>`;
+      }
+      document.getElementById("servicios-lista").innerHTML = html;
+    }
+    window.renderServicios = renderServicios;
+
+    // Helpers para nombres de propiedad y contrato
+    async function nombrePropiedad(id) {
+      if (!id) return "-";
+      const d = await getDoc(doc(db, "propiedades", id));
+      return d.exists() ? (d.data().direccion || d.data().nombre || id) : id;
+    }
+    async function nombreContrato(id) {
+      if (!id) return "-";
+      const d = await getDoc(doc(db, "contratos", id));
+      return d.exists() ? (d.data().nombre || id) : id;
+    }
+
+    // Editar y eliminar servicios
+    window.editarServicio = async function(id) {
+      const d = await getDoc(doc(db, "servicios", id));
+      if (!d.exists()) return;
+      abrirModalServicio({ ...d.data(), id });
+    };
+    window.eliminarServicio = async function(id) {
+      if (!confirm("¿Eliminar servicio?")) return;
+      await deleteDoc(doc(db, "servicios", id));
+      renderServicios();
+    };
+
+    // Render automático al hacer clic en el menú de servicios
+    document.querySelector("a[onclick*=\"navigateToSection('servicios-section')\"]")?.addEventListener("click", () => {
+      renderServicios();
+    });
     </script>
 </body>
 </html>
