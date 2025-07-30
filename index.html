@@ -186,7 +186,8 @@
         }
 
         // Navegación para secciones estáticas (Servicios)
-        function navigateToSection(sectionId) {
+        // Exponemos navigateToSection en el objeto window para que pueda usarse desde los atributos onclick
+        window.navigateToSection = function(sectionId) {
             // ocultar el contenido dinámico y otras secciones
             const mainContentArea = document.getElementById('main-content-area');
             if (mainContentArea) mainContentArea.classList.add('hidden');
