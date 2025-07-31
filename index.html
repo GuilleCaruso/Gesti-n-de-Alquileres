@@ -1196,7 +1196,7 @@ function getPropiedadForm(data, id) {
     };
 
     // Listar y renderizar servicios
-    async function renderServicios() {
+    async window.renderServicios = async function () {
       await cargarPropiedadesEnSelect("filtro-propiedad", "");
       await cargarContratosEnSelect("filtro-contrato", "");
       let qy = collection(db, "servicios");
