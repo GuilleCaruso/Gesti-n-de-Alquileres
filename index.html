@@ -1194,41 +1194,34 @@ function getPropiedadForm(data, id) {
       alert("Servicio guardado correctamente.");
       renderServicios();
     };
-
     // Listar y renderizar servicios
-    async window.renderServicios = async function () {
-      await cargarPropiedadesEnSelect("filtro-propiedad", "");
-      await cargarContratosEnSelect("filtro-contrato", "");
-      let qy = collection(db, "servicios");
-      const filtroProp = document.getElementById("filtro-propiedad").value;
-      const filtroCon = document.getElementById("filtro-contrato").value;
-      if (filtroProp) qy = query(qy, where("propiedad_id", "==", filtroProp));
-      if (filtroCon) qy = query(qy, where("contrato_id", "==", filtroCon));
-      qy = query(qy, orderBy("vencimiento", "desc"));
-      const snap = await getDocs(qy);
-      let html = "";
-      for (const docu of snap.docs) {
-        const s = docu.data();
-        html += `
-          <tr>
-            <td class="border px-2 py-1">${await nombrePropiedad(s.propiedad_id)}</td>
-            <td class="border px-2 py-1">${await nombreContrato(s.contrato_id)}</td>
-            <td class="border px-2 py-1">${s.tipo}</td>
-            <td class="border px-2 py-1">$${s.monto}</td>
-            <td class="border px-2 py-1">${s.vencimiento}</td>
-            <td class="border px-2 py-1">
-              <span class="${s.estado==='Pagado'?'text-green-600':'text-yellow-700'}">${s.estado}</span>
-            </td>
-            <td class="border px-2 py-1 flex gap-2">
-              <button onclick="editarServicio('${docu.id}')" class="text-xs px-1 bg-blue-100 rounded">Editar</button>
-              <button onclick="eliminarServicio('${docu.id}')" class="text-xs px-1 bg-red-100 rounded">Eliminar</button>
-            </td>
-          </tr>`;
-      }
-      document.getElementById("servicios-lista").innerHTML = html;
-    }
-    window.renderServicios = renderServicios;
-
+const renderServicios = async function () {
+  await cargarPropiedadesEnSelect("filtro-propiedad", "");
+  await cargarContratosEnSelect("filtro-contrato", "");
+  let q = collection(db, "servicios");
+  const filtroProp = document.getElementById("filtro-propiedad").value;
+  const filtroCon = document.getElementById("filtro-contrato").value;
+  if (filtroProp) q = query(q, where("propiedad_id", "==", filtroProp));
+  if (filtroCon) q = query(q, where("contrato_id", "==", filtroCon));
+  q = query(q, orderBy("vencimiento", "desc"));
+  const snap = await getDocs(q);
+  let html = "";
+  for (const docu of snap.docs) {
+    const s = docu.data();
+    html += `
+      <tr>
+        <td class="border px-2 py-1">${await nombrePropiedad(s.propiedad_id)}</td>
+        <td class="border px-2 py-1">${await nombreContrato(s.contrato_id)}</td>
+        <td class="border px-2 py-1">${s.tipo}</td>
+        <td class="border px-2 py-1">${s.vencimiento}</td>
+        <td class="border px-2 py-1">${s.monto}</td>
+        <td class="border px-2 py-1">${s.estado}</td>
+      </tr>
+    `;
+  }
+  document.getElementById("tabla-servicios").innerHTML = html;
+};
+window.renderServicios = renderServicios;
     // Helpers para nombres de propiedad y contrato
     async function nombrePropiedad(id) {
       if (!id) return "-";
