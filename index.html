@@ -1122,187 +1122,97 @@ function getPropiedadForm(data, id) {
 
     <!-- ==== SCRIPTS PARA MÓDULO DE SERVICIOS ==== -->
     <script type="module">
-    // Firebase imports para el módulo de servicios
-    import { getFirestore, collection, doc, getDoc, getDocs, setDoc, deleteDoc, query, orderBy, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
- // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  addDoc,
+  query,
+  where,
+  doc,
+  setDoc,
+  getDoc
+} from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 
-// Your web app's Firebase configuration
+// Tu configuración de Firebase
 const firebaseConfig = {
-  apiKey: "AIzaSyDQFTvKLmUnLXa5GCAx8PQORmFolnssX04",
+  apiKey: "AIzaSyDQvKTnLmXAsGCAxPQRmFonslsX04",
   authDomain: "mi-app-inmobiliaria-3d461.firebaseapp.com",
   projectId: "mi-app-inmobiliaria-3d461",
-  storageBucket: "mi-app-inmobiliaria-3d461.firebasestorage.app",
-  messagingSenderId: "401339260242",
-  appId: "1:401339260242:web:49502eee63772e7433ee8b"
+  storageBucket: "mi-app-inmobiliaria-3d461.appspot.com",
+  messagingSenderId: "1413932096422",
+  appId: "1:1413932096422:web:495aecee63772e7433ee8b"
 };
 
-// Initialize Firebase
+// Inicializa Firebase
 const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-    const db = getFirestore(app);
+/**
+ * Llena un <select id="selectPropiedad"> con las propiedades desde Firestore
+ */
+export async function cargarPropiedadesSelect() {
+  const select = document.getElementById('selectPropiedad');
+  select.innerHTML = '<option value="">Seleccione propiedad</option>';
+  const propsSnap = await getDocs(collection(db, 'propiedades'));
+  propsSnap.forEach((doc) => {
+    const prop = doc.data();
+    // Ajusta aquí según tus campos
+    select.innerHTML += `<option value="${doc.id}">${prop.nombre || prop.direccion || doc.id}</option>`;
+  });
+}
 
-    // Cargar selects de propiedades y contratos
-    async function cargarPropiedadesEnSelect(selectId, selected) {
-      const snap = await getDocs(collection(db, "propiedades"));
-      const sel = document.getElementById(selectId);
-      sel.innerHTML = `<option value="">Seleccionar...</option>`;
-      snap.forEach(docu => {
-        const p = docu.data();
-        sel.innerHTML += `<option value="${docu.id}"${docu.id===selected?' selected':''}>${p.direccion||p.nombre||docu.id}</option>`;
-      });
-    }
-    async function cargarContratosEnSelect(selectId, selected, propiedadId = "") {
-      let qy = collection(db, "contratos");
-      if (propiedadId) qy = query(qy, where("propiedad_id", "==", propiedadId));
-      const snap = await getDocs(qy);
-      const sel = document.getElementById(selectId);
-      sel.innerHTML = `<option value="">Ninguno</option>`;
-      snap.forEach(docu => {
-        const c = docu.data();
-        sel.innerHTML += `<option value="${docu.id}"${docu.id===selected?' selected':''}>${c.nombre||docu.id}</option>`;
-      });
-    }
-    document.getElementById("servicio-propiedad").onchange = e => {
-      cargarContratosEnSelect("servicio-contrato", "", e.target.value);
-    };
+/**
+ * Guarda un servicio público en la colección "servicios"
+ * @param {Object} servicio - { propiedadId, tipo, monto, vencimiento, estado, [otrosCampos] }
+ */
+export async function guardarServicio(servicio) {
+  // servicio debe incluir propiedadId, tipo, monto, etc.
+  try {
+    await addDoc(collection(db, 'servicios'), servicio);
+    alert('Servicio registrado correctamente.');
+  } catch (e) {
+    console.error('Error guardando servicio:', e);
+    alert('Error al guardar servicio.');
+  }
+}
 
-    // Filtros en tabla
-    window.limpiarFiltrosServicios = () => {
-      document.getElementById("filtro-propiedad").value = "";
-      document.getElementById("filtro-contrato").value = "";
-      renderServicios();
-    };
-
-    // Modal NUEVO/EDITAR
-    window.abrirModalServicio = async function(servicio = null) {
-      await cargarPropiedadesEnSelect("servicio-propiedad", servicio?.propiedad_id || "");
-      await cargarContratosEnSelect("servicio-contrato", servicio?.contrato_id || "", servicio?.propiedad_id || "");
-      document.getElementById("servicio-id").value = servicio?.id || "";
-      document.getElementById("servicio-propiedad").value = servicio?.propiedad_id || "";
-      document.getElementById("servicio-contrato").value = servicio?.contrato_id || "";
-      document.getElementById("servicio-tipo").value = servicio?.tipo || "";
-      document.getElementById("servicio-monto").value = servicio?.monto || "";
-      document.getElementById("servicio-vencimiento").value = servicio?.vencimiento || "";
-      document.getElementById("servicio-estado").value = servicio?.estado || "Pendiente";
-      document.getElementById("modal-servicio").showModal();
-    };
-    window.cerrarModalServicio = () => document.getElementById("modal-servicio").close();
-
-    // Guardar (create/update)
-    document.getElementById("form-servicio").onsubmit = async function(e) {
-      e.preventDefault();
-      const propiedad_id = e.target["propiedad_id"].value;
-      const contrato_id = e.target["contrato_id"].value || null;
-      const tipo = e.target["tipo"].value;
-      const monto = parseFloat(e.target["monto"].value);
-      const vencimiento = e.target["vencimiento"].value;
-      const estado = e.target["estado"].value;
-      if (!propiedad_id || !tipo || !vencimiento || isNaN(monto) || monto <= 0) {
-        alert("Completá todos los campos obligatorios y monto válido");
-        return;
-      }
-      const servicio_id = document.getElementById("servicio-id").value;
-      let servicioRef = servicio_id ? doc(db, "servicios", servicio_id) : doc(collection(db, "servicios"));
-      const data = { propiedad_id, contrato_id, tipo, monto, vencimiento, estado };
-      await setDoc(servicioRef, data, { merge: true });
-      cerrarModalServicio();
-      alert("Servicio guardado correctamente.");
-      renderServicios();
-    };
-    // Listar y renderizar servicios
-const renderServicios = async function () {
-  await cargarPropiedadesEnSelect("filtro-propiedad", "");
-  await cargarContratosEnSelect("filtro-contrato", "");
-  let q = collection(db, "servicios");
-  const filtroProp = document.getElementById("filtro-propiedad").value;
-  const filtroCon = document.getElementById("filtro-contrato").value;
-  if (filtroProp) q = query(q, where("propiedad_id", "==", filtroProp));
-  if (filtroCon) q = query(q, where("contrato_id", "==", filtroCon));
-  q = query(q, orderBy("vencimiento", "desc"));
+/**
+ * Lee todos los servicios públicos filtrados por propiedad o contrato
+ * @param {string} [propiedadId] - opcional, filtra por propiedad
+ * @returns {Promise<Array>}
+ */
+export async function leerServicios(propiedadId = null) {
+  let serviciosRef = collection(db, 'servicios');
+  let q = serviciosRef;
+  if (propiedadId) {
+    q = query(serviciosRef, where('propiedadId', '==', propiedadId));
+  }
   const snap = await getDocs(q);
-  let html = "";
-  for (const docu of snap.docs) {
-    const s = docu.data();
-    html += `
-      <tr>
-        <td class="border px-2 py-1">${await nombrePropiedad(s.propiedad_id)}</td>
-        <td class="border px-2 py-1">${await nombreContrato(s.contrato_id)}</td>
-        <td class="border px-2 py-1">${s.tipo}</td>
-        <td class="border px-2 py-1">${s.vencimiento}</td>
-        <td class="border px-2 py-1">${s.monto}</td>
-        <td class="border px-2 py-1">${s.estado}</td>
-      </tr>
-    `;
-  }
-  document.getElementById("tabla-servicios").innerHTML = html;
-};
-window.renderServicios = renderServicios;
-    // Helpers para nombres de propiedad y contrato
-    async function nombrePropiedad(id) {
-      if (!id) return "-";
-      const d = await getDoc(doc(db, "propiedades", id));
-      return d.exists() ? (d.data().direccion || d.data().nombre || id) : id;
-    }
-    async function nombreContrato(id) {
-      if (!id) return "-";
-      const d = await getDoc(doc(db, "contratos", id));
-      return d.exists() ? (d.data().nombre || id) : id;
-    }
+  return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+}
 
-    // Editar y eliminar servicios
-    window.editarServicio = async function(id) {
-      const d = await getDoc(doc(db, "servicios", id));
-      if (!d.exists()) return;
-      abrirModalServicio({ ...d.data(), id });
-    };
-    window.eliminarServicio = async function(id) {
-      if (!confirm("¿Eliminar servicio?")) return;
-      await deleteDoc(doc(db, "servicios", id));
-      renderServicios();
-    };
+/* ------------ USO BÁSICO DE EJEMPLO ----------- */
 
-    // Render automático al hacer clic en el menú de servicios
-    document.querySelector("a[onclick*=\"navigateToSection('servicios-section')\"]")?.addEventListener("click", () => {
-      renderServicios();
-    });
-        // === INICIO: FUNCIÓN DE NAVEGACIÓN SPA ===
-window.navigateToSection = function(sectionId) {
-  [
-    'dashboard-section',
-    'propiedades-section',
-    'personas-section',
-    'contratos-section',
-    'incidencias-section',
-    'liquidaciones-section',
-    'servicios-section'
-  ].forEach(id => {
-    const sec = document.getElementById(id);
-    if (sec) sec.classList.add('hidden');
-  });
+// Ejecuta al cargar la página
+window.addEventListener('DOMContentLoaded', () => {
+  cargarPropiedadesSelect();
+});
 
-  const activeSec = document.getElementById(sectionId);
-  if (activeSec) activeSec.classList.remove('hidden');
+// Si tienes un formulario para registrar servicios:
+document.getElementById('formServicio').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const propiedadId = document.getElementById('selectPropiedad').value;
+  const tipo = document.getElementById('inputTipo').value;
+  const monto = parseFloat(document.getElementById('inputMonto').value);
+  const vencimiento = document.getElementById('inputVencimiento').value;
+  const estado = document.getElementById('inputEstado').value;
+  // ...otros campos...
 
-  document.querySelectorAll('aside button').forEach(btn => {
-    btn.classList.remove('bg-gray-800', 'text-white');
-  });
-
-  const activeBtn = Array.from(document.querySelectorAll('aside button'))
-    .find(btn => btn.getAttribute('onclick')?.includes(`'${sectionId}'`));
-  if (activeBtn) {
-    activeBtn.classList.add('bg-gray-800', 'text-white');
-  }
-
-  if (sectionId === 'servicios-section' && typeof renderServicios === 'function') {
-    renderServicios();
-  }
-};
-// === FIN DE LA FUNCIÓN DE NAVEGACIÓN SPA ===
-
-    </script>
+  await guardarServicio({ propiedadId, tipo, monto, vencimiento, estado });
+  // Si quieres recargar lista de servicios, llama leerServicios(propiedadId)
+});
+</script>
 </body>
 </html>
