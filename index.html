@@ -1119,99 +1119,177 @@ function getPropiedadForm(data, id) {
         </form>
       </dialog>
     </section>
-
     <!-- ==== SCRIPTS PARA MÓDULO DE SERVICIOS ==== -->
-    <script type="module">
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
-import {
-  getFirestore,
-  collection,
-  getDocs,
-  addDoc,
-  query,
-  where,
-  doc,
-  setDoc,
-  getDoc
-} from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
+<script type="module">
+// Asume que ya existe "db" (Firestore) inicializado arriba en el archivo principal
 
-// Tu configuración de Firebase
-const firebaseConfig = {
-  apiKey: "AIzaSyDQvKTnLmXAsGCAxPQRmFonslsX04",
-  authDomain: "mi-app-inmobiliaria-3d461.firebaseapp.com",
-  projectId: "mi-app-inmobiliaria-3d461",
-  storageBucket: "mi-app-inmobiliaria-3d461.appspot.com",
-  messagingSenderId: "1413932096422",
-  appId: "1:1413932096422:web:495aecee63772e7433ee8b"
-};
-
-// Inicializa Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+// --- FUNCIONES DE SERVICIOS PÚBLICOS ---
 
 /**
- * Llena un <select id="selectPropiedad"> con las propiedades desde Firestore
+ * Carga las propiedades al select de filtros y formularios del módulo Servicios.
  */
-export async function cargarPropiedadesSelect() {
-  const select = document.getElementById('selectPropiedad');
-  select.innerHTML = '<option value="">Seleccione propiedad</option>';
+async function cargarPropiedadesServicios() {
+  const propSel = document.getElementById('filtro-propiedad');
+  const formPropSel = document.getElementById('servicio-propiedad');
+  propSel.innerHTML = '<option value="">Todas las propiedades</option>';
+  formPropSel.innerHTML = '<option value="">Seleccionar...</option>';
   const propsSnap = await getDocs(collection(db, 'propiedades'));
-  propsSnap.forEach((doc) => {
-    const prop = doc.data();
-    // Ajusta aquí según tus campos
-    select.innerHTML += `<option value="${doc.id}">${prop.nombre || prop.direccion || doc.id}</option>`;
+  propsSnap.forEach(doc => {
+    const p = doc.data();
+    const nombre = p.direccion || p.nombre || doc.id;
+    propSel.innerHTML += `<option value="${doc.id}">${nombre}</option>`;
+    formPropSel.innerHTML += `<option value="${doc.id}">${nombre}</option>`;
   });
 }
 
 /**
- * Guarda un servicio público en la colección "servicios"
- * @param {Object} servicio - { propiedadId, tipo, monto, vencimiento, estado, [otrosCampos] }
+ * Carga contratos al filtro y formulario del módulo Servicios, opcionalmente filtrados por propiedad.
  */
-export async function guardarServicio(servicio) {
-  // servicio debe incluir propiedadId, tipo, monto, etc.
-  try {
-    await addDoc(collection(db, 'servicios'), servicio);
-    alert('Servicio registrado correctamente.');
-  } catch (e) {
-    console.error('Error guardando servicio:', e);
-    alert('Error al guardar servicio.');
+async function cargarContratosServicios(propiedadId = "") {
+  const contratoSel = document.getElementById('filtro-contrato');
+  const formContratoSel = document.getElementById('servicio-contrato');
+  contratoSel.innerHTML = '<option value="">Todos los contratos</option>';
+  formContratoSel.innerHTML = '<option value="">Sin contrato</option>';
+  let q = collection(db, 'contratos');
+  if (propiedadId) {
+    q = query(q, where("propiedad_id", "==", propiedadId));
   }
+  const contratosSnap = await getDocs(q);
+  contratosSnap.forEach(doc => {
+    const c = doc.data();
+    const label = c.id ? `${c.id} (${c.fecha_inicio || ''})` : doc.id;
+    contratoSel.innerHTML += `<option value="${doc.id}">${label}</option>`;
+    formContratoSel.innerHTML += `<option value="${doc.id}">${label}</option>`;
+  });
 }
 
 /**
- * Lee todos los servicios públicos filtrados por propiedad o contrato
- * @param {string} [propiedadId] - opcional, filtra por propiedad
- * @returns {Promise<Array>}
+ * Carga y muestra los servicios en la tabla, filtrando según selección.
  */
-export async function leerServicios(propiedadId = null) {
-  let serviciosRef = collection(db, 'servicios');
-  let q = serviciosRef;
-  if (propiedadId) {
-    q = query(serviciosRef, where('propiedadId', '==', propiedadId));
+async function renderServicios() {
+  const propiedadId = document.getElementById('filtro-propiedad').value;
+  const contratoId = document.getElementById('filtro-contrato').value;
+  let q = collection(db, 'servicios');
+  if (propiedadId && contratoId) {
+    q = query(q, where('propiedad_id', '==', propiedadId), where('contrato_id', '==', contratoId));
+  } else if (propiedadId) {
+    q = query(q, where('propiedad_id', '==', propiedadId));
+  } else if (contratoId) {
+    q = query(q, where('contrato_id', '==', contratoId));
   }
   const snap = await getDocs(q);
-  return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  const tbody = document.getElementById('servicios-lista');
+  tbody.innerHTML = '';
+  snap.forEach(doc => {
+    const s = doc.data();
+    tbody.innerHTML += `
+      <tr>
+        <td class="border px-2 py-1">${await buscarNombrePropiedad(s.propiedad_id)}</td>
+        <td class="border px-2 py-1">${s.contrato_id || '-'}</td>
+        <td class="border px-2 py-1">${s.tipo}</td>
+        <td class="border px-2 py-1">$${parseFloat(s.monto).toFixed(2)}</td>
+        <td class="border px-2 py-1">${s.vencimiento}</td>
+        <td class="border px-2 py-1">${s.estado}</td>
+        <td class="border px-2 py-1">
+          <button onclick="editarServicio('${doc.id}')">Editar</button>
+        </td>
+      </tr>
+    `;
+  });
 }
 
-/* ------------ USO BÁSICO DE EJEMPLO ----------- */
+/**
+ * Busca el nombre/dirección de la propiedad dado su ID.
+ */
+async function buscarNombrePropiedad(id) {
+  if (!id) return "-";
+  const docu = await getDoc(doc(db, 'propiedades', id));
+  return docu.exists() ? (docu.data().direccion || docu.data().nombre || id) : id;
+}
 
-// Ejecuta al cargar la página
-window.addEventListener('DOMContentLoaded', () => {
-  cargarPropiedadesSelect();
+/**
+ * Limpia los filtros de servicios.
+ */
+function limpiarFiltrosServicios() {
+  document.getElementById('filtro-propiedad').value = "";
+  document.getElementById('filtro-contrato').value = "";
+  renderServicios();
+}
+
+/**
+ * Abre el modal para crear un nuevo servicio.
+ */
+window.abrirModalServicio = function() {
+  document.getElementById('form-servicio').reset();
+  document.getElementById('servicio-id').value = "";
+  document.getElementById('modal-servicio').showModal();
+};
+
+/**
+ * Cierra el modal de servicios.
+ */
+window.cerrarModalServicio = function() {
+  document.getElementById('modal-servicio').close();
+};
+
+/**
+ * Edita un servicio existente.
+ */
+window.editarServicio = async function(servicioId) {
+  const docu = await getDoc(doc(db, 'servicios', servicioId));
+  if (!docu.exists()) return;
+  const s = docu.data();
+  document.getElementById('servicio-id').value = servicioId;
+  document.getElementById('servicio-propiedad').value = s.propiedad_id || '';
+  document.getElementById('servicio-contrato').value = s.contrato_id || '';
+  document.getElementById('servicio-tipo').value = s.tipo || '';
+  document.getElementById('servicio-monto').value = s.monto || '';
+  document.getElementById('servicio-vencimiento').value = s.vencimiento || '';
+  document.getElementById('servicio-estado').value = s.estado || '';
+  document.getElementById('modal-servicio').showModal();
+};
+
+/**
+ * Guarda un servicio (nuevo o edición).
+ */
+document.getElementById('form-servicio').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const id = document.getElementById('servicio-id').value;
+  const data = {
+    propiedad_id: document.getElementById('servicio-propiedad').value,
+    contrato_id: document.getElementById('servicio-contrato').value,
+    tipo: document.getElementById('servicio-tipo').value,
+    monto: parseFloat(document.getElementById('servicio-monto').value),
+    vencimiento: document.getElementById('servicio-vencimiento').value,
+    estado: document.getElementById('servicio-estado').value
+  };
+  try {
+    if (id) {
+      await setDoc(doc(db, 'servicios', id), data);
+    } else {
+      await addDoc(collection(db, 'servicios'), data);
+    }
+    cerrarModalServicio();
+    renderServicios();
+  } catch (e) {
+    alert('Error guardando servicio');
+  }
 });
 
-// Si tienes un formulario para registrar servicios:
-document.getElementById('formServicio').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const propiedadId = document.getElementById('selectPropiedad').value;
-  const tipo = document.getElementById('inputTipo').value;
-  const monto = parseFloat(document.getElementById('inputMonto').value);
-  const vencimiento = document.getElementById('inputVencimiento').value;
-  const estado = document.getElementById('inputEstado').value;
-  // ...otros campos...
-
-  await guardarServicio({ propiedadId, tipo, monto, vencimiento, estado });
-  // Si quieres recargar lista de servicios, llama leerServicios(propiedadId)
+// --- INICIALIZACIÓN ---
+window.addEventListener('DOMContentLoaded', async () => {
+  await cargarPropiedadesServicios();
+  await cargarContratosServicios();
+  renderServicios();
+  // Cambio de selects de filtro recarga contratos y servicios
+  document.getElementById('filtro-propiedad').addEventListener('change', async function() {
+    await cargarContratosServicios(this.value);
+  });
+  document.getElementById('servicio-propiedad').addEventListener('change', async function() {
+    await cargarContratosServicios(this.value);
+    // Sincroniza ambos selects si es necesario
+    document.getElementById('servicio-contrato').value = "";
+  });
 });
 </script>
 </body>
