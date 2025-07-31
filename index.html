@@ -1257,6 +1257,40 @@ function getPropiedadForm(data, id) {
     document.querySelector("a[onclick*=\"navigateToSection('servicios-section')\"]")?.addEventListener("click", () => {
       renderServicios();
     });
+        // === INICIO: FUNCIÓN DE NAVEGACIÓN SPA ===
+window.navigateToSection = function(sectionId) {
+  [
+    'dashboard-section',
+    'propiedades-section',
+    'personas-section',
+    'contratos-section',
+    'incidencias-section',
+    'liquidaciones-section',
+    'servicios-section'
+  ].forEach(id => {
+    const sec = document.getElementById(id);
+    if (sec) sec.classList.add('hidden');
+  });
+
+  const activeSec = document.getElementById(sectionId);
+  if (activeSec) activeSec.classList.remove('hidden');
+
+  document.querySelectorAll('aside button').forEach(btn => {
+    btn.classList.remove('bg-gray-800', 'text-white');
+  });
+
+  const activeBtn = Array.from(document.querySelectorAll('aside button'))
+    .find(btn => btn.getAttribute('onclick')?.includes(`'${sectionId}'`));
+  if (activeBtn) {
+    activeBtn.classList.add('bg-gray-800', 'text-white');
+  }
+
+  if (sectionId === 'servicios-section' && typeof renderServicios === 'function') {
+    renderServicios();
+  }
+};
+// === FIN DE LA FUNCIÓN DE NAVEGACIÓN SPA ===
+
     </script>
 </body>
 </html>
