@@ -1,0 +1,1813 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Caruso Propiedades</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --pine-900:#0d3d33; --pine-800:#12483c; --pine-700:#175947; --pine-600:#1d6b55;
+  --saffron-500:#f0a13a; --saffron-600:#b5711a; --saffron-100:#fbe8cd;
+  --sidebar-fg:#f6f2e8; --sidebar-fg-muted:rgba(246,242,232,.68);
+
+  --paper-0:#faf7f2; --paper-50:#f1ecdf; --surface:#ffffff; --surface-2:#fbf9f4;
+  --border:#e4dcc9; --border-strong:#d3c8ac;
+  --ink-900:#20261f; --ink-600:#5b6357; --ink-400:#8c9184;
+
+  --ok-600:#2f8f5b; --ok-100:#e1f2e7;
+  --warn-600:#a3690f; --warn-100:#f8ecd6;
+  --danger-600:#c0392b; --danger-100:#fbe6e2;
+  --info-600:#3b6fb4; --info-100:#e6eef8;
+  --violet-600:#7d5bc7; --violet-100:#efe9fb;
+
+  --shadow-1: 0 1px 2px rgba(20,30,20,.06), 0 1px 1px rgba(20,30,20,.04);
+  --shadow-2: 0 12px 32px rgba(13,40,30,.18), 0 2px 8px rgba(13,40,30,.10);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper-0:#141c19; --paper-50:#1a2420; --surface:#1a2420; --surface-2:#1e2b25;
+    --border:#2c3a33; --border-strong:#3a4a41;
+    --ink-900:#eef1ec; --ink-600:#aab3a9; --ink-400:#78827a;
+    --ok-600:#54c185; --ok-100:rgba(84,193,133,.14);
+    --warn-600:#dba24a; --warn-100:rgba(219,162,74,.14);
+    --danger-600:#e2685a; --danger-100:rgba(226,104,90,.14);
+    --info-600:#7ba0dd; --info-100:rgba(123,160,221,.14);
+    --violet-600:#ac91e6; --violet-100:rgba(172,145,230,.14);
+    --shadow-2: 0 12px 32px rgba(0,0,0,.5), 0 2px 8px rgba(0,0,0,.3);
+  }
+}
+:root[data-theme="dark"]{
+  --paper-0:#141c19; --paper-50:#1a2420; --surface:#1a2420; --surface-2:#1e2b25;
+  --border:#2c3a33; --border-strong:#3a4a41;
+  --ink-900:#eef1ec; --ink-600:#aab3a9; --ink-400:#78827a;
+  --ok-600:#54c185; --ok-100:rgba(84,193,133,.14);
+  --warn-600:#dba24a; --warn-100:rgba(219,162,74,.14);
+  --danger-600:#e2685a; --danger-100:rgba(226,104,90,.14);
+  --info-600:#7ba0dd; --info-100:rgba(123,160,221,.14);
+  --violet-600:#ac91e6; --violet-100:rgba(172,145,230,.14);
+  --shadow-2: 0 12px 32px rgba(0,0,0,.5), 0 2px 8px rgba(0,0,0,.3);
+}
+
+*{box-sizing:border-box;}
+body{
+  background:var(--paper-0); color:var(--ink-900);
+  font-family:"Public Sans",-apple-system,"Segoe UI",sans-serif;
+  font-size:14.5px; line-height:1.45;
+}
+h1,h2,h3,.brand-name{font-family:"Fraunces","Georgia",serif; text-wrap:balance;}
+button,input{font-family:inherit; font-size:inherit;}
+::selection{background:var(--saffron-100); color:var(--pine-900);}
+a{color:inherit;}
+.tnum{font-variant-numeric:tabular-nums;}
+
+/* ---------- shell ---------- */
+.shell{display:flex; min-height:100vh;}
+.sidebar{
+  width:238px; flex:none; background:var(--pine-900); color:var(--sidebar-fg);
+  display:flex; flex-direction:column; position:fixed; inset:0 auto 0 0; z-index:40;
+  transition:transform .22s ease;
+}
+.brand{display:flex; align-items:center; gap:10px; padding:20px 18px 16px;}
+.brand-mark{
+  width:38px; height:38px; border-radius:11px; background:var(--saffron-500);
+  display:flex; align-items:center; justify-content:center; flex:none;
+  box-shadow:inset 0 -3px 0 rgba(0,0,0,.15);
+}
+.brand-mark svg{width:22px; height:22px;}
+.brand-text{line-height:1.1;}
+.brand-name{font-size:19px; font-weight:700; letter-spacing:.3px;}
+.brand-sub{font-size:10.5px; text-transform:uppercase; letter-spacing:2px; color:var(--sidebar-fg-muted); font-weight:600;}
+
+.nav{padding:8px 12px; display:flex; flex-direction:column; gap:2px; overflow-y:auto; flex:1;}
+.nav-label{font-size:10.5px; text-transform:uppercase; letter-spacing:1.6px; color:var(--sidebar-fg-muted); padding:14px 10px 6px;}
+.nav-item{
+  display:flex; align-items:center; gap:11px; padding:9px 10px; border-radius:9px;
+  color:var(--sidebar-fg-muted); text-decoration:none; cursor:pointer; border:none; background:none;
+  width:100%; text-align:left; font-size:14px; font-weight:500;
+}
+.nav-item svg{width:18px; height:18px; flex:none;}
+.nav-item:hover{background:var(--pine-800); color:var(--sidebar-fg);}
+.nav-item.active{background:var(--pine-700); color:#fff;}
+.nav-item.active::before{content:""; }
+.nav-count{
+  margin-left:auto; background:var(--saffron-500); color:#3a2405; font-weight:700;
+  font-size:11px; padding:1px 7px; border-radius:99px; min-width:20px; text-align:center;
+}
+.sidebar-foot{padding:14px 18px 18px; border-top:1px solid rgba(255,255,255,.08);}
+.proto-tag{font-size:11px; color:var(--sidebar-fg-muted); display:flex; align-items:center; gap:6px;}
+.proto-dot{width:6px; height:6px; border-radius:50%; background:var(--saffron-500); flex:none;}
+
+.overlay{position:fixed; inset:0; background:rgba(10,20,15,.45); z-index:35; opacity:0; pointer-events:none; transition:opacity .2s;}
+body.sidebar-open .overlay{opacity:1; pointer-events:auto;}
+body.sidebar-open .sidebar{transform:translateX(0);}
+
+.main{margin-left:238px; flex:1; display:flex; flex-direction:column; min-width:0;}
+.topbar{
+  position:sticky; top:0; z-index:20; background:var(--paper-0); border-bottom:1px solid var(--border);
+  display:flex; align-items:center; gap:14px; padding:12px 28px;
+}
+.hamburger{display:none; background:none; border:1px solid var(--border-strong); border-radius:8px; width:36px; height:36px; align-items:center; justify-content:center; color:var(--ink-900); flex:none;}
+.hamburger svg{width:19px; height:19px;}
+.icon-btn{background:none; border:1px solid var(--border-strong); border-radius:8px; width:36px; height:36px; display:flex; align-items:center; justify-content:center; color:var(--ink-900); flex:none; cursor:pointer;}
+.icon-btn svg{width:17px; height:17px;}
+.icon-btn:hover{border-color:var(--saffron-500);}
+.search-wrap{position:relative; flex:1; max-width:460px;}
+.search-input{
+  width:100%; padding:9px 14px 9px 38px; border-radius:10px; border:1px solid var(--border-strong);
+  background:var(--surface); color:var(--ink-900); outline:none;
+}
+.search-input:focus{border-color:var(--saffron-500); box-shadow:0 0 0 3px var(--saffron-100);}
+.search-icon{position:absolute; left:12px; top:50%; transform:translateY(-50%); width:16px; height:16px; color:var(--ink-400); pointer-events:none;}
+.search-results{
+  position:absolute; top:calc(100% + 6px); left:0; right:0; background:var(--surface); border:1px solid var(--border);
+  border-radius:12px; box-shadow:var(--shadow-2); max-height:360px; overflow-y:auto; z-index:30; display:none;
+}
+.search-results.show{display:block;}
+.search-group-label{font-size:10.5px; text-transform:uppercase; letter-spacing:1.2px; color:var(--ink-400); padding:10px 14px 4px;}
+.search-result{display:flex; flex-direction:column; gap:1px; padding:8px 14px; cursor:pointer; border-bottom:1px solid var(--border);}
+.search-result:last-child{border-bottom:none;}
+.search-result:hover{background:var(--paper-50);}
+.search-result-title{font-weight:600; font-size:13.5px;}
+.search-result-sub{font-size:12px; color:var(--ink-600);}
+.search-empty{padding:16px 14px; font-size:13px; color:var(--ink-400);}
+.topbar-right{margin-left:auto; display:flex; align-items:center; gap:10px; font-size:13px; color:var(--ink-600); flex:none;}
+.today-pill{background:var(--paper-50); border:1px solid var(--border); border-radius:99px; padding:5px 12px; white-space:nowrap;}
+
+.content{padding:26px 28px 60px; flex:1;}
+.content-inner{max-width:1180px; margin:0 auto;}
+.page-head{display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin-bottom:18px; flex-wrap:wrap;}
+.page-title{font-size:26px; font-weight:600; margin:0;}
+.page-sub{color:var(--ink-600); font-size:13.5px; margin-top:3px;}
+
+/* ---------- buttons / badges / chips ---------- */
+.btn{
+  display:inline-flex; align-items:center; gap:7px; padding:8px 14px; border-radius:9px; border:1px solid var(--border-strong);
+  background:var(--surface); color:var(--ink-900); cursor:pointer; font-weight:600; font-size:13.5px; white-space:nowrap;
+}
+.btn svg{width:15px; height:15px;}
+.btn:hover{border-color:var(--saffron-500);}
+.btn-primary{background:var(--saffron-500); border-color:var(--saffron-500); color:#3a2405;}
+.btn-primary:hover{background:var(--saffron-600); border-color:var(--saffron-600); color:#fff;}
+.btn-ghost{border-color:transparent; background:transparent;}
+.btn-ghost:hover{background:var(--paper-50); border-color:var(--border);}
+.btn-sm{padding:5px 10px; font-size:12.5px; border-radius:7px;}
+.btn-block{width:100%; justify-content:center;}
+
+.badge{display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:700; padding:3px 10px; border-radius:99px; white-space:nowrap;}
+.badge svg{width:11px; height:11px;}
+.badge-ok{background:var(--ok-100); color:var(--ok-600);}
+.badge-warn{background:var(--warn-100); color:var(--warn-600);}
+.badge-danger{background:var(--danger-100); color:var(--danger-600);}
+.badge-info{background:var(--info-100); color:var(--info-600);}
+.badge-violet{background:var(--violet-100); color:var(--violet-600);}
+.badge-neutral{background:var(--paper-50); color:var(--ink-600); border:1px solid var(--border);}
+
+.pill-row{display:flex; gap:8px; flex-wrap:wrap;}
+.pill{padding:6px 13px; border-radius:99px; border:1px solid var(--border-strong); background:var(--surface); font-size:13px; font-weight:600; cursor:pointer; color:var(--ink-600);}
+.pill.active{background:var(--pine-900); border-color:var(--pine-900); color:#fff;}
+
+/* ---------- cards / panels ---------- */
+.card{background:var(--surface); border:1px solid var(--border); border-radius:14px;}
+.card-pad{padding:18px 20px;}
+.section-title{font-size:15px; font-weight:700; margin:0 0 2px;}
+.grid-2{display:grid; grid-template-columns:1.4fr 1fr; gap:18px; align-items:start;}
+
+.stat-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:14px; margin-bottom:22px;}
+.stat-tile{background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px 18px; display:flex; flex-direction:column; gap:6px;}
+.stat-top{display:flex; align-items:center; justify-content:space-between;}
+.stat-icon{width:32px; height:32px; border-radius:9px; display:flex; align-items:center; justify-content:center; flex:none;}
+.stat-icon svg{width:17px; height:17px;}
+.stat-value{font-size:28px; font-weight:700; font-family:"Fraunces",serif;}
+.stat-label{font-size:12.5px; color:var(--ink-600); font-weight:600;}
+
+.task-list{display:flex; flex-direction:column;}
+.task-row{display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--border);}
+.task-row:last-child{border-bottom:none;}
+.task-dot{width:9px; height:9px; border-radius:50%; flex:none;}
+.task-text{flex:1; font-size:13.8px;}
+.task-text b{font-weight:700;}
+.task-sub{font-size:12px; color:var(--ink-600); margin-top:1px;}
+
+.activity-row{display:flex; gap:11px; padding:10px 0; border-bottom:1px solid var(--border); font-size:13px;}
+.activity-row:last-child{border-bottom:none;}
+.activity-dot{width:7px; height:7px; border-radius:50%; background:var(--ok-600); margin-top:6px; flex:none;}
+.activity-text{color:var(--ink-900);}
+.activity-time{color:var(--ink-400); font-size:11.5px;}
+
+/* ---------- tables ---------- */
+.table-wrap{overflow-x:auto; border:1px solid var(--border); border-radius:14px; background:var(--surface);}
+table{width:100%; border-collapse:collapse; font-size:13.6px;}
+thead th{text-align:left; font-size:11.5px; text-transform:uppercase; letter-spacing:.6px; color:var(--ink-400); font-weight:700; padding:12px 16px; border-bottom:1px solid var(--border); white-space:nowrap;}
+tbody td{padding:13px 16px; border-bottom:1px solid var(--border); vertical-align:middle;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr.clickable{cursor:pointer;}
+tbody tr.clickable:hover{background:var(--paper-50);}
+td.num, th.num{text-align:right;}
+.cell-title{font-weight:600;}
+.cell-sub{font-size:12px; color:var(--ink-600);}
+.row-actions{display:flex; gap:6px; justify-content:flex-end;}
+
+.empty-state{padding:48px 20px; text-align:center; color:var(--ink-600);}
+.empty-state svg{width:34px; height:34px; color:var(--ink-400); margin-bottom:10px;}
+.empty-state-title{font-weight:700; color:var(--ink-900); margin-bottom:3px;}
+
+/* ---------- ficha / tabs ---------- */
+.back-link{display:inline-flex; align-items:center; gap:6px; color:var(--ink-600); font-size:13px; font-weight:600; margin-bottom:14px; cursor:pointer; border:none; background:none; padding:0;}
+.back-link svg{width:15px; height:15px;}
+.back-link:hover{color:var(--ink-900);}
+.ficha-head{display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:6px; flex-wrap:wrap;}
+.ficha-id{font-size:12px; color:var(--ink-400); font-weight:700; letter-spacing:.5px;}
+.ficha-title{font-size:23px; font-weight:600; margin:2px 0 6px;}
+.ficha-meta{display:flex; gap:8px; flex-wrap:wrap; align-items:center; color:var(--ink-600); font-size:13.5px;}
+.tabs{display:flex; gap:4px; border-bottom:1px solid var(--border); margin:20px 0 20px; overflow-x:auto;}
+.tab-btn{padding:10px 6px; margin-right:18px; border:none; background:none; color:var(--ink-600); font-weight:600; font-size:13.8px; cursor:pointer; border-bottom:2px solid transparent; white-space:nowrap;}
+.tab-btn.active{color:var(--ink-900); border-bottom-color:var(--saffron-500);}
+
+.kv-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:14px 24px;}
+.kv{padding:2px 0;}
+.kv-label{font-size:11.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--ink-400); font-weight:700; margin-bottom:3px;}
+.kv-value{font-size:14.5px; font-weight:600;}
+.kv-value a{color:var(--info-600); text-decoration:none;}
+.kv-value a:hover{text-decoration:underline;}
+.divider{height:1px; background:var(--border); margin:18px 0;}
+
+.chiprow{display:flex; gap:8px; flex-wrap:wrap;}
+.svc-card{border:1px solid var(--border); border-radius:12px; padding:14px 16px; display:flex; flex-direction:column; gap:6px;}
+.svc-name{font-weight:700; font-size:13.5px; display:flex; align-items:center; gap:8px;}
+.svc-name svg{width:16px; height:16px; color:var(--ink-600);}
+.svc-titular{font-size:12.5px; color:var(--ink-600);}
+.svc-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:12px;}
+
+/* ---------- drawer ---------- */
+.drawer-overlay{position:fixed; inset:0; background:rgba(10,20,15,.4); z-index:60; opacity:0; pointer-events:none; transition:opacity .2s;}
+.drawer-overlay.show{opacity:1; pointer-events:auto;}
+.drawer{
+  position:fixed; top:0; right:0; bottom:0; width:min(400px,92vw); background:var(--surface); z-index:61;
+  box-shadow:var(--shadow-2); transform:translateX(100%); transition:transform .22s ease; padding:22px; overflow-y:auto;
+}
+.drawer-overlay.show .drawer{transform:translateX(0);}
+.drawer-close{position:absolute; top:16px; right:16px; background:var(--paper-50); border:1px solid var(--border); border-radius:8px; width:30px; height:30px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--ink-900);}
+.drawer-close svg{width:15px; height:15px;}
+.avatar{width:46px; height:46px; border-radius:12px; background:var(--pine-900); color:var(--saffron-500); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:17px; font-family:"Fraunces",serif;}
+
+/* ---------- deudores ---------- */
+.debtor-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(270px,1fr)); gap:14px;}
+.debtor-card{border:1px solid var(--border); border-radius:14px; padding:16px 18px; background:var(--surface); display:flex; flex-direction:column; gap:8px;}
+.debtor-amount{font-size:22px; font-weight:700; font-family:"Fraunces",serif; color:var(--danger-600);}
+.debtor-row{display:flex; justify-content:space-between; gap:8px;}
+
+/* ---------- liquidaciones ---------- */
+.liq-row{border-bottom:1px solid var(--border);}
+.liq-row:last-child{border-bottom:none;}
+.liq-head{display:flex; align-items:center; gap:14px; padding:15px 18px; cursor:pointer;}
+.liq-head:hover{background:var(--paper-50);}
+.liq-chevron{width:16px; height:16px; color:var(--ink-400); transition:transform .15s; flex:none;}
+.liq-row.open .liq-chevron{transform:rotate(90deg);}
+.liq-detail{display:none; padding:0 18px 18px 48px;}
+.liq-row.open .liq-detail{display:block;}
+.liq-line{display:flex; justify-content:space-between; padding:6px 0; font-size:13.5px; border-bottom:1px dashed var(--border);}
+.liq-line:last-child{border-bottom:none; font-weight:700; padding-top:10px;}
+.liq-total-badge{margin-left:auto; font-weight:700; font-family:"Fraunces",serif; font-size:16px;}
+
+/* ---------- misc ---------- */
+.note-banner{display:flex; gap:10px; align-items:flex-start; background:var(--warn-100); color:var(--warn-600); border-radius:10px; padding:12px 14px; font-size:13px; font-weight:600;}
+.note-banner svg{width:17px; height:17px; flex:none; margin-top:1px;}
+.note-banner.info{background:var(--info-100); color:var(--info-600);}
+.toast{position:fixed; bottom:22px; left:50%; transform:translate(-50%,20px); background:var(--pine-900); color:#fff; padding:11px 18px; border-radius:10px; font-size:13.5px; font-weight:600; box-shadow:var(--shadow-2); opacity:0; transition:all .2s; z-index:80; display:flex; align-items:center; gap:8px;}
+.toast.show{opacity:1; transform:translate(-50%,0);}
+.toast svg{width:16px; height:16px; color:var(--saffron-500);}
+.toast-undo{background:none; border:none; color:var(--saffron-500); font-weight:700; text-decoration:underline; cursor:pointer; padding:0; margin-left:4px; font-size:13.5px;}
+
+.modal-overlay{position:fixed; inset:0; background:rgba(10,20,15,.45); z-index:70; opacity:0; pointer-events:none; transition:opacity .2s; display:flex; align-items:center; justify-content:center; padding:20px;}
+.modal-overlay.show{opacity:1; pointer-events:auto;}
+.modal-box{background:var(--surface); border-radius:14px; box-shadow:var(--shadow-2); padding:22px; width:min(440px,100%); max-height:90vh; overflow-y:auto; transform:translateY(10px); transition:transform .2s;}
+.modal-box.wide{width:min(680px,100%);}
+.modal-overlay.show .modal-box{transform:translateY(0);}
+
+@media print {
+  body > *:not(#modalOverlay){ display:none !important; }
+  #modalOverlay{ position:static !important; background:none !important; opacity:1 !important; padding:0 !important; }
+  #modalOverlay .modal-box{ box-shadow:none !important; width:100% !important; max-height:none !important; }
+  .modal-box > *:not(.receipt-print){ display:none !important; }
+}
+
+/* ---------- recibo formal ---------- */
+.receipt-box{display:flex; border:2px solid #1a1a1a; background:#fff; color:#1a1a1a; font-family:"Public Sans",sans-serif;}
+.receipt-side{
+  writing-mode:vertical-rl; transform:rotate(180deg); border-right:2px solid #1a1a1a;
+  padding:14px 8px; font-weight:800; letter-spacing:3px; font-size:14px; white-space:nowrap;
+  display:flex; align-items:center; justify-content:center; flex:none;
+}
+.receipt-body{flex:1; padding:14px 18px;}
+.receipt-row{display:flex; align-items:baseline; gap:8px; border-bottom:1px solid #1a1a1a; padding:7px 0; font-size:13px;}
+.receipt-row .rl{font-weight:700; white-space:nowrap; flex:none;}
+.receipt-row .rv{flex:1; text-align:left;}
+.receipt-breakdown{display:flex; gap:18px; padding:12px 0 6px; font-size:12.5px;}
+.receipt-breakdown > div{flex:1; text-align:center; border:1px solid #1a1a1a; border-radius:6px; padding:8px;}
+.receipt-breakdown .kv-label{color:#444;}
+.receipt-breakdown .tnum{font-weight:700; font-size:14px; margin-top:2px;}
+.receipt-sign{text-align:right; margin-top:24px; font-size:13px;}
+
+.form-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:14px;}
+.field{display:flex; flex-direction:column; gap:5px;}
+.field label{font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:var(--ink-400);}
+.field input,.field select{padding:9px 12px; border:1px solid var(--border-strong); border-radius:9px; background:var(--paper-50); color:var(--ink-900);}
+.staff-row{display:flex; align-items:center; gap:12px; padding:11px 0; border-bottom:1px solid var(--border);}
+.staff-row:last-child{border-bottom:none;}
+
+@media (max-width:860px){
+  .sidebar{transform:translateX(-100%);}
+  .main{margin-left:0;}
+  .hamburger{display:flex;}
+  .content{padding:18px 16px 50px;}
+  .stat-grid{grid-template-columns:repeat(2,1fr);}
+  .grid-2{grid-template-columns:1fr;}
+  .kv-grid{grid-template-columns:1fr;}
+  .svc-grid{grid-template-columns:repeat(2,1fr);}
+  .form-grid{grid-template-columns:1fr;}
+  .today-pill{display:none;}
+}
+</style>
+
+<div class="overlay" id="navOverlay"></div>
+<div class="shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#0d3d33" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="9" r="5.2"/><path d="M13 13l7 7M17 17l2.3-2.3M19.3 19.3l1.7 1.7"/></svg>
+      </div>
+      <div class="brand-text">
+        <div class="brand-name">CARUSO</div>
+        <div class="brand-sub">propiedades</div>
+      </div>
+    </div>
+    <nav class="nav" id="navList"></nav>
+    <div class="sidebar-foot">
+      <div class="proto-tag"><span class="proto-dot"></span>Prototipo &middot; datos de ejemplo</div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <button class="hamburger" id="hamburgerBtn" aria-label="Abrir menú">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <button class="icon-btn" id="backBtn" aria-label="Volver" title="Volver">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <div class="search-wrap">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input class="search-input" id="globalSearch" placeholder="Buscar dirección, propietario, inquilino, ID..." autocomplete="off">
+        <div class="search-results" id="searchResults"></div>
+      </div>
+      <div class="topbar-right">
+        <span class="today-pill" id="todayPill"></span>
+      </div>
+    </div>
+    <div class="content"><div class="content-inner" id="view"></div></div>
+  </div>
+</div>
+
+<div class="drawer-overlay" id="drawerOverlay"><div class="drawer" id="drawer"></div></div>
+<div class="modal-overlay" id="modalOverlay"><div class="modal-box"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================== ICONS ============================== */
+const ICONS = {
+  dashboard:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="5" rx="1.5"/><rect x="13" y="10" width="8" height="11" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/></svg>',
+  propiedades:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.5L12 4l8 6.5"/><path d="M6 9.5V20h12V9.5"/><rect x="10" y="13" width="4" height="7"/></svg>',
+  personas:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.4"/><path d="M2.7 20c.8-3.4 3.2-5.3 6.3-5.3s5.5 1.9 6.3 5.3"/><circle cx="17.5" cy="8.5" r="2.6"/><path d="M16 14.9c2.5.4 4.1 2 4.7 4.5"/></svg>',
+  contratos:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h8l4 4v14H7z"/><path d="M15 3v4h4"/><path d="M9.5 12.5h6M9.5 16h6"/></svg>',
+  cobranzas:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8.5" cy="8.5" r="5"/><circle cx="15" cy="15" r="5"/></svg>',
+  deudores:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9.5 17H2.5z"/><path d="M12 10v4"/><circle cx="12" cy="17" r=".4" fill="currentColor"/></svg>',
+  servicios:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg>',
+  liquidaciones:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h4"/></svg>',
+  arreglos:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7a4.5 4.5 0 0 1-6.2 4.2L7 19l-2-2 7.8-7.8A4.5 4.5 0 0 1 17 3l-3 3 1.7 1.7 3-3c.3.5.3 1.9.3 2.3z"/></svg>',
+  configuracion:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 13.5a1.7 1.7 0 0 0 .35 1.9l.05.05a2 2 0 1 1-2.9 2.9l-.05-.05a1.7 1.7 0 0 0-1.9-.35 1.7 1.7 0 0 0-1 1.55V19.6a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.55 1.7 1.7 0 0 0-1.9.35l-.05.05a2 2 0 1 1-2.9-2.9l.05-.05a1.7 1.7 0 0 0 .35-1.9 1.7 1.7 0 0 0-1.55-1H4.4a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.55-1.1 1.7 1.7 0 0 0-.35-1.9l-.05-.05a2 2 0 1 1 2.9-2.9l.05.05a1.7 1.7 0 0 0 1.9.35H10.5a1.7 1.7 0 0 0 1-1.55V4.4a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.9-.35l.05-.05a2 2 0 1 1 2.9 2.9l-.05.05a1.7 1.7 0 0 0-.35 1.9V10.5a1.7 1.7 0 0 0 1.55 1H19.6a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.55 1z"/></svg>',
+  search:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>',
+  back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>',
+  x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>',
+  chevron:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>',
+  alert:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><circle cx="12" cy="16.3" r=".4" fill="currentColor"/><path d="M10.6 3.9L2.4 18.3A1.6 1.6 0 0 0 3.8 20.7h16.4a1.6 1.6 0 0 0 1.4-2.4L13.4 3.9a1.6 1.6 0 0 0-2.8 0z"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>',
+  droplet:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg>',
+  bolt:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4 14h6l-1 8 9-12h-6z"/></svg>',
+  flame:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2s-3 4-3 7a3 3 0 0 0 6 0c0 1.3-1 2-1 3.2a2 2 0 0 0 3.8.9C18.6 11.5 19 10 19 8.5 19 5 15 2 12 2z"/><path d="M9.5 14a2.5 2.5 0 0 0 5 0c0-1.2-.7-1.8-1.3-2.6"/></svg>',
+  bank:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M4 21V10M20 21V10M2 10l10-6 10 6M6 10v11M18 10v11M10 14v4M14 14v4"/></svg>',
+  printer:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6"/><rect x="4" y="9" width="16" height="8" rx="1.5"/><path d="M6 14h12v7H6z"/></svg>',
+  plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  phone:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5c0 8.3 6.7 15 15 15l2-4.2-5-2-1.6 1.6a12 12 0 0 1-5.8-5.8L10.2 8l-2-5z"/></svg>',
+  mail:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>',
+  doc:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/></svg>',
+  inbox:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h5l2 3h4l2-3h5"/><path d="M5 4h14l2 8v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-6z"/></svg>',
+};
+const icon=(n)=>ICONS[n]||'';
+
+/* ============================== DATA ============================== */
+const HOY = new Date('2026-09-14T00:00:00');
+const TODAY_ISO = '2026-09-14';
+const PERIODO_ACTUAL = '2026-09';
+let INDICES = { ICL: 3.4, IPC: 4.1 }; // % publicado este mes, editable a mano en Cobranzas > Aumentos
+const roundTo500 = n => Math.round(n/500)*500;
+function addMonths(dateStr, n){
+  const d = new Date(dateStr+'T00:00:00');
+  d.setMonth(d.getMonth()+n);
+  return d.toISOString().slice(0,10);
+}
+
+const persons = [
+  {id:'PS01', nombre:'Carlos', apellido:'Pérez', dni:'18.334.221', telefono:'11-4455-2201', email:'carlos.perez@gmail.com', roles:['Propietario']},
+  {id:'PS02', nombre:'Marta', apellido:'Gómez', dni:'20.115.884', telefono:'11-3322-9087', email:'marta.gomez@hotmail.com', roles:['Propietario']},
+  {id:'PS03', nombre:'Roberto', apellido:'Díaz', dni:'16.887.320', telefono:'11-6644-1123', email:'r.diaz@yahoo.com.ar', roles:['Propietario']},
+  {id:'PS04', nombre:'Elena', apellido:'Suárez', dni:'22.556.990', telefono:'11-5522-8834', email:'elena.suarez@gmail.com', roles:['Propietario']},
+  {id:'PS05', nombre:'Juan', apellido:'Fernández', dni:'34.221.887', telefono:'11-2211-7765', email:'juanfernandez88@gmail.com', roles:['Inquilino']},
+  {id:'PS06', nombre:'Laura', apellido:'Ibáñez', dni:'31.998.442', telefono:'11-4432-1190', email:'laura.ibanez@gmail.com', roles:['Inquilino']},
+  {id:'PS07', nombre:'Diego', apellido:'Ramírez', dni:'29.887.112', telefono:'11-3345-6678', email:'diego.ramirez@outlook.com', roles:['Inquilino']},
+  {id:'PS08', nombre:'Sofía', apellido:'Molina', dni:'36.774.221', telefono:'11-2233-9981', email:'sofia.molina@gmail.com', roles:['Inquilino']},
+  {id:'PS09', nombre:'Martín', apellido:'Acosta', dni:'27.665.310', telefono:'11-6677-2234', email:'martin.acosta@gmail.com', roles:['Inquilino']},
+  {id:'PS10', nombre:'Valeria', apellido:'Torres', dni:'33.112.887', telefono:'11-4499-1123', email:'valeria.torres@gmail.com', roles:['Inquilino']},
+  {id:'PS11', nombre:'Hugo', apellido:'Benítez', dni:'25.443.998', telefono:'11-5566-7789', email:'hugo.benitez@gmail.com', roles:['Inquilino']},
+  {id:'PS12', nombre:'Patricia', apellido:'Ledesma', dni:'19.887.665', telefono:'11-3311-4456', email:'patricia.ledesma@gmail.com', roles:['Inquilino']},
+  {id:'PS13', nombre:'Fernando', apellido:'Castro', dni:'30.556.221', telefono:'11-2245-8890', email:'fernando.castro@gmail.com', roles:['Garante']},
+  {id:'PS14', nombre:'Gabriela', apellido:'Ríos', dni:'28.334.556', telefono:'11-6689-3321', email:'gabriela.rios@gmail.com', roles:['Garante']},
+  {id:'PS15', nombre:'Andrés', apellido:'Villalba', dni:'35.887.221', telefono:'11-4467-9982', email:'andres.villalba@gmail.com', roles:['Inquilino']},
+  {id:'PS16', nombre:'Cecilia', apellido:'Herrera', dni:'32.665.887', telefono:'11-3398-2211', email:'cecilia.herrera@gmail.com', roles:['Compradora']},
+  {id:'PS17', nombre:'Nicolás', apellido:'Vega', dni:'31.221.884', telefono:'11-2298-4471', email:'nicolas.vega@gmail.com', roles:['Inquilino']},
+];
+const P = id => persons.find(p=>p.id===id);
+const nombreCompleto = p => p ? `${p.nombre} ${p.apellido}` : '—';
+
+const properties = [
+  {id:'PR01', tipo:'Casa', direccion:'Belgrano 1234', localidad:'Paso del Rey', dormitorios:3, ambientes:4, banos:2, cochera:true, patio:true, m2:140, estado:'Alquilada', ownerId:'PS04', tenantId:'PS05', obs:''},
+  {id:'PR02', tipo:'Duplex', direccion:'Gaona 450', localidad:'Moreno', dormitorios:2, ambientes:3, banos:1, cochera:false, terraza:true, m2:78, estado:'Alquilada', ownerId:'PS02', tenantId:'PS06', obs:''},
+  {id:'PR03', tipo:'Departamento', direccion:'Juan XXIII 88, 1°B', localidad:'Paso del Rey', dormitorios:1, ambientes:2, banos:1, cochera:false, m2:42, estado:'Disponible', ownerId:'PS03', tenantId:null, obs:''},
+  {id:'PR04', tipo:'Local comercial', direccion:'San Martín 900', localidad:'Moreno', dormitorios:0, ambientes:1, banos:1, cochera:false, m2:95, estado:'Alquilada', ownerId:'PS02', tenantId:'PS07', obs:'Rubro: kiosco / despensa'},
+  {id:'PR05', tipo:'Casa', direccion:'Rivadavia 2200', localidad:'Francisco Álvarez', dormitorios:3, ambientes:5, banos:2, cochera:true, patio:true, m2:180, estado:'En venta', ownerId:'PS04', tenantId:null, obs:'Publicada en portales desde julio 2026'},
+  {id:'PR06', tipo:'Duplex', direccion:'Sarmiento 340', localidad:'Paso del Rey', dormitorios:2, ambientes:3, banos:1, cochera:true, m2:75, estado:'Alquilada', ownerId:'PS01', tenantId:'PS08', obs:''},
+  {id:'PR07', tipo:'Duplex', direccion:'Sarmiento 342', localidad:'Paso del Rey', dormitorios:2, ambientes:3, banos:1, cochera:true, m2:75, estado:'Alquilada', ownerId:'PS01', tenantId:'PS09', obs:''},
+  {id:'PR08', tipo:'Duplex', direccion:'Sarmiento 344', localidad:'Paso del Rey', dormitorios:2, ambientes:3, banos:1, cochera:true, m2:75, estado:'Disponible', ownerId:'PS01', tenantId:null, obs:''},
+  {id:'PR09', tipo:'Duplex', direccion:'Sarmiento 346', localidad:'Paso del Rey', dormitorios:2, ambientes:3, banos:1, cochera:true, m2:76, estado:'Alquilada', ownerId:'PS01', tenantId:'PS12', obs:''},
+  {id:'PR10', tipo:'Casa', direccion:'Moreno 1567', localidad:'La Reja', dormitorios:2, ambientes:3, banos:1, patio:true, m2:95, estado:'Alquilada', ownerId:'PS02', tenantId:'PS10', obs:''},
+  {id:'PR11', tipo:'Departamento', direccion:'Belgrano 780, 3°A', localidad:'Moreno', dormitorios:1, ambientes:2, banos:1, m2:48, estado:'Reservada', ownerId:'PS03', tenantId:null, obs:'Reservada por Cecilia Herrera (PS16) — seña recibida'},
+  {id:'PR12', tipo:'Casa', direccion:'Alsina 233', localidad:'Paso del Rey', dormitorios:2, ambientes:3, banos:1, patio:true, m2:88, estado:'En mantenimiento', ownerId:'PS04', tenantId:null, obs:'Pintura general y arreglo de techo antes de re-alquilar'},
+  {id:'PR13', tipo:'PH', direccion:'Güemes 120', localidad:'Moreno', dormitorios:2, ambientes:3, banos:1, terraza:true, m2:65, estado:'Alquilada', ownerId:'PS02', tenantId:'PS15', obs:''},
+  {id:'PR14', tipo:'Casa', direccion:'25 de Mayo 455', localidad:'Paso del Rey', dormitorios:3, ambientes:4, banos:2, cochera:true, patio:true, m2:130, estado:'Alquilada', ownerId:'PS03', tenantId:'PS17', obs:''},
+  {id:'PR15', tipo:'Duplex', direccion:'Colón 690', localidad:'Moreno', dormitorios:2, ambientes:3, banos:1, m2:74, estado:'Alquilada', ownerId:'PS03', tenantId:'PS11', obs:''},
+  {id:'PR16', tipo:'Local', direccion:'Yrigoyen 310', localidad:'Paso del Rey', dormitorios:0, ambientes:1, banos:1, m2:60, estado:'Baja', ownerId:'PS04', tenantId:null, obs:'Dado de baja — demolición prevista'},
+];
+const PR = id => properties.find(p=>p.id===id);
+
+const contracts = [
+  {id:'CT01', propertyId:'PR01', ownerId:'PS04', tenantId:'PS05', tenantId2:null, guarantorId:'PS13', inicio:'2025-03-01', fin:'2027-02-28', alquilerInicial:520000, alquilerActual:610000, metodo:'ICL', tipoAumento:'ICL', frecuencia:3, proxAct:'2026-12-01', estado:'Activo', deposito:610000, expensas:{aplica:true, monto:22000}, servicios:{aplica:false},
+    historial:[{fecha:'2025-06-01',anterior:520000,nuevo:560000,indice:'ICL +7,7%'},{fecha:'2025-09-01',anterior:560000,nuevo:610000,indice:'ICL +8,9%'}]},
+  {id:'CT02', propertyId:'PR02', ownerId:'PS02', tenantId:'PS06', tenantId2:null, guarantorId:null, inicio:'2024-10-01', fin:'2026-09-30', alquilerInicial:450000, alquilerActual:690000, metodo:'IPC', tipoAumento:'IPC', frecuencia:4, proxAct:'2026-09-01', estado:'Próximo a vencer', deposito:690000, expensas:{aplica:false}, servicios:{aplica:false},
+    historial:[{fecha:'2026-01-01',anterior:610000,nuevo:650000,indice:'IPC +6,6%'},{fecha:'2026-05-01',anterior:650000,nuevo:690000,indice:'IPC +6,2%'}]},
+  {id:'CT04', propertyId:'PR04', ownerId:'PS02', tenantId:'PS07', tenantId2:null, guarantorId:null, inicio:'2023-06-01', fin:'2028-05-31', alquilerInicial:300000, alquilerActual:720000, metodo:'Porcentaje fijo (10%)', tipoAumento:'Fijo', pctFijo:10, frecuencia:6, proxAct:'2026-12-01', estado:'Activo', deposito:720000, expensas:{aplica:false}, servicios:{aplica:false}, historial:[]},
+  {id:'CT05', propertyId:'PR06', ownerId:'PS01', tenantId:'PS08', tenantId2:null, guarantorId:null, inicio:'2025-01-15', fin:'2027-01-14', alquilerInicial:480000, alquilerActual:560000, metodo:'ICL', tipoAumento:'ICL', frecuencia:3, proxAct:'2026-10-15', estado:'Activo', deposito:560000, expensas:{aplica:false}, servicios:{aplica:true}, historial:[{fecha:'2026-04-15',anterior:520000,nuevo:560000,indice:'ICL +7,7%'}]},
+  {id:'CT06', propertyId:'PR07', ownerId:'PS01', tenantId:'PS09', tenantId2:null, guarantorId:null, inicio:'2025-02-01', fin:'2027-01-31', alquilerInicial:480000, alquilerActual:560000, metodo:'ICL', tipoAumento:'ICL', frecuencia:3, proxAct:'2026-11-01', estado:'Activo', deposito:560000, expensas:{aplica:false}, servicios:{aplica:false}, historial:[]},
+  {id:'CT07', propertyId:'PR09', ownerId:'PS01', tenantId:'PS12', tenantId2:null, guarantorId:null, inicio:'2025-05-01', fin:'2027-04-30', alquilerInicial:470000, alquilerActual:545000, metodo:'ICL', tipoAumento:'ICL', frecuencia:3, proxAct:'2026-11-01', estado:'Activo', deposito:545000, expensas:{aplica:false}, servicios:{aplica:false}, historial:[]},
+  {id:'CT08', propertyId:'PR10', ownerId:'PS02', tenantId:'PS10', tenantId2:null, guarantorId:'PS14', inicio:'2024-08-01', fin:'2027-07-31', alquilerInicial:380000, alquilerActual:520000, metodo:'IPC', tipoAumento:'IPC', frecuencia:4, proxAct:'2026-12-01', estado:'Activo', deposito:520000, expensas:{aplica:false}, servicios:{aplica:false}, historial:[{fecha:'2026-01-01',anterior:470000,nuevo:520000,indice:'IPC +10,6%'}]},
+  {id:'CT09', propertyId:'PR13', ownerId:'PS02', tenantId:'PS15', tenantId2:null, guarantorId:null, inicio:'2025-09-01', fin:'2027-08-31', alquilerInicial:400000, alquilerActual:470000, metodo:'Personalizado', tipoAumento:'Personalizado', frecuencia:6, proxAct:'2027-03-01', estado:'Activo', deposito:470000, expensas:{aplica:true, monto:15000}, servicios:{aplica:true}, historial:[]},
+  {id:'CT10', propertyId:'PR14', ownerId:'PS03', tenantId:'PS17', tenantId2:null, guarantorId:null, inicio:'2024-12-01', fin:'2026-11-30', alquilerInicial:500000, alquilerActual:780000, metodo:'ICL', tipoAumento:'ICL', frecuencia:3, proxAct:'2026-09-01', estado:'Activo', deposito:780000, expensas:{aplica:false}, servicios:{aplica:false},
+    historial:[{fecha:'2025-12-01',anterior:660000,nuevo:720000,indice:'ICL +9,1%'},{fecha:'2026-03-01',anterior:720000,nuevo:780000,indice:'ICL +8,3%'}]},
+  {id:'CT11', propertyId:'PR15', ownerId:'PS03', tenantId:'PS11', tenantId2:null, guarantorId:null, inicio:'2025-04-01', fin:'2027-03-31', alquilerInicial:430000, alquilerActual:500000, metodo:'IPC', tipoAumento:'IPC', frecuencia:4, proxAct:'2026-12-01', estado:'Activo', deposito:500000, expensas:{aplica:false}, servicios:{aplica:false}, historial:[]},
+];
+const CT = id => contracts.find(c=>c.id===id);
+const contractByProperty = pid => contracts.find(c=>c.propertyId===pid);
+const contractsByOwner = oid => contracts.filter(c=>c.ownerId===oid);
+const pendienteActualizacion = c => new Date(c.proxAct+'T00:00:00') <= HOY;
+
+const payments = [
+  // CT01 (paga expensas)
+  {id:'PG1a', contractId:'CT01', periodo:'2026-07', importe:610000, expensas:22000, estado:'Pagado', vencimiento:'2026-07-10', fechaPago:'2026-07-06'},
+  {id:'PG1b', contractId:'CT01', periodo:'2026-08', importe:610000, expensas:22000, estado:'Pagado', vencimiento:'2026-08-10', fechaPago:'2026-08-07'},
+  {id:'PG1c', contractId:'CT01', periodo:'2026-09', importe:610000, expensas:22000, estado:'Pagado', vencimiento:'2026-09-10', fechaPago:'2026-09-03'},
+  // CT02
+  {id:'PG2a', contractId:'CT02', periodo:'2026-07', importe:690000, estado:'Pagado', vencimiento:'2026-07-10', fechaPago:'2026-07-09'},
+  {id:'PG2b', contractId:'CT02', periodo:'2026-08', importe:690000, estado:'Pagado', vencimiento:'2026-08-10', fechaPago:'2026-08-10'},
+  {id:'PG2c', contractId:'CT02', periodo:'2026-09', importe:690000, estado:'Pendiente', vencimiento:'2026-09-20', fechaPago:null},
+  // CT04
+  {id:'PG4a', contractId:'CT04', periodo:'2026-07', importe:720000, estado:'Pagado', vencimiento:'2026-07-10', fechaPago:'2026-07-08'},
+  {id:'PG4b', contractId:'CT04', periodo:'2026-08', importe:720000, estado:'Pagado', vencimiento:'2026-08-10', fechaPago:'2026-08-08'},
+  {id:'PG4c', contractId:'CT04', periodo:'2026-09', importe:720000, estado:'Pagado', vencimiento:'2026-09-10', fechaPago:'2026-09-08'},
+  // CT05 (paga servicios que se reintegran al propietario, monto variable por mes)
+  {id:'PG5a', contractId:'CT05', periodo:'2026-07', importe:560000, servicios:17800, estado:'Pagado', vencimiento:'2026-07-10', fechaPago:'2026-07-05'},
+  {id:'PG5b', contractId:'CT05', periodo:'2026-08', importe:560000, servicios:19200, estado:'Pagado', vencimiento:'2026-08-10', fechaPago:'2026-08-06'},
+  {id:'PG5c', contractId:'CT05', periodo:'2026-09', importe:560000, servicios:18500, estado:'Pagado', vencimiento:'2026-09-10', fechaPago:'2026-09-10'},
+  // CT06 (parcial en sept)
+  {id:'PG6a', contractId:'CT06', periodo:'2026-07', importe:560000, estado:'Pagado', vencimiento:'2026-07-10', fechaPago:'2026-07-07'},
+  {id:'PG6b', contractId:'CT06', periodo:'2026-08', importe:560000, estado:'Pagado', vencimiento:'2026-08-10', fechaPago:'2026-08-09'},
+  {id:'PG6c', contractId:'CT06', periodo:'2026-09', importe:560000, estado:'Parcial', vencimiento:'2026-09-10', fechaPago:'2026-09-12', pagado:300000},
+  // CT07
+  {id:'PG7a', contractId:'CT07', periodo:'2026-07', importe:545000, estado:'Pagado', vencimiento:'2026-07-10', fechaPago:'2026-07-05'},
+  {id:'PG7b', contractId:'CT07', periodo:'2026-08', importe:545000, estado:'Pagado', vencimiento:'2026-08-10', fechaPago:'2026-08-05'},
+  {id:'PG7c', contractId:'CT07', periodo:'2026-09', importe:545000, estado:'Pagado', vencimiento:'2026-09-10', fechaPago:'2026-09-05'},
+  // CT08 (deudor 2 periodos)
+  {id:'PG8a', contractId:'CT08', periodo:'2026-07', importe:520000, estado:'Pagado', vencimiento:'2026-07-10', fechaPago:'2026-07-11'},
+  {id:'PG8b', contractId:'CT08', periodo:'2026-08', importe:520000, estado:'Vencido', vencimiento:'2026-08-10', fechaPago:null},
+  {id:'PG8c', contractId:'CT08', periodo:'2026-09', importe:520000, estado:'Vencido', vencimiento:'2026-09-10', fechaPago:null},
+  // CT09 (paga expensas y servicios)
+  {id:'PG9a', contractId:'CT09', periodo:'2026-07', importe:470000, expensas:15000, servicios:8700, estado:'Pagado', vencimiento:'2026-07-10', fechaPago:'2026-07-03'},
+  {id:'PG9b', contractId:'CT09', periodo:'2026-08', importe:470000, expensas:15000, servicios:9200, estado:'Pagado', vencimiento:'2026-08-10', fechaPago:'2026-08-02'},
+  {id:'PG9c', contractId:'CT09', periodo:'2026-09', importe:470000, expensas:15000, servicios:9500, estado:'Pagado', vencimiento:'2026-09-10', fechaPago:'2026-09-02'},
+  // CT10 (en gestión)
+  {id:'PG10a', contractId:'CT10', periodo:'2026-07', importe:780000, estado:'Pagado', vencimiento:'2026-07-10', fechaPago:'2026-07-14'},
+  {id:'PG10b', contractId:'CT10', periodo:'2026-08', importe:780000, estado:'Pagado', vencimiento:'2026-08-10', fechaPago:'2026-08-15'},
+  {id:'PG10c', contractId:'CT10', periodo:'2026-09', importe:780000, estado:'En gestión', vencimiento:'2026-09-10', fechaPago:null},
+  // CT11 (deudor 1 periodo)
+  {id:'PG11a', contractId:'CT11', periodo:'2026-07', importe:500000, estado:'Pagado', vencimiento:'2026-07-10', fechaPago:'2026-07-08'},
+  {id:'PG11b', contractId:'CT11', periodo:'2026-08', importe:500000, estado:'Pagado', vencimiento:'2026-08-10', fechaPago:'2026-08-09'},
+  {id:'PG11c', contractId:'CT11', periodo:'2026-09', importe:500000, estado:'Vencido', vencimiento:'2026-09-05', fechaPago:null},
+];
+const paymentsByContract = cid => payments.filter(p=>p.contractId===cid).sort((a,b)=>a.periodo.localeCompare(b.periodo));
+const pagoTotal = p => p.importe + (p.expensas||0) + (p.servicios||0);
+const saldoPendiente = p => pagoTotal(p) - (p.estado==='Parcial' ? (p.pagado||0) : 0);
+
+function computeDebtors(){
+  const overdue = payments.filter(p=>p.estado==='Vencido');
+  const byContract = {};
+  overdue.forEach(p=>{
+    (byContract[p.contractId] ||= []).push(p);
+  });
+  return Object.entries(byContract).map(([cid, pays])=>{
+    const c = CT(cid); const prop = PR(c.propertyId); const tenant = P(c.tenantId);
+    const total = pays.reduce((s,p)=>s+pagoTotal(p),0);
+    const oldest = pays.reduce((a,b)=> a.vencimiento < b.vencimiento ? a : b);
+    const dias = Math.round((HOY - new Date(oldest.vencimiento+'T00:00:00'))/86400000);
+    return {contractId:cid, property:prop, tenant, periodos:pays.length, total, dias};
+  }).sort((a,b)=>b.total-a.total);
+}
+
+const services = {
+  PR01:{gas:{titular:'PS05',estado:'Al día'}, luz:{titular:'PS05',estado:'Al día'}, agua:{titular:'PS05',estado:'Al día'}, municipal:{titular:'PS04',estado:'Al día'}},
+  PR02:{gas:{titular:'PS06',estado:'Al día'}, luz:{titular:'PS06',estado:'Al día'}, agua:{titular:'PS06',estado:'Al día'}, municipal:{titular:'PS02',estado:'Al día'}},
+  PR04:{gas:{titular:'PS07',estado:'Al día'}, luz:{titular:'PS07',estado:'Al día'}, agua:{titular:'PS07',estado:'Al día'}, municipal:{titular:'PS02',estado:'Al día'}},
+  PR06:{gas:{titular:'PS08',estado:'Al día'}, luz:{titular:'PS08',estado:'Al día'}, agua:{titular:'PS08',estado:'Al día'}, municipal:{titular:'PS01',estado:'Al día'}},
+  PR07:{gas:{titular:'PS09',estado:'Al día'}, luz:{titular:'PS09',estado:'Al día'}, agua:{titular:'PS09',estado:'Al día'}, municipal:{titular:'PS01',estado:'Al día'}},
+  PR09:{gas:{titular:'PS12',estado:'Al día'}, luz:{titular:'PS12',estado:'Al día'}, agua:{titular:'PS12',estado:'Al día'}, municipal:{titular:'PS01',estado:'Al día'}},
+  PR10:{gas:{titular:'PS10',estado:'Al día'}, luz:{titular:'PS10',estado:'Al día'}, agua:{titular:'PS10',estado:'Al día'}, municipal:{titular:'PS02',estado:'Al día'}},
+  PR12:{gas:{titular:'—',estado:'Pendiente cambio de titularidad'}, luz:{titular:'—',estado:'Pendiente cambio de titularidad'}, agua:{titular:'—',estado:'Pendiente cambio de titularidad'}, municipal:{titular:'PS04',estado:'Al día'}},
+  PR13:{gas:{titular:'PS15',estado:'Al día'}, luz:{titular:'PS15',estado:'Al día'}, agua:{titular:'PS15',estado:'Al día'}, municipal:{titular:'PS02',estado:'Al día'}},
+  PR14:{gas:{titular:'PS17',estado:'Al día'}, luz:{titular:'PS17',estado:'Al día'}, agua:{titular:'PS17',estado:'Al día'}, municipal:{titular:'PS03',estado:'Al día'}},
+  PR15:{gas:{titular:'PS11',estado:'Al día'}, luz:{titular:'PS11',estado:'Al día'}, agua:{titular:'PS11',estado:'Al día'}, municipal:{titular:'PS03',estado:'Al día'}},
+  PR16:{gas:{titular:'—',estado:'Pendiente cambio de titularidad'}, luz:{titular:'—',estado:'Pendiente cambio de titularidad'}, agua:{titular:'—',estado:'Baja de servicio'}, municipal:{titular:'PS04',estado:'Al día'}},
+};
+
+const repairs = [
+  {id:'AR01', propertyId:'PR07', descripcion:'Pérdida en la cañería de la cocina', fechaAviso:'2026-09-07', especialista:'Plomería Ríos', estado:'Resuelto', costo:15000, fechaResuelto:'2026-09-09', pagadoPor:'Propietario', urgente:false, obs:'', documentos:[{nombre:'foto_cañeria_cocina.jpg'},{nombre:'factura_plomeria_rios.pdf'}]},
+  {id:'AR02', propertyId:'PR12', descripcion:'Filtración de techo y pintura general', fechaAviso:'2026-08-15', especialista:'Pintores Moreno', estado:'Resuelto', costo:60000, fechaResuelto:'2026-09-05', pagadoPor:'Propietario', urgente:false, obs:'Motivo por el cual la propiedad está en mantenimiento antes de re-alquilar.', documentos:[{nombre:'foto_humedad_living.jpg'},{nombre:'factura_pintores_moreno.pdf'}]},
+  {id:'AR03', propertyId:'PR06', descripcion:'Persiana rota en dormitorio principal', fechaAviso:'2026-08-20', especialista:'Carpintería Bazán', estado:'Resuelto', costo:18000, fechaResuelto:'2026-08-25', pagadoPor:'Inquilino', urgente:false, obs:'Rotura por mal uso — se descuenta del depósito, no de la liquidación del propietario.', documentos:[{nombre:'factura_bazan.pdf'}]},
+  {id:'AR04', propertyId:'PR02', descripcion:'Termotanque no calienta', fechaAviso:'2026-09-10', especialista:'Gas Fernández', estado:'En curso', costo:35000, fechaResuelto:null, pagadoPor:'Propietario', urgente:false, obs:'Presupuesto aprobado, a la espera del repuesto.', documentos:[{nombre:'foto_termotanque.jpg'},{nombre:'presupuesto_gas_fernandez.pdf'}]},
+  {id:'AR05', propertyId:'PR10', descripcion:'Pérdida de agua en el baño', fechaAviso:'2026-09-13', especialista:null, estado:'Pendiente', costo:null, fechaResuelto:null, pagadoPor:null, urgente:false, obs:'', documentos:[{nombre:'foto_perdida_bano.jpg'}]},
+  {id:'AR06', propertyId:'PR13', descripcion:'Olor a gas — revisar instalación', fechaAviso:'2026-09-14', especialista:null, estado:'Pendiente', costo:null, fechaResuelto:null, pagadoPor:null, urgente:true, obs:'Inquilino reporta olor a gas en la cocina. Contactar urgente a gasista matriculado.', documentos:[]},
+];
+const repairsByProperty = pid => repairs.filter(r=>r.propertyId===pid).sort((a,b)=>b.fechaAviso.localeCompare(a.fechaAviso));
+
+const serviciosPagados = [
+  {id:'SV01', propertyId:'PR12', servicio:'Luz', monto:8500, fecha:'2026-09-02', obs:'Mantener conectada durante la refacción'},
+  {id:'SV02', propertyId:'PR12', servicio:'Gas', monto:4200, fecha:'2026-09-02', obs:''},
+  {id:'SV03', propertyId:'PR08', servicio:'Luz', monto:6100, fecha:'2026-09-05', obs:'Propiedad disponible — mínimo de la tarifa'},
+  {id:'SV04', propertyId:'PR16', servicio:'Agua', monto:3200, fecha:'2026-08-28', obs:'Última factura antes de dar de baja el servicio'},
+];
+const deudasServicios = [
+  {id:'DS01', contractId:'CT08', servicio:'Luz', monto:22000, obs:'EDENOR envió intimación por falta de pago', fecha:'2026-09-01'},
+  {id:'DS02', contractId:'CT08', servicio:'Gas', monto:9500, fecha:'2026-09-10', obs:'Metrogas cortó el suministro'},
+];
+
+function liquidacionOwner(ownerId, periodo){
+  const cs = contractsByOwner(ownerId);
+  let cobrado=0, detalle=[];
+  cs.forEach(c=>{
+    const pay = payments.find(p=>p.contractId===c.id && p.periodo===periodo);
+    if(!pay) return;
+    const monto = pay.estado==='Pagado' ? pagoTotal(pay) : (pay.estado==='Parcial' ? (pay.pagado||0) : 0);
+    if(monto>0){ cobrado += monto; detalle.push({property:PR(c.propertyId), tenant:P(c.tenantId), monto}); }
+  });
+  const ownerPropertyIds = properties.filter(pr=>pr.ownerId===ownerId).map(pr=>pr.id);
+  const gastosArreglos = repairs.filter(r=> ownerPropertyIds.includes(r.propertyId) && r.estado==='Resuelto' && r.pagadoPor==='Propietario' && r.fechaResuelto && r.fechaResuelto.slice(0,7)===periodo)
+    .map(r=>({desc:`Arreglo — ${r.descripcion} (${PR(r.propertyId).direccion})`, monto:r.costo||0}));
+  const gastosServicios = serviciosPagados.filter(s=> ownerPropertyIds.includes(s.propertyId) && s.fecha.slice(0,7)===periodo)
+    .map(s=>({desc:`Servicio — ${s.servicio} (${PR(s.propertyId).direccion})`, monto:s.monto}));
+  const gastos = [...gastosArreglos, ...gastosServicios];
+  const gastosTotal = gastos.reduce((s,g)=>s+g.monto,0);
+  const comision = Math.round(cobrado*0.08);
+  const total = cobrado - comision - gastosTotal;
+  return {ownerId, owner:P(ownerId), detalle, cobrado, comision, gastos, gastosTotal, total};
+}
+const owners = ['PS01','PS02','PS03','PS04'];
+
+/* ============================== HELPERS ============================== */
+const money = n => '$ ' + Math.round(n).toLocaleString('es-AR');
+const fdate = iso => iso ? new Date(iso+'T00:00:00').toLocaleDateString('es-AR') : '—';
+const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const periodoLabel = p => { const [y,m] = p.split('-'); const s = MESES[+m-1]; return s.charAt(0).toUpperCase()+s.slice(1)+' '+y; };
+const esc = s => String(s??'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function estadoBadge(estado){
+  const map = {
+    'Alquilada':['ok','check'], 'Disponible':['info','check'], 'En venta':['violet','bank'], 'Reservada':['warn','alert'], 'En mantenimiento':['warn','alert'], 'Baja':['neutral',null],
+    'Activo':['ok','check'], 'Próximo a vencer':['warn','alert'], 'Finalizado':['neutral',null], 'Rescindido':['danger',null], 'Suspendido':['neutral',null],
+    'Pagado':['ok','check'], 'Pendiente':['warn','alert'], 'Parcial':['info',null], 'Vencido':['danger','alert'], 'En gestión':['violet',null],
+    'Al día':['ok','check'], 'Con deuda':['danger','alert'], 'Pendiente cambio de titularidad':['warn','alert'], 'Baja de servicio':['neutral',null],
+    'En curso':['info',null], 'Resuelto':['ok','check'],
+  };
+  const [cls,ic] = map[estado] || ['neutral',null];
+  return `<span class="badge badge-${cls}">${ic?icon(ic):''}${esc(estado)}</span>`;
+}
+
+let toastTimer=null;
+function showToast(msg, undoFn){
+  const t = document.getElementById('toast');
+  t.innerHTML = icon('check') + '<span>'+esc(msg)+'</span>' + (undoFn?'<button class="toast-undo" data-toast-undo="1">Deshacer</button>':'');
+  t._undo = undoFn||null;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), undoFn?6000:2600);
+}
+function diasHasta(dateStr){ return Math.round((new Date(dateStr+'T00:00:00') - HOY)/86400000); }
+function waLink(telefono, mensaje){
+  const digits = String(telefono||'').replace(/\D/g,'');
+  return `https://wa.me/549${digits}?text=${encodeURIComponent(mensaje)}`;
+}
+function showModal(html, wide){
+  const m = document.getElementById('modalOverlay');
+  const box = m.querySelector('.modal-box');
+  box.innerHTML = html;
+  box.classList.toggle('wide', !!wide);
+  m.classList.add('show');
+}
+function closeModal(){ document.getElementById('modalOverlay').classList.remove('show'); }
+function showConfirm(message, onConfirm){
+  showModal(`
+    <div class="section-title" style="margin-bottom:10px;">Confirmar acción</div>
+    <div style="margin-bottom:18px;">${esc(message)}</div>
+    <div style="display:flex; gap:10px; justify-content:flex-end;">
+      <button class="btn" data-modal-cancel="1">Cancelar</button>
+      <button class="btn btn-primary" id="modalConfirmBtn">Confirmar</button>
+    </div>`);
+  document.getElementById('modalConfirmBtn').onclick = ()=>{ closeModal(); onConfirm(); };
+}
+
+/* ============================== NAV ============================== */
+const NAV = [
+  {key:'dashboard', label:'Dashboard', icon:'dashboard'},
+  {key:'cobranzas', label:'Cobranzas', icon:'cobranzas'},
+  {key:'deudores', label:'Deudores', icon:'deudores'},
+  {key:'arreglos', label:'Arreglos', icon:'arreglos'},
+  {key:'liquidaciones', label:'Liquidaciones', icon:'liquidaciones'},
+  {key:'contratos', label:'Contratos', icon:'contratos'},
+  {key:'propiedades', label:'Propiedades', icon:'propiedades'},
+  {key:'personas', label:'Personas', icon:'personas'},
+  {key:'servicios', label:'Servicios', icon:'servicios'},
+];
+function navCount(key){
+  if(key==='deudores') return computeDebtors().length;
+  if(key==='cobranzas') return contracts.filter(pendienteActualizacion).length;
+  if(key==='arreglos') return repairs.filter(r=>r.estado!=='Resuelto').length;
+  return 0;
+}
+function renderNav(activeKey){
+  const items = NAV.map(item=>{
+    const count = navCount(item.key);
+    return `<button class="nav-item ${item.key===activeKey?'active':''}" data-nav="/${item.key}">
+      ${icon(item.icon)}<span>${item.label}</span>
+      ${count>0?`<span class="nav-count">${count}</span>`:''}
+    </button>`;
+  }).join('');
+  document.getElementById('navList').innerHTML = items + `
+    <div class="nav-label">Sistema</div>
+    <button class="nav-item ${activeKey==='configuracion'?'active':''}" data-nav="/configuracion">${icon('configuracion')}<span>Configuración</span></button>
+  `;
+}
+
+/* ============================== VIEWS ============================== */
+function viewDashboard(){
+  const alquiladas = properties.filter(p=>p.estado==='Alquilada').length;
+  const pagosDelMes = payments.filter(p=>p.periodo===PERIODO_ACTUAL);
+  const pendientesMes = pagosDelMes.filter(p=>p.estado!=='Pagado').length;
+  const pagadosMes = pagosDelMes.filter(p=>p.estado==='Pagado').length;
+  const debtors = computeDebtors();
+  const pendActualizacion = contracts.filter(pendienteActualizacion);
+  const arreglosPend = repairs.filter(r=>r.estado!=='Resuelto');
+  const arreglosUrgentes = arreglosPend.filter(r=>r.urgente);
+
+  const tareas = [
+    arreglosPend.length ? {tipo: arreglosUrgentes.length?'danger':'warn', text:`<b>${arreglosPend.length} arreglo${arreglosPend.length>1?'s':''}</b> sin resolver${arreglosUrgentes.length?' — incluye 1 urgente':''}`, sub:arreglosPend.map(r=>r.descripcion+' ('+PR(r.propertyId).direccion+')').join(' · '), nav:'/arreglos'} : null,
+    debtors.length ? {tipo:'warn', text:`<b>${debtors.length} inquilino${debtors.length>1?'s':''}</b> con pagos vencidos`, sub:debtors.map(d=>nombreCompleto(d.tenant)).join(' · '), nav:'/deudores'} : null,
+    pendActualizacion.length ? {tipo:'warn', text:`<b>${pendActualizacion.length} contrato${pendActualizacion.length>1?'s':''}</b> necesita${pendActualizacion.length>1?'n':''} actualización de alquiler`, sub:pendActualizacion.map(c=>PR(c.propertyId).direccion).join(' · '), nav:'/cobranzas?sub=aumentos'} : null,
+    pendientesMes ? {tipo:'warn', text:`<b>${pendientesMes} cobranzas</b> de ${periodoLabel(PERIODO_ACTUAL)} sin acreditar`, sub:'Pendientes, parciales o en gestión', nav:'/cobranzas'} : null,
+    {tipo:'info', text:`Liquidaciones de ${periodoLabel(PERIODO_ACTUAL)} listas para revisar`, sub:`${owners.length} propietarios`, nav:'/liquidaciones'},
+    {tipo:'ok', text:`<b>${pagadosMes} cobranzas</b> de ${periodoLabel(PERIODO_ACTUAL)} ya registradas como pagadas`, sub:'', nav:null},
+  ].filter(Boolean);
+
+  const actividad = payments.filter(p=>p.fechaPago).sort((a,b)=>b.fechaPago.localeCompare(a.fechaPago)).slice(0,5).map(p=>{
+    const c = CT(p.contractId); const prop = PR(c.propertyId); const dias = Math.round((HOY-new Date(p.fechaPago+'T00:00:00'))/86400000);
+    return `<div class="activity-row"><span class="activity-dot"></span><div><div class="activity-text">Pago registrado — <b>${esc(prop.direccion)}</b> — ${money(p.estado==='Parcial'?p.pagado:p.importe)}</div><div class="activity-time">${dias<=0?'Hoy':dias===1?'Ayer':'Hace '+dias+' días'}</div></div></div>`;
+  }).join('') || `<div class="empty-state">${icon('inbox')}<div>Sin movimientos recientes</div></div>`;
+
+  return `
+    <div class="page-head">
+      <div><h1 class="page-title">Hola, buen día</h1><div class="page-sub">${HOY.toLocaleDateString('es-AR',{weekday:'long', day:'numeric', month:'long', year:'numeric'})}</div></div>
+    </div>
+    <div class="stat-grid">
+      ${statTile('propiedades', alquiladas, 'Alquileres activos', 'info')}
+      ${statTile('cobranzas', pendientesMes, `Cobranzas pendientes · ${periodoLabel(PERIODO_ACTUAL)}`, 'warn')}
+      ${statTile('deudores', debtors.length, 'Deudores', 'danger')}
+      ${statTile('contratos', pendActualizacion.length, 'Actualizaciones pendientes', 'warn')}
+      ${statTile('arreglos', arreglosPend.length, 'Arreglos sin resolver', arreglosUrgentes.length?'danger':'warn')}
+    </div>
+    <div class="grid-2">
+      <div class="card card-pad">
+        <div class="section-title">Qué tenés pendiente hoy</div>
+        <div class="page-sub" style="margin-bottom:6px;">Tu lista de trabajo para no perder nada de vista.</div>
+        <div class="task-list">
+          ${tareas.map(t=>`
+            <div class="task-row">
+              <span class="task-dot" style="background:var(--${t.tipo}-600)"></span>
+              <div class="task-text">${t.text}${t.sub?`<div class="task-sub">${esc(t.sub)}</div>`:''}</div>
+              ${t.nav?`<button class="btn btn-sm" data-nav="${t.nav}">Ver</button>`:''}
+            </div>`).join('')}
+        </div>
+      </div>
+      <div class="card card-pad">
+        <div class="section-title">Actividad reciente</div>
+        <div class="page-sub" style="margin-bottom:6px;">Últimos pagos acreditados.</div>
+        ${actividad}
+      </div>
+    </div>`;
+}
+function statTile(iconName, value, label, tone){
+  return `<div class="stat-tile">
+    <div class="stat-top"><div class="stat-icon" style="background:var(--${tone}-100); color:var(--${tone}-600);">${icon(iconName)}</div></div>
+    <div class="stat-value tnum">${value}</div>
+    <div class="stat-label">${label}</div>
+  </div>`;
+}
+
+function viewPropiedades(filter, query){
+  filter = filter || 'todos';
+  let list = properties.slice();
+  if(filter==='alquiladas') list = list.filter(p=>p.estado==='Alquilada');
+  else if(filter==='disponibles') list = list.filter(p=>p.estado==='Disponible');
+  else if(filter==='venta') list = list.filter(p=>p.estado==='En venta');
+  if(query){
+    const q = query.toLowerCase();
+    list = list.filter(p=> [p.id,p.tipo,p.direccion,p.localidad,p.estado, nombreCompleto(P(p.ownerId)), nombreCompleto(P(p.tenantId))].join(' ').toLowerCase().includes(q));
+  }
+  const filters = [['todos','Todas'],['alquiladas','Alquiladas'],['disponibles','Disponibles'],['venta','En venta']];
+  const rows = list.map(p=>{
+    const owner = P(p.ownerId); const tenant = P(p.tenantId); const c = contractByProperty(p.id);
+    return `<tr class="clickable" data-nav="/propiedades/${p.id}">
+      <td><div class="cell-title">${esc(p.direccion)}</div><div class="cell-sub">${esc(p.tipo)} · ${esc(p.localidad)}</div></td>
+      <td>${esc(nombreCompleto(owner))}</td>
+      <td>${tenant?esc(nombreCompleto(tenant)):'<span class="cell-sub">—</span>'}</td>
+      <td class="num tnum">${c?money(c.alquilerActual):'—'}</td>
+      <td>${estadoBadge(p.estado)} ${c && pendienteActualizacion(c) ? '<span class="badge badge-warn" style="margin-left:4px;">'+icon('alert')+'Actualizar</span>' : ''}</td>
+    </tr>`;
+  }).join('');
+  return `
+    <div class="page-head">
+      <div><h1 class="page-title">Propiedades</h1><div class="page-sub">${list.length} de ${properties.length} propiedades</div></div>
+      <button class="btn btn-primary" onclick="showToast('Alta de propiedades — próximamente en esta etapa')">${icon('plus')}Nueva propiedad</button>
+    </div>
+    <div style="display:flex; gap:14px; flex-wrap:wrap; align-items:center; margin-bottom:16px;">
+      <div class="search-wrap" style="max-width:340px;">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input class="search-input" id="propFilterInput" placeholder="Buscar dirección, propietario, inquilino..." value="${esc(query||'')}">
+      </div>
+      <div class="pill-row">${filters.map(([k,l])=>`<button class="pill ${filter===k?'active':''}" data-propfilter="${k}">${l}</button>`).join('')}</div>
+    </div>
+    <div class="table-wrap">
+      ${list.length? `<table><thead><tr><th>Propiedad</th><th>Propietario</th><th>Inquilino</th><th class="num">Alquiler</th><th>Estado</th></tr></thead><tbody>${rows}</tbody></table>`
+      : `<div class="empty-state">${icon('propiedades')}<div class="empty-state-title">No encontramos propiedades</div><div>Probá con otra búsqueda o filtro.</div></div>`}
+    </div>`;
+}
+
+function viewFichaPropiedad(id, tab){
+  const p = PR(id);
+  if(!p) return `<div class="empty-state">${icon('propiedades')}<div class="empty-state-title">Propiedad no encontrada</div></div>`;
+  tab = tab || 'info';
+  const owner = P(p.ownerId); const tenant = P(p.tenantId); const c = contractByProperty(p.id);
+  const tabs = [['info','Información'],['contrato','Contrato'],['cobranzas','Cobranzas'],['servicios','Servicios'],['arreglos','Arreglos'],['documentos','Documentos']];
+
+  let body='';
+  if(tab==='info'){
+    body = `<div class="kv-grid">
+      <div class="kv"><div class="kv-label">Dirección</div><div class="kv-value">${esc(p.direccion)}</div></div>
+      <div class="kv"><div class="kv-label">Localidad</div><div class="kv-value">${esc(p.localidad)}</div></div>
+      <div class="kv"><div class="kv-label">Tipo</div><div class="kv-value">${esc(p.tipo)}</div></div>
+      <div class="kv"><div class="kv-label">Superficie</div><div class="kv-value">${p.m2} m²</div></div>
+      <div class="kv"><div class="kv-label">Ambientes</div><div class="kv-value">${p.ambientes} amb · ${p.dormitorios} dorm · ${p.banos} baño${p.banos>1?'s':''}</div></div>
+      <div class="kv"><div class="kv-label">Extras</div><div class="kv-value">${[p.cochera&&'Cochera',p.patio&&'Patio',p.terraza&&'Terraza',p.balcon&&'Balcón'].filter(Boolean).join(' · ')||'—'}</div></div>
+      <div class="kv"><div class="kv-label">Propietario</div><div class="kv-value"><a data-persona="${owner.id}">${esc(nombreCompleto(owner))}</a></div></div>
+      <div class="kv"><div class="kv-label">Inquilino actual</div><div class="kv-value">${tenant?`<a data-persona="${tenant.id}">${esc(nombreCompleto(tenant))}</a>`:'—'}</div></div>
+    </div>
+    ${p.obs?`<div class="divider"></div><div class="kv-label">Observaciones</div><div style="margin-top:4px;">${esc(p.obs)}</div>`:''}`;
+  } else if(tab==='contrato'){
+    if(!c){ body = `<div class="empty-state">${icon('contratos')}<div class="empty-state-title">Sin contrato activo</div><div>Esta propiedad no tiene un contrato vigente.</div></div>`; }
+    else {
+      body = `<div class="kv-grid">
+        <div class="kv"><div class="kv-label">Contrato</div><div class="kv-value">#${c.id}</div></div>
+        <div class="kv"><div class="kv-label">Estado</div><div class="kv-value">${estadoBadge(c.estado)}</div></div>
+        <div class="kv"><div class="kv-label">Inicio</div><div class="kv-value tnum">${fdate(c.inicio)}</div></div>
+        <div class="kv"><div class="kv-label">Fin</div><div class="kv-value tnum">${fdate(c.fin)}</div></div>
+        <div class="kv"><div class="kv-label">Alquiler actual</div><div class="kv-value tnum">${money(c.alquilerActual)}</div></div>
+        <div class="kv"><div class="kv-label">Depósito</div><div class="kv-value tnum">${money(c.deposito)}</div></div>
+        <div class="kv"><div class="kv-label">Método de actualización</div><div class="kv-value">${esc(c.metodo)}</div></div>
+        <div class="kv"><div class="kv-label">Frecuencia</div><div class="kv-value">Cada ${c.frecuencia} meses</div></div>
+        <div class="kv"><div class="kv-label">Próxima actualización</div><div class="kv-value tnum">${fdate(c.proxAct)} ${pendienteActualizacion(c)?'<span class="badge badge-warn" style="margin-left:6px;">'+icon('alert')+'Pendiente</span>':''}</div></div>
+        <div class="kv"><div class="kv-label">Garante</div><div class="kv-value">${c.guarantorId?`<a data-persona="${c.guarantorId}">${esc(nombreCompleto(P(c.guarantorId)))}</a>`:'—'}</div></div>
+        <div class="kv"><div class="kv-label">Inquilino 2</div><div class="kv-value">${c.tenantId2?`<a data-persona="${c.tenantId2}">${esc(nombreCompleto(P(c.tenantId2)))}</a>`:'—'}</div></div>
+        <div class="kv"><div class="kv-label">Expensas</div><div class="kv-value">${c.expensas&&c.expensas.aplica?'Sí — '+money(c.expensas.monto||0):'No'}</div></div>
+        <div class="kv"><div class="kv-label">Servicios a reintegrar</div><div class="kv-value">${c.servicios&&c.servicios.aplica?'Sí':'No'}</div></div>
+      </div>
+      <div class="divider"></div>
+      <div class="kv-label" style="margin-bottom:8px;">Historial de actualizaciones</div>
+      ${c.historial.length? `<div class="table-wrap"><table><thead><tr><th>Fecha</th><th class="num">Alquiler anterior</th><th class="num">Alquiler nuevo</th><th>Índice</th></tr></thead><tbody>
+        ${c.historial.map(h=>`<tr><td class="tnum">${fdate(h.fecha)}</td><td class="num tnum">${money(h.anterior)}</td><td class="num tnum">${money(h.nuevo)}</td><td>${esc(h.indice)}</td></tr>`).join('')}
+      </tbody></table></div>` : `<div class="page-sub">Todavía no hay actualizaciones registradas para este contrato.</div>`}`;
+    }
+  } else if(tab==='cobranzas'){
+    if(!c){ body = `<div class="empty-state">${icon('cobranzas')}<div class="empty-state-title">Sin historial</div></div>`; }
+    else {
+      const pays = paymentsByContract(c.id);
+      body = `<div class="table-wrap"><table><thead><tr><th>Período</th><th class="num">Importe</th><th>Estado</th><th>Fecha de pago</th><th></th></tr></thead><tbody>
+        ${pays.map(pg=>{
+          const detalle = [pg.expensas?'exp '+money(pg.expensas):null, pg.servicios?'serv '+money(pg.servicios):null].filter(Boolean).join(' + ');
+          return `<tr><td>${periodoLabel(pg.periodo)}</td><td class="num tnum">${money(pg.estado==='Parcial'?pg.pagado:pagoTotal(pg))}${pg.estado==='Parcial'?' <span class="cell-sub">de '+money(pagoTotal(pg))+'</span>':(detalle?'<div class="cell-sub">alquiler '+money(pg.importe)+' + '+detalle+'</div>':'')}</td><td>${estadoBadge(pg.estado)}</td><td class="tnum">${fdate(pg.fechaPago)}</td><td class="row-actions">${pg.estado==='Pagado'?`<button class="btn btn-sm" data-ver-recibo="${pg.id}">${icon('printer')}Recibo</button><button class="btn btn-sm btn-ghost" data-deshacer-pago="${pg.id}">Deshacer</button>`:`<button class="btn btn-sm btn-primary" data-cobrar="${pg.id}">${icon('printer')}${pg.estado==='Parcial'?'Seguir cobrando':'Cobrar'}</button>`}</td></tr>`;
+        }).join('')}
+      </tbody></table></div>`;
+    }
+  } else if(tab==='servicios'){
+    const s = services[p.id];
+    if(!s){ body = `<div class="empty-state">${icon('servicios')}<div class="empty-state-title">Sin datos de servicios cargados</div></div>`; }
+    else {
+      const needsReview = p.estado==='En mantenimiento' || p.estado==='Baja';
+      body = (needsReview? `<div class="note-banner" style="margin-bottom:16px;">${icon('alert')}<div>Contrato finalizado — revisar titularidad de servicios antes de re-alquilar o dar de baja definitiva.</div></div>`:'') +
+      `<div class="svc-grid">
+        ${svcCard('flame','Gas', s.gas)}
+        ${svcCard('bolt','Luz', s.luz)}
+        ${svcCard('droplet','Agua', s.agua)}
+        ${svcCard('bank','Municipal (ABL)', s.municipal)}
+      </div>`;
+    }
+  } else if(tab==='arreglos'){
+    const list = repairsByProperty(p.id);
+    if(!list.length){ body = `<div class="empty-state">${icon('check')}<div class="empty-state-title">Sin arreglos registrados</div><div>Esta propiedad no tiene reparaciones en su historial.</div></div>`; }
+    else {
+      body = `<button class="btn btn-sm" style="margin-bottom:14px;" onclick="showToast('Registrar arreglo — próximamente en esta etapa')">${icon('plus')}Registrar arreglo</button>` +
+      list.map(r=>`
+        <div class="card card-pad" style="margin-bottom:12px;">
+          <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+            <div>
+              <div class="cell-title">${esc(r.descripcion)}</div>
+              <div class="cell-sub">Aviso: ${fdate(r.fechaAviso)}${r.especialista?' · '+esc(r.especialista):''}</div>
+            </div>
+            <div style="text-align:right;">
+              ${estadoBadge(r.estado)}${r.urgente?' <span class="badge badge-danger">Urgente</span>':''}
+              <div class="tnum" style="margin-top:4px; font-weight:700;">${r.costo!=null?money(r.costo):'Sin costo cargado'}</div>
+            </div>
+          </div>
+          ${r.fechaResuelto?`<div class="cell-sub" style="margin-top:6px;">Resuelto el ${fdate(r.fechaResuelto)} · Paga: ${esc(r.pagadoPor||'—')}</div>`:''}
+          ${r.obs?`<div style="margin-top:6px; font-size:13px;">${esc(r.obs)}</div>`:''}
+          ${r.documentos.length?`<div class="chiprow" style="margin-top:10px;">${r.documentos.map(d=>`<span class="badge badge-neutral" style="cursor:pointer;" onclick="showToast('Vista previa de documentos — próximamente')">${icon('doc')}${esc(d.nombre)}</span>`).join('')}</div>`:''}
+          ${r.estado!=='Resuelto'?`<button class="btn btn-sm" style="margin-top:12px;" data-marcar-resuelto="${r.id}">Marcar resuelto</button>`:''}
+        </div>`).join('');
+    }
+  } else if(tab==='documentos'){
+    body = `<div class="empty-state">${icon('doc')}<div class="empty-state-title">Gestor documental — próxima etapa</div><div>Acá vas a poder ver y subir el contrato, recibos y liquidaciones en PDF de esta propiedad.</div></div>`;
+  }
+
+  return `
+    <button class="back-link" data-nav="/propiedades">${icon('back')}Volver a propiedades</button>
+    <div class="ficha-head">
+      <div>
+        <div class="ficha-id">PROPIEDAD #${p.id}</div>
+        <div class="ficha-title">${esc(p.tipo)} — ${esc(p.direccion)}</div>
+        <div class="ficha-meta">${esc(p.localidad)} · ${estadoBadge(p.estado)}</div>
+      </div>
+      <button class="btn" onclick="showToast('Imprimir ficha — próximamente en esta etapa')">${icon('printer')}Imprimir</button>
+    </div>
+    <div class="tabs">${tabs.map(([k,l])=>`<button class="tab-btn ${tab===k?'active':''}" data-ficha-tab="${p.id}:${k}">${l}</button>`).join('')}</div>
+    <div>${body}</div>`;
+}
+function svcCard(iconName,label,s){
+  return `<div class="svc-card">
+    <div class="svc-name">${icon(iconName)}${label}</div>
+    <div class="svc-titular">Titular: ${s.titular==='—'?'—':esc(nombreCompleto(P(s.titular)))}</div>
+    ${estadoBadge(s.estado)}
+  </div>`;
+}
+
+function viewPersonas(query){
+  let list = persons.slice();
+  if(query){ const q=query.toLowerCase(); list = list.filter(p=> (nombreCompleto(p)+' '+p.dni+' '+p.roles.join(' ')).toLowerCase().includes(q)); }
+  const rows = list.map(p=>`
+    <tr class="clickable" data-persona="${p.id}">
+      <td><div class="cell-title">${esc(nombreCompleto(p))}</div><div class="cell-sub">DNI ${esc(p.dni)}</div></td>
+      <td class="chiprow">${p.roles.map(r=>`<span class="badge badge-neutral">${esc(r)}</span>`).join('')}</td>
+      <td>${esc(p.telefono)}</td>
+      <td>${esc(p.email)}</td>
+    </tr>`).join('');
+  return `
+    <div class="page-head">
+      <div><h1 class="page-title">Personas</h1><div class="page-sub">${list.length} de ${persons.length} personas registradas</div></div>
+      <button class="btn btn-primary" onclick="showToast('Alta de personas — próximamente en esta etapa')">${icon('plus')}Nueva persona</button>
+    </div>
+    <div class="search-wrap" style="max-width:340px; margin-bottom:16px;">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input class="search-input" id="personaFilterInput" placeholder="Buscar por nombre, DNI o rol..." value="${esc(query||'')}">
+    </div>
+    <div class="table-wrap">
+      ${list.length?`<table><thead><tr><th>Persona</th><th>Roles</th><th>Teléfono</th><th>Email</th></tr></thead><tbody>${rows}</tbody></table>`
+      : `<div class="empty-state">${icon('personas')}<div class="empty-state-title">No encontramos personas</div></div>`}
+    </div>`;
+}
+function personaDrawer(id){
+  const p = P(id); if(!p) return '';
+  const asOwner = properties.filter(pr=>pr.ownerId===id);
+  const asTenant = properties.filter(pr=>pr.tenantId===id);
+  const asGuarantor = contracts.filter(c=>c.guarantorId===id);
+  return `
+    <button class="drawer-close" id="drawerCloseBtn">${icon('x')}</button>
+    <div style="display:flex; gap:14px; align-items:center; margin-bottom:18px;">
+      <div class="avatar">${esc(p.nombre[0]+p.apellido[0])}</div>
+      <div><div style="font-weight:700; font-size:17px;">${esc(nombreCompleto(p))}</div><div class="chiprow" style="margin-top:4px;">${p.roles.map(r=>`<span class="badge badge-neutral">${esc(r)}</span>`).join('')}</div></div>
+    </div>
+    <div class="kv-grid" style="grid-template-columns:1fr;">
+      <div class="kv"><div class="kv-label">DNI</div><div class="kv-value">${esc(p.dni)}</div></div>
+      <div class="kv"><div class="kv-label">Teléfono</div><div class="kv-value">${icon('phone')} ${esc(p.telefono)}</div></div>
+      <div class="kv"><div class="kv-label">Email</div><div class="kv-value">${icon('mail')} ${esc(p.email)}</div></div>
+    </div>
+    ${asOwner.length?`<div class="divider"></div><div class="kv-label" style="margin-bottom:8px;">Propiedades (propietario)</div>${asOwner.map(pr=>`<div class="task-row"><div class="task-text">${esc(pr.direccion)}<div class="task-sub">${esc(pr.localidad)}</div></div>${estadoBadge(pr.estado)}<button class="btn btn-sm" data-nav="/propiedades/${pr.id}" data-close-drawer="1">Ver</button></div>`).join('')}`:''}
+    ${asTenant.length?`<div class="divider"></div><div class="kv-label" style="margin-bottom:8px;">Alquila</div>${asTenant.map(pr=>`<div class="task-row"><div class="task-text">${esc(pr.direccion)}<div class="task-sub">${esc(pr.localidad)}</div></div><button class="btn btn-sm" data-nav="/propiedades/${pr.id}" data-close-drawer="1">Ver</button></div>`).join('')}`:''}
+    ${asGuarantor.length?`<div class="divider"></div><div class="kv-label" style="margin-bottom:8px;">Garantías</div>${asGuarantor.map(c=>`<div class="task-row"><div class="task-text">${esc(PR(c.propertyId).direccion)}<div class="task-sub">Contrato #${c.id}</div></div><button class="btn btn-sm" data-nav="/propiedades/${c.propertyId}" data-close-drawer="1">Ver</button></div>`).join('')}`:''}
+  `;
+}
+
+function viewContratos(filter, query){
+  filter = filter || 'activos';
+  let list = contracts.slice();
+  if(filter==='activos') list = list.filter(c=>c.estado==='Activo'||c.estado==='Próximo a vencer');
+  else if(filter==='vencer') list = list.filter(c=>c.estado==='Próximo a vencer');
+  else if(filter==='finalizados') list = list.filter(c=>c.estado==='Finalizado'||c.estado==='Rescindido'||c.estado==='Suspendido');
+  else if(filter==='pendiente') list = list.filter(pendienteActualizacion);
+  if(query){
+    const q = query.toLowerCase();
+    list = list.filter(c=>{
+      const p = PR(c.propertyId); const t = P(c.tenantId); const o = P(c.ownerId);
+      return (c.id+' '+p.direccion+' '+p.localidad+' '+nombreCompleto(t)+' '+nombreCompleto(o)).toLowerCase().includes(q);
+    });
+  }
+  const filters = [['activos','Activos'],['vencer','Por vencer'],['pendiente','Actualización pendiente'],['finalizados','Finalizados']];
+  const rows = list.map(c=>{
+    const p = PR(c.propertyId); const t = P(c.tenantId);
+    return `<tr class="clickable" data-nav="/propiedades/${p.id}?tab=contrato">
+      <td class="cell-title tnum">#${c.id}</td>
+      <td><div class="cell-title">${esc(p.direccion)}</div><div class="cell-sub">${esc(p.localidad)}</div></td>
+      <td>${esc(nombreCompleto(t))}</td>
+      <td class="num tnum">${money(c.alquilerActual)}</td>
+      <td>${estadoBadge(c.estado)}</td>
+      <td>${pendienteActualizacion(c)?`<span class="badge badge-warn">${icon('alert')}Actualización pendiente</span>`:'<span class="cell-sub">Al día</span>'}</td>
+    </tr>`;
+  }).join('');
+  return `
+    <div class="page-head">
+      <div><h1 class="page-title">Contratos</h1><div class="page-sub">${list.length} contratos</div></div>
+      <button class="btn btn-primary" data-action="nuevo-contrato">${icon('plus')}Nuevo contrato</button>
+    </div>
+    <div class="note-banner info" style="margin-bottom:16px;">${icon('bolt')}<div>Acá vinculás propietario, propiedad, inquilino, monto y periodicidad. Para aplicar aumentos por ICL, IPC o acuerdo, andá a <b>Cobranzas → Aumentos</b>.</div></div>
+    <div style="display:flex; gap:14px; flex-wrap:wrap; align-items:center; margin-bottom:16px;">
+      <div class="search-wrap" style="max-width:340px;">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input class="search-input" id="contratosFilterInput" placeholder="Buscar propiedad, inquilino, propietario..." value="${esc(query||'')}">
+      </div>
+      <div class="pill-row">${filters.map(([k,l])=>`<button class="pill ${filter===k?'active':''}" data-contratofilter="${k}">${l}</button>`).join('')}</div>
+    </div>
+    <div class="table-wrap">
+      ${list.length? `<table><thead><tr><th>Contrato</th><th>Propiedad</th><th>Inquilino</th><th class="num">Alquiler</th><th>Estado</th><th>Actualización</th></tr></thead><tbody>${rows}</tbody></table>`
+      : `<div class="empty-state">${icon('contratos')}<div class="empty-state-title">No hay contratos en este filtro</div></div>`}
+    </div>`;
+}
+
+function nuevoContratoModal(){
+  const disponibles = properties.filter(p=>p.estado==='Disponible');
+  if(!disponibles.length){ showToast('No hay propiedades disponibles para armar un contrato nuevo'); return; }
+  const opts = disponibles.map(p=>`<option value="${p.id}">${esc(p.direccion)} — ${esc(p.localidad)}</option>`).join('');
+  showModal(`
+    <div class="section-title" style="margin-bottom:4px;">Nuevo contrato</div>
+    <div class="page-sub" style="margin-bottom:14px;">Completá los datos para dar de alta el contrato y la propiedad pasa a "Alquilada".</div>
+    <div class="form-grid" style="margin-bottom:12px;">
+      <div class="field" style="grid-column:1/-1;">
+        <label>Propiedad</label>
+        <select id="ncPropiedad">${opts}</select>
+      </div>
+      <div class="field" style="grid-column:1/-1;"><label>Propietario</label><input id="ncPropietario" disabled></div>
+    </div>
+    <div class="divider"></div>
+    <div class="form-grid" style="margin-bottom:12px;">
+      <div class="field"><label>Inquilino — nombre y apellido</label><input id="ncInq1Nombre" placeholder="Ej: Juan Fernández"></div>
+      <div class="field"><label>Inquilino — teléfono</label><input id="ncInq1Tel" placeholder="11-2211-7765"></div>
+      <div class="field"><label>Inquilino 2 (opcional)</label><input id="ncInq2Nombre" placeholder="Si figuran dos personas"></div>
+      <div class="field"><label>Teléfono inquilino 2</label><input id="ncInq2Tel" placeholder="Opcional"></div>
+      <div class="field"><label>Garante (opcional)</label><input id="ncGarNombre" placeholder="Nombre y apellido"></div>
+      <div class="field"><label>Teléfono garante</label><input id="ncGarTel" placeholder="Opcional"></div>
+    </div>
+    <div class="divider"></div>
+    <div class="form-grid" style="margin-bottom:12px;">
+      <div class="field"><label>Valor de alquiler</label><input type="number" id="ncValor" step="500" placeholder="0"></div>
+      <div class="field"><label>Depósito</label><input type="number" id="ncDeposito" step="500" placeholder="Igual al alquiler si se deja vacío"></div>
+      <div class="field"><label>Tipo de aumento</label>
+        <select id="ncTipoAumento">
+          <option value="ICL">ICL</option>
+          <option value="IPC">IPC</option>
+          <option value="Fijo">Porcentaje fijo</option>
+          <option value="Personalizado">Personalizado / acuerdo</option>
+        </select>
+      </div>
+      <div class="field"><label>% fijo (solo si aplica)</label><input type="number" id="ncPctFijo" step="0.5" placeholder="Ej: 10"></div>
+      <div class="field"><label>Periodicidad de aumento</label>
+        <select id="ncFrecuencia"><option value="3">Cada 3 meses</option><option value="4">Cada 4 meses</option><option value="6">Cada 6 meses</option><option value="12">Cada 12 meses</option></select>
+      </div>
+      <div class="field"></div>
+      <div class="field"><label>Fecha de inicio</label><input type="date" id="ncInicio" value="${TODAY_ISO}"></div>
+      <div class="field"><label>Fecha de fin</label><input type="date" id="ncFin"></div>
+    </div>
+    <div class="divider"></div>
+    <div style="display:flex; gap:24px; flex-wrap:wrap; margin-bottom:16px;">
+      <label style="display:flex; align-items:center; gap:8px; font-size:13.5px; font-weight:600;"><input type="checkbox" id="ncPagaExpensas"> ¿Paga expensas?</label>
+      <input type="number" id="ncExpensasMonto" placeholder="Monto expensas" style="max-width:160px; padding:8px 10px; border:1px solid var(--border-strong); border-radius:9px; background:var(--paper-50); color:var(--ink-900);">
+      <label style="display:flex; align-items:center; gap:8px; font-size:13.5px; font-weight:600;"><input type="checkbox" id="ncPagaServicios"> ¿Paga servicios a reintegrar al propietario?</label>
+    </div>
+    <div style="display:flex; gap:10px; justify-content:flex-end;">
+      <button class="btn" data-modal-cancel="1">Cancelar</button>
+      <button class="btn btn-primary" id="ncSaveBtn">Crear contrato</button>
+    </div>`, true);
+  const propSel = document.getElementById('ncPropiedad');
+  const updateOwner = ()=>{ document.getElementById('ncPropietario').value = nombreCompleto(P(PR(propSel.value).ownerId)); };
+  propSel.addEventListener('change', updateOwner);
+  updateOwner();
+  document.getElementById('ncSaveBtn').onclick = ()=>{
+    const propertyId = propSel.value;
+    const valor = parseFloat(document.getElementById('ncValor').value)||0;
+    const inq1Nombre = document.getElementById('ncInq1Nombre').value.trim();
+    if(!propertyId || !inq1Nombre || valor<=0){ showToast('Completá al menos propiedad, inquilino y valor de alquiler'); return; }
+    const crearPersona = (nombreTxt, telefono, rol)=>{
+      const partes = nombreTxt.split(' ');
+      const p = {id:'PS'+Date.now()+Math.floor(Math.random()*1000), nombre:partes[0], apellido:partes.slice(1).join(' ')||'—', dni:'—', telefono:telefono||'—', email:'—', roles:[rol]};
+      persons.push(p);
+      return p.id;
+    };
+    const tenantId = crearPersona(inq1Nombre, document.getElementById('ncInq1Tel').value.trim(), 'Inquilino');
+    const inq2Nombre = document.getElementById('ncInq2Nombre').value.trim();
+    const tenantId2 = inq2Nombre ? crearPersona(inq2Nombre, document.getElementById('ncInq2Tel').value.trim(), 'Inquilino') : null;
+    const garNombre = document.getElementById('ncGarNombre').value.trim();
+    const guarantorId = garNombre ? crearPersona(garNombre, document.getElementById('ncGarTel').value.trim(), 'Garante') : null;
+    const tipoAumento = document.getElementById('ncTipoAumento').value;
+    const pctFijo = parseFloat(document.getElementById('ncPctFijo').value)||0;
+    const frecuencia = parseInt(document.getElementById('ncFrecuencia').value,10);
+    const inicio = document.getElementById('ncInicio').value || TODAY_ISO;
+    const fin = document.getElementById('ncFin').value || addMonths(inicio, 24);
+    const deposito = parseFloat(document.getElementById('ncDeposito').value)||valor;
+    const pagaExpensas = document.getElementById('ncPagaExpensas').checked;
+    const expensasMonto = parseFloat(document.getElementById('ncExpensasMonto').value)||0;
+    const pagaServicios = document.getElementById('ncPagaServicios').checked;
+    const metodo = tipoAumento==='Fijo' ? `Porcentaje fijo (${pctFijo}%)` : (tipoAumento==='Personalizado' ? 'Personalizado' : tipoAumento);
+    const id = 'CT'+Date.now();
+    const contrato = {
+      id, propertyId, ownerId:PR(propertyId).ownerId, tenantId, tenantId2, guarantorId,
+      inicio, fin, alquilerInicial:valor, alquilerActual:valor, metodo, tipoAumento,
+      pctFijo: tipoAumento==='Fijo' ? pctFijo : undefined, frecuencia, proxAct: addMonths(inicio, frecuencia),
+      estado:'Activo', deposito,
+      expensas:{aplica:pagaExpensas, monto:expensasMonto}, servicios:{aplica:pagaServicios},
+      historial:[],
+    };
+    contracts.push(contrato);
+    const prop = PR(propertyId); prop.estado='Alquilada'; prop.tenantId=tenantId;
+    payments.push({id:'PG'+Date.now(), contractId:id, periodo:PERIODO_ACTUAL, importe:valor, expensas:pagaExpensas?expensasMonto:0, servicios:0, estado:'Pendiente', vencimiento:PERIODO_ACTUAL+'-10', fechaPago:null});
+    closeModal();
+    showToast('Contrato creado');
+    location.hash = `#/propiedades/${propertyId}?tab=contrato`;
+  };
+}
+function viewCobranzas(sub, query){
+  sub = sub==='aumentos' ? 'aumentos' : 'mes';
+  const subnav = `<div class="pill-row" style="margin-bottom:18px;">
+    <button class="pill ${sub==='mes'?'active':''}" data-cobranzasub="mes">Cobranzas del mes</button>
+    <button class="pill ${sub==='aumentos'?'active':''}" data-cobranzasub="aumentos">Aumentos</button>
+  </div>`;
+  return `
+    <div class="page-head">
+      <div><h1 class="page-title">Cobranzas</h1><div class="page-sub">${periodoLabel(PERIODO_ACTUAL)}</div></div>
+      ${sub==='mes'?`<button class="btn" onclick="showToast('Impresión de recibos del período — próximamente en esta etapa')">${icon('printer')}Imprimir recibos del mes</button>`:''}
+    </div>
+    ${subnav}
+    ${sub==='aumentos'?viewAumentos():viewCobranzasMes(query)}`;
+}
+
+function viewCobranzasMes(query){
+  let pays = payments.filter(p=>p.periodo===PERIODO_ACTUAL);
+  const total = pays.reduce((s,p)=>s+pagoTotal(p),0);
+  const cobrado = pays.reduce((s,p)=> s + (p.estado==='Pagado'?pagoTotal(p) : p.estado==='Parcial'?(p.pagado||0):0), 0);
+  const pendiente = total - cobrado;
+  if(query){
+    const q = query.toLowerCase();
+    pays = pays.filter(p=>{
+      const c = CT(p.contractId); const prop = PR(c.propertyId); const t = P(c.tenantId);
+      return (prop.direccion+' '+prop.localidad+' '+nombreCompleto(t)).toLowerCase().includes(q);
+    });
+  }
+  const rows = pays.map(p=>{
+    const c = CT(p.contractId); const prop = PR(c.propertyId); const t = P(c.tenantId);
+    const detalle = [p.expensas?'exp '+money(p.expensas):null, p.servicios?'serv '+money(p.servicios):null].filter(Boolean).join(' + ');
+    return `<tr>
+      <td><div class="cell-title">${esc(prop.direccion)}</div><div class="cell-sub">${esc(prop.localidad)}</div></td>
+      <td>${esc(nombreCompleto(t))}</td>
+      <td class="num tnum">${money(pagoTotal(p))}${detalle?`<div class="cell-sub">alquiler ${money(p.importe)} + ${detalle}</div>`:''}</td>
+      <td>${estadoBadge(p.estado)}</td>
+      <td class="tnum">${fdate(p.fechaPago)}</td>
+      <td class="row-actions">
+        ${p.estado==='Pagado'
+          ? `<button class="btn btn-sm" data-ver-recibo="${p.id}">${icon('printer')}Recibo</button><button class="btn btn-sm btn-ghost" data-deshacer-pago="${p.id}">Deshacer pago</button>`
+          : `<button class="btn btn-sm" data-nav="/propiedades/${prop.id}?tab=cobranzas">Ver</button><button class="btn btn-sm btn-primary" data-cobrar="${p.id}">${icon('printer')}${p.estado==='Parcial'?'Seguir cobrando':'Cobrar y emitir recibo'}</button>${p.estado==='Parcial'?`<button class="btn btn-sm btn-ghost" data-deshacer-pago="${p.id}">Deshacer</button>`:''}`}
+      </td>
+    </tr>`;
+  }).join('');
+  return `
+    <div class="stat-grid" style="grid-template-columns:repeat(3,1fr);">
+      ${statTile('bank', money(total), 'Total del período', 'info')}
+      ${statTile('check', money(cobrado), 'Cobrado', 'ok')}
+      ${statTile('alert', money(pendiente), 'Pendiente', 'warn')}
+    </div>
+    <div class="search-wrap" style="max-width:340px; margin-bottom:16px;">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input class="search-input" id="cobranzasFilterInput" placeholder="Buscar propiedad o inquilino..." value="${esc(query||'')}">
+    </div>
+    <div class="table-wrap">
+      ${pays.length? `<table><thead><tr><th>Propiedad</th><th>Inquilino</th><th class="num">Importe</th><th>Estado</th><th>Fecha de pago</th><th></th></tr></thead><tbody>${rows}</tbody></table>`
+      : `<div class="empty-state">${icon('cobranzas')}<div class="empty-state-title">No encontramos cobranzas</div></div>`}
+    </div>`;
+}
+function numeroALetras(n){
+  n = Math.round(n);
+  if(n===0) return 'cero';
+  const UNIDADES=['','un','dos','tres','cuatro','cinco','seis','siete','ocho','nueve'];
+  const DIECI=['diez','once','doce','trece','catorce','quince','dieciséis','diecisiete','dieciocho','diecinueve'];
+  const DECENAS=['','','veinte','treinta','cuarenta','cincuenta','sesenta','setenta','ochenta','noventa'];
+  const CENTENAS=['','ciento','doscientos','trescientos','cuatrocientos','quinientos','seiscientos','setecientos','ochocientos','novecientos'];
+  function tres(n){
+    if(n===0) return '';
+    if(n===100) return 'cien';
+    let out=''; const c=Math.floor(n/100), r=n%100;
+    if(c>0) out+=CENTENAS[c]+' ';
+    if(r>0){
+      if(r<10) out+=UNIDADES[r];
+      else if(r<20) out+=DIECI[r-10];
+      else { const d=Math.floor(r/10), u=r%10; if(d===2&&u>0) out+='veinti'+UNIDADES[u]; else { out+=DECENAS[d]; if(u>0) out+=' y '+UNIDADES[u]; } }
+    }
+    return out.trim();
+  }
+  let out=''; const millones=Math.floor(n/1000000); n%=1000000; const miles=Math.floor(n/1000); const resto=n%1000;
+  if(millones>0) out += (millones===1?'un millón':tres(millones)+' millones')+' ';
+  if(miles>0) out += (miles===1?'mil':tres(miles)+' mil')+' ';
+  if(resto>0) out += tres(resto);
+  return out.trim();
+}
+function reciboHtml(p){
+  const c = CT(p.contractId); const prop = PR(c.propertyId); const t = P(c.tenantId); const t2 = c.tenantId2 ? P(c.tenantId2) : null;
+  const [y,m] = p.periodo.split('-').map(Number);
+  const rangoInicio = new Date(y, m-1, 1).toLocaleDateString('es-AR');
+  const rangoFin = new Date(y, m, 0).toLocaleDateString('es-AR');
+  const montoEsteRecibo = p.estado==='Parcial' ? (p.pagado||0) : pagoTotal(p);
+  const recibidoDe = t2 ? `${nombreCompleto(t)} y ${nombreCompleto(t2)}` : nombreCompleto(t);
+  return `
+    <div class="receipt-print">
+      <div class="receipt-box">
+        <div class="receipt-side">RECIBO DE ALQUILER</div>
+        <div class="receipt-body">
+          <div class="receipt-row"><span class="rl">Número</span><span class="rv">${esc(p.id)}</span><span class="rl" style="margin-left:14px;">Fecha</span><span class="rv">${fdate(TODAY_ISO)}</span></div>
+          <div class="receipt-row"><span class="rl">Recibido de</span><span class="rv">${esc(recibidoDe)}</span></div>
+          <div class="receipt-row"><span class="rl">La suma de $</span><span class="rv tnum" style="flex:none; min-width:120px;">${money(montoEsteRecibo).replace('$ ','')}</span></div>
+          <div class="receipt-row"><span class="rl" style="white-space:normal;">${esc(numeroALetras(montoEsteRecibo).charAt(0).toUpperCase()+numeroALetras(montoEsteRecibo).slice(1))} pesos</span></div>
+          <div class="receipt-row"><span class="rl">Por alquiler de</span><span class="rv">Propiedad ubicada en ${esc(prop.direccion)}, ${esc(prop.localidad)}</span></div>
+          <div class="receipt-row"><span class="rl">Correspondiente a</span><span class="rv">${periodoLabel(p.periodo)} (del ${rangoInicio} al ${rangoFin})</span></div>
+          <div class="receipt-breakdown">
+            <div><span class="kv-label">Alquiler</span><div class="tnum">${money(p.importe)}</div></div>
+            <div><span class="kv-label">Expensas</span><div class="tnum">${p.expensas?money(p.expensas):'—'}</div></div>
+            <div><span class="kv-label">Servicios</span><div class="tnum">${p.servicios?money(p.servicios):'—'}</div></div>
+          </div>
+          <div class="receipt-sign">Firma _______________________________</div>
+        </div>
+      </div>
+    </div>`;
+}
+function verRecibo(pid){
+  const p = payments.find(x=>x.id===pid);
+  if(!p) return;
+  showModal(reciboHtml(p) + `<div style="display:flex; gap:10px; justify-content:flex-end; margin-top:18px;">
+    <button class="btn" data-modal-cancel="1">Cerrar</button>
+    <button class="btn btn-primary" onclick="window.print()">${icon('printer')}Imprimir</button>
+  </div>`, true);
+}
+function cobrarModal(pid){
+  const p = payments.find(x=>x.id===pid);
+  const c = CT(p.contractId); const prop = PR(c.propertyId); const t = P(c.tenantId);
+  const saldo = saldoPendiente(p);
+  showModal(`
+    <div class="section-title" style="margin-bottom:10px;">Registrar cobro</div>
+    <div class="page-sub" style="margin-bottom:14px;">${esc(prop.direccion)} — ${esc(nombreCompleto(t))} — ${periodoLabel(p.periodo)}</div>
+    <div class="field" style="margin-bottom:16px;">
+      <label>Monto cobrado ahora (saldo pendiente: ${money(saldo)})</label>
+      <input type="number" id="cobroMonto" value="${saldo}">
+    </div>
+    <div style="display:flex; gap:10px; justify-content:flex-end;">
+      <button class="btn" data-modal-cancel="1">Cancelar</button>
+      <button class="btn btn-primary" id="cobroConfirmBtn">Confirmar cobro</button>
+    </div>`);
+  document.getElementById('cobroConfirmBtn').onclick = ()=>{
+    const monto = parseFloat(document.getElementById('cobroMonto').value)||0;
+    if(monto<=0){ showToast('Ingresá un monto válido'); return; }
+    const prev = {...p};
+    const pagadoYa = p.estado==='Parcial' ? (p.pagado||0) : 0;
+    const nuevoPagado = pagadoYa + monto;
+    const total = pagoTotal(p);
+    closeModal();
+    if(nuevoPagado >= total){
+      p.estado='Pagado'; p.fechaPago=TODAY_ISO; delete p.pagado;
+      showToast('Pago completo registrado', ()=>{ Object.assign(p, prev); if(!('pagado' in prev)) delete p.pagado; route(); showToast('Pago deshecho'); });
+      route();
+      verRecibo(pid);
+    } else {
+      p.estado='Parcial'; p.pagado=nuevoPagado; p.fechaPago=TODAY_ISO;
+      showToast(`Pago parcial registrado — quedan pendientes ${money(total-nuevoPagado)}`, ()=>{ Object.assign(p, prev); if(!('pagado' in prev)) delete p.pagado; route(); showToast('Pago deshecho'); });
+      route();
+    }
+  };
+}
+function deshacerPago(pid){
+  const pg = payments.find(x=>x.id===pid);
+  const prev = {...pg};
+  pg.estado='Pendiente'; pg.fechaPago=null; delete pg.pagado;
+  showToast('Pago revertido a pendiente', ()=>{ Object.assign(pg, prev); route(); showToast('Se restauró el pago'); });
+  route();
+}
+
+function computeNuevo(c){
+  if(c.tipoAumento==='ICL') return roundTo500(c.alquilerActual*(1+INDICES.ICL/100));
+  if(c.tipoAumento==='IPC') return roundTo500(c.alquilerActual*(1+INDICES.IPC/100));
+  if(c.tipoAumento==='Fijo') return roundTo500(c.alquilerActual*(1+c.pctFijo/100));
+  return c.alquilerActual;
+}
+function aplicarActualizacion(c, nuevo, indiceLabel){
+  c.historial.push({fecha:TODAY_ISO, anterior:c.alquilerActual, nuevo, indice:indiceLabel});
+  c.alquilerActual = nuevo;
+  c.proxAct = addMonths(c.proxAct, c.frecuencia);
+}
+function deshacerActualizacion(c, prev){
+  c.historial.pop();
+  c.alquilerActual = prev.alquilerActual;
+  c.proxAct = prev.proxAct;
+  route();
+  showToast('Actualización deshecha');
+}
+function actualizarContratoDesdeUI(cid){
+  const c = CT(cid);
+  const input = document.getElementById('nuevoAlquiler_'+cid);
+  const nuevo = roundTo500(parseFloat(input.value)||c.alquilerActual);
+  const auto = c.tipoAumento!=='Personalizado' && nuevo===computeNuevo(c);
+  const indiceLabel = c.tipoAumento==='Personalizado' ? 'Acuerdo entre partes' : (auto ? `${c.tipoAumento} ${c.tipoAumento==='Fijo'?c.pctFijo:INDICES[c.tipoAumento]}%` : 'Ajuste manual');
+  const prev = {alquilerActual:c.alquilerActual, proxAct:c.proxAct};
+  aplicarActualizacion(c, nuevo, indiceLabel);
+  showToast('Contrato #'+cid+' actualizado — nuevo alquiler '+money(nuevo), ()=>deshacerActualizacion(c, prev));
+  route();
+}
+function actualizarTodosPendientes(){
+  const due = contracts.filter(pendienteActualizacion).filter(c=>c.tipoAumento!=='Personalizado');
+  if(!due.length){ showToast('No hay contratos automáticos pendientes de actualizar'); return; }
+  showConfirm(`¿Actualizar ${due.length} contrato${due.length>1?'s':''} pendiente${due.length>1?'s':''} por ICL/IPC/% fijo? Los contratos "Personalizado" no se tocan. Después vas a poder deshacerlo.`, ()=>{
+    const snapshots = due.map(c=>({c, prev:{alquilerActual:c.alquilerActual, proxAct:c.proxAct}}));
+    due.forEach(c=> aplicarActualizacion(c, computeNuevo(c), `${c.tipoAumento} ${c.tipoAumento==='Fijo'?c.pctFijo:INDICES[c.tipoAumento]}%`));
+    showToast(`${due.length} contrato${due.length>1?'s':''} actualizado${due.length>1?'s':''}`, ()=>{
+      snapshots.forEach(({c,prev})=>{ c.historial.pop(); c.alquilerActual=prev.alquilerActual; c.proxAct=prev.proxAct; });
+      route();
+      showToast('Actualización masiva deshecha');
+    });
+    route();
+  });
+}
+function viewAumentos(){
+  const activos = contracts.filter(c=>c.estado==='Activo'||c.estado==='Próximo a vencer')
+    .slice().sort((a,b)=> new Date(a.proxAct+'T00:00:00') - new Date(b.proxAct+'T00:00:00'));
+  const rows = activos.map(c=>{
+    const p = PR(c.propertyId); const t = P(c.tenantId);
+    const dias = diasHasta(c.proxAct);
+    const sugerido = c.tipoAumento==='Personalizado' ? c.alquilerActual : computeNuevo(c);
+    const indiceCell = c.tipoAumento==='Personalizado' ? '<span class="cell-sub">Manual</span>' : `${esc(c.tipoAumento)} <span class="cell-sub">${c.tipoAumento==='Fijo'?c.pctFijo:INDICES[c.tipoAumento]}%</span>`;
+    let estadoCell;
+    if(dias<=0) estadoCell = `<span class="badge badge-warn">${icon('alert')}Pendiente</span>`;
+    else if(dias<=14) estadoCell = `<span class="badge badge-info">Vence en ${dias} día${dias>1?'s':''}</span>`;
+    else estadoCell = `<span class="cell-sub">${fdate(c.proxAct)}</span>`;
+    const msg = `Hola ${t.nombre}! Te escribimos de Caruso Propiedades para avisarte que a partir de ${fdate(c.proxAct)} el alquiler de ${p.direccion} pasa a ${money(sugerido)}. Cualquier consulta, quedamos a disposición.`;
+    return `<tr>
+      <td><div class="cell-title">${esc(p.direccion)}</div><div class="cell-sub">${esc(nombreCompleto(t))}</div></td>
+      <td>${indiceCell}</td>
+      <td class="num tnum">${money(c.alquilerActual)}</td>
+      <td class="num"><input type="number" step="500" id="nuevoAlquiler_${c.id}" value="${sugerido}" style="width:118px; padding:6px 8px; border:1px solid var(--border-strong); border-radius:7px; background:var(--paper-50); color:var(--ink-900); text-align:right;"></td>
+      <td>${estadoCell}</td>
+      <td class="row-actions">
+        <a class="btn btn-sm" href="${waLink(t.telefono, msg)}" target="_blank" rel="noopener">${icon('phone')}WhatsApp</a>
+        <button class="btn btn-sm btn-primary" data-actualizar="${c.id}">Actualizar</button>
+      </td>
+    </tr>`;
+  }).join('');
+  return `
+    <div class="card card-pad" style="margin-bottom:16px;">
+      <div class="section-title" style="margin-bottom:6px;">Índices del mes</div>
+      <div class="page-sub" style="margin-bottom:12px;">El ICL y el IPC se publican una vez al mes — cargalos acá. El campo "Alquiler nuevo" siempre se puede editar a mano si el propietario y el inquilino acuerdan otro valor.</div>
+      <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:flex-end;">
+        <div class="field"><label>ICL del mes (%)</label><input type="number" step="0.1" id="indiceIcl" value="${INDICES.ICL}"></div>
+        <div class="field"><label>IPC del mes (%)</label><input type="number" step="0.1" id="indiceIpc" value="${INDICES.IPC}"></div>
+        <button class="btn btn-primary" data-action="guardar-indices">Guardar índices</button>
+        <button class="btn" data-action="actualizar-todos">${icon('bolt')}Actualizar todos los pendientes</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table><thead><tr><th>Propiedad</th><th>Índice</th><th class="num">Alquiler actual</th><th class="num">Alquiler nuevo</th><th>Vencimiento</th><th></th></tr></thead><tbody>${rows}</tbody></table>
+    </div>
+    <div class="page-sub" style="margin-top:10px;">Ordenado por los que vencen antes. El monto propuesto se redondea al múltiplo de $500 más cercano, pero podés escribir otro valor antes de actualizar.</div>`;
+}
+
+function agregarGaranteModal(cid){
+  showModal(`
+    <div class="section-title" style="margin-bottom:10px;">Agregar garante</div>
+    <div class="page-sub" style="margin-bottom:14px;">Contrato #${esc(cid)}</div>
+    <div class="field" style="margin-bottom:10px;"><label>Nombre y apellido</label><input id="garNombre" placeholder="Ej: Roberto Sosa"></div>
+    <div class="field" style="margin-bottom:16px;"><label>Teléfono</label><input id="garTelefono" placeholder="Ej: 11-4455-6677"></div>
+    <div style="display:flex; gap:10px; justify-content:flex-end;">
+      <button class="btn" data-modal-cancel="1">Cancelar</button>
+      <button class="btn btn-primary" id="garSaveBtn">Guardar</button>
+    </div>`);
+  document.getElementById('garSaveBtn').onclick = ()=>{
+    const nombreTxt = document.getElementById('garNombre').value.trim();
+    const telefono = document.getElementById('garTelefono').value.trim();
+    if(!nombreTxt || !telefono){ showToast('Completá nombre y teléfono'); return; }
+    const partes = nombreTxt.split(' ');
+    const nuevaPersona = {id:'PSg'+Date.now(), nombre:partes[0], apellido:partes.slice(1).join(' ')||'—', dni:'—', telefono, email:'—', roles:['Garante']};
+    persons.push(nuevaPersona);
+    CT(cid).guarantorId = nuevaPersona.id;
+    closeModal();
+    showToast('Garante agregado');
+    route();
+  };
+}
+function viewDeudores(filter, query){
+  filter = filter==='servicios' ? 'servicios' : 'todos';
+  const all = computeDebtors();
+  let debtors = filter==='servicios' ? all.filter(d=>deudasServicios.some(ds=>ds.contractId===d.contractId)) : all;
+  if(query){
+    const q = query.toLowerCase();
+    debtors = debtors.filter(d=> (nombreCompleto(d.tenant)+' '+d.property.direccion+' '+d.property.localidad).toLowerCase().includes(q));
+  }
+  const cards = debtors.map(d=>{
+    const c = CT(d.contractId);
+    const garante = c.guarantorId ? P(c.guarantorId) : null;
+    const reincidente = d.periodos>=2;
+    const misDeudas = deudasServicios.filter(ds=>ds.contractId===d.contractId);
+    const msgInquilino = `Hola ${d.tenant.nombre}, te escribimos de Caruso Propiedades por el alquiler de ${d.property.direccion}: registramos ${money(d.total)} pendiente de pago. Te pedimos que te pongas en contacto para regularizarlo.`;
+    return `<div class="debtor-card">
+      <div class="debtor-row"><div class="cell-title">${esc(nombreCompleto(d.tenant))}</div>${estadoBadge('Vencido')}</div>
+      <div class="cell-sub">${esc(d.property.direccion)}, ${esc(d.property.localidad)}</div>
+      <div class="cell-sub">${d.periodos} período${d.periodos>1?'s':''} adeudado${d.periodos>1?'s':''} · ${d.dias} días de atraso</div>
+      <div class="chiprow">${reincidente?'<span class="badge badge-danger">Reincidente</span>':''}${misDeudas.length?'<span class="badge badge-danger">Deudor de servicios</span>':''}</div>
+      <div class="debtor-amount tnum">${money(d.total)}</div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:4px;">
+        <button class="btn btn-sm" data-nav="/propiedades/${d.property.id}?tab=contrato">Ver contrato</button>
+        <a class="btn btn-sm" href="${waLink(d.tenant.telefono, msgInquilino)}" target="_blank" rel="noopener">${icon('phone')}WhatsApp inquilino</a>
+      </div>
+      <div class="divider" style="margin:10px 0;"></div>
+      ${garante?`
+      <div class="cell-sub"><b>Garante:</b> ${esc(nombreCompleto(garante))} · ${esc(garante.telefono)}</div>
+      <a class="btn btn-sm" style="margin-top:6px;" href="${waLink(garante.telefono, `Hola ${garante.nombre}, te contactamos de Caruso Propiedades: como garante del contrato de ${d.property.direccion}, hay ${money(d.total)} pendientes de pago.`)}" target="_blank" rel="noopener">${icon('phone')}WhatsApp garante</a>`
+      :`<button class="btn btn-sm" data-agregar-garante="${c.id}">${icon('plus')}Agregar garante</button>`}
+      <div class="divider" style="margin:10px 0;"></div>
+      <div class="cell-sub" style="margin-bottom:4px;"><b>Servicios adeudados:</b></div>
+      ${misDeudas.length? misDeudas.map(ds=>`<div class="debtor-row"><span class="cell-sub">${esc(ds.servicio)}${ds.obs?' — '+esc(ds.obs):''}</span><span class="tnum" style="font-weight:700;">${money(ds.monto)}</span></div>`).join('') : `<div class="cell-sub">Sin deudas de servicios cargadas.</div>`}
+      <button class="btn btn-sm" style="margin-top:8px;" data-nueva-deuda-contrato="${c.id}">${icon('plus')}Agregar deuda de servicio</button>
+    </div>`;
+  }).join('');
+  const filtros = [['todos','Todos'],['servicios','Deudores de servicios']];
+  return `
+    <div class="page-head"><div><h1 class="page-title">Deudores</h1><div class="page-sub">${all.length} casos con pagos vencidos — surgen automáticamente de Cobranzas</div></div></div>
+    <div style="display:flex; gap:14px; flex-wrap:wrap; align-items:center; margin-bottom:16px;">
+      <div class="search-wrap" style="max-width:340px;">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input class="search-input" id="deudoresFilterInput" placeholder="Buscar por inquilino o propiedad..." value="${esc(query||'')}">
+      </div>
+      <div class="pill-row">${filtros.map(([k,l])=>`<button class="pill ${filter===k?'active':''}" data-deudorfilter="${k}">${l}</button>`).join('')}</div>
+    </div>
+    ${debtors.length? `<div class="debtor-grid">${cards}</div>` : `<div class="empty-state">${icon('check')}<div class="empty-state-title">No hay casos en este filtro</div></div>`}`;
+}
+
+function viewArreglos(filter, query){
+  filter = filter || 'todos';
+  let list = repairs.slice();
+  if(filter==='pendientes') list = list.filter(r=>r.estado==='Pendiente');
+  else if(filter==='curso') list = list.filter(r=>r.estado==='En curso');
+  else if(filter==='resueltos') list = list.filter(r=>r.estado==='Resuelto');
+  if(query){
+    const q = query.toLowerCase();
+    list = list.filter(r=>{ const p = PR(r.propertyId); return (r.descripcion+' '+p.direccion+' '+p.localidad+' '+(r.especialista||'')).toLowerCase().includes(q); });
+  }
+  list.sort((a,b)=>b.fechaAviso.localeCompare(a.fechaAviso));
+  const filtros = [['todos','Todos'],['pendientes','Pendientes'],['curso','En curso'],['resueltos','Resueltos']];
+  const rows = list.map(r=>{
+    const p = PR(r.propertyId);
+    return `<tr class="clickable" data-nav="/propiedades/${p.id}?tab=arreglos">
+      <td><div class="cell-title">${esc(r.descripcion)}</div><div class="cell-sub">${esc(p.direccion)}, ${esc(p.localidad)}</div></td>
+      <td class="tnum">${fdate(r.fechaAviso)}</td>
+      <td>${esc(r.especialista||'—')}</td>
+      <td class="num tnum">${r.costo!=null?money(r.costo):'—'}</td>
+      <td>${estadoBadge(r.estado)} ${r.urgente?'<span class="badge badge-danger" style="margin-left:4px;">Urgente</span>':''}</td>
+      <td class="row-actions">${r.estado!=='Resuelto'?`<button class="btn btn-sm" data-marcar-resuelto="${r.id}">Marcar resuelto</button>`:''}</td>
+    </tr>`;
+  }).join('');
+  return `
+    <div class="page-head">
+      <div><h1 class="page-title">Arreglos</h1><div class="page-sub">Reparaciones y mantenimiento reportados por inquilinos o propietarios</div></div>
+      <button class="btn btn-primary" onclick="showToast('Registrar arreglo — próximamente en esta etapa')">${icon('plus')}Nuevo arreglo</button>
+    </div>
+    <div style="display:flex; gap:14px; flex-wrap:wrap; align-items:center; margin-bottom:16px;">
+      <div class="search-wrap" style="max-width:340px;">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input class="search-input" id="arreglosFilterInput" placeholder="Buscar por descripción, propiedad, especialista..." value="${esc(query||'')}">
+      </div>
+      <div class="pill-row">${filtros.map(([k,l])=>`<button class="pill ${filter===k?'active':''}" data-arreglofilter="${k}">${l}</button>`).join('')}</div>
+    </div>
+    <div class="table-wrap">
+      ${list.length? `<table><thead><tr><th>Arreglo</th><th>Aviso</th><th>Especialista</th><th class="num">Costo</th><th>Estado</th><th></th></tr></thead><tbody>${rows}</tbody></table>`
+      : `<div class="empty-state">${icon('check')}<div class="empty-state-title">No hay arreglos en este filtro</div></div>`}
+    </div>
+    <div class="page-sub" style="margin-top:10px;">El costo de los arreglos resueltos a cargo del propietario se descuenta automáticamente de su liquidación del mes.</div>`;
+}
+
+function nuevoServicioPagadoModal(){
+  const opts = properties.map(p=>`<option value="${p.id}">${esc(p.direccion)} — ${esc(p.localidad)}</option>`).join('');
+  showModal(`
+    <div class="section-title" style="margin-bottom:10px;">Registrar servicio pagado</div>
+    <div class="field" style="margin-bottom:10px;"><label>Propiedad</label><select id="svPropiedad">${opts}</select></div>
+    <div class="field" style="margin-bottom:10px;"><label>Servicio</label><select id="svTipo"><option>Gas</option><option>Luz</option><option>Agua</option><option>Municipal</option></select></div>
+    <div class="field" style="margin-bottom:10px;"><label>Monto</label><input type="number" id="svMonto" placeholder="0"></div>
+    <div class="field" style="margin-bottom:16px;"><label>Observación</label><input id="svObs" placeholder="Opcional"></div>
+    <div style="display:flex; gap:10px; justify-content:flex-end;">
+      <button class="btn" data-modal-cancel="1">Cancelar</button>
+      <button class="btn btn-primary" id="svSaveBtn">Guardar</button>
+    </div>`);
+  document.getElementById('svSaveBtn').onclick = ()=>{
+    const monto = parseFloat(document.getElementById('svMonto').value)||0;
+    if(monto<=0){ showToast('Cargá un monto válido'); return; }
+    serviciosPagados.push({id:'SV'+Date.now(), propertyId:document.getElementById('svPropiedad').value, servicio:document.getElementById('svTipo').value, monto, fecha:TODAY_ISO, obs:document.getElementById('svObs').value.trim()});
+    closeModal();
+    showToast('Servicio registrado — se va a descontar de la liquidación');
+    route();
+  };
+}
+function nuevaDeudaServicioModal(fixedContractId){
+  const debtorsAll = computeDebtors();
+  if(!fixedContractId && !debtorsAll.length){ showToast('No hay deudores cargados en Cobranzas'); return; }
+  const selectorHtml = fixedContractId
+    ? `<div class="page-sub" style="margin-bottom:12px;">${esc(nombreCompleto(P(CT(fixedContractId).tenantId)))} — ${esc(PR(CT(fixedContractId).propertyId).direccion)}</div>`
+    : `<div class="field" style="margin-bottom:10px;"><label>Deudor</label><select id="dsContrato">${debtorsAll.map(d=>`<option value="${d.contractId}">${esc(nombreCompleto(d.tenant))} — ${esc(d.property.direccion)}</option>`).join('')}</select></div>`;
+  showModal(`
+    <div class="section-title" style="margin-bottom:10px;">Agregar deuda de servicio</div>
+    ${selectorHtml}
+    <div class="field" style="margin-bottom:10px;"><label>Servicio</label><select id="dsTipo"><option>Gas</option><option>Luz</option><option>Agua</option></select></div>
+    <div class="field" style="margin-bottom:10px;"><label>Monto adeudado</label><input type="number" id="dsMonto" placeholder="0"></div>
+    <div class="field" style="margin-bottom:16px;"><label>Observación</label><input id="dsObs" placeholder="Opcional"></div>
+    <div style="display:flex; gap:10px; justify-content:flex-end;">
+      <button class="btn" data-modal-cancel="1">Cancelar</button>
+      <button class="btn btn-primary" id="dsSaveBtn">Guardar</button>
+    </div>`);
+  document.getElementById('dsSaveBtn').onclick = ()=>{
+    const monto = parseFloat(document.getElementById('dsMonto').value)||0;
+    if(monto<=0){ showToast('Cargá un monto válido'); return; }
+    const contractId = fixedContractId || document.getElementById('dsContrato').value;
+    deudasServicios.push({id:'DS'+Date.now(), contractId, servicio:document.getElementById('dsTipo').value, monto, obs:document.getElementById('dsObs').value.trim(), fecha:TODAY_ISO});
+    closeModal();
+    showToast('Deuda de servicio agregada');
+    route();
+  };
+}
+function viewServicios(){
+  const rowsPag = serviciosPagados.slice().sort((a,b)=>b.fecha.localeCompare(a.fecha)).map(s=>{
+    const p = PR(s.propertyId);
+    return `<tr>
+      <td><div class="cell-title">${esc(p.direccion)}</div><div class="cell-sub">${esc(p.localidad)} · ${estadoBadge(p.estado)}</div></td>
+      <td>${esc(s.servicio)}</td>
+      <td class="num tnum">${money(s.monto)}</td>
+      <td class="tnum">${fdate(s.fecha)}</td>
+      <td class="cell-sub">${esc(s.obs||'—')}</td>
+    </tr>`;
+  }).join('');
+  const rowsDeuda = deudasServicios.map(d=>{
+    const c = CT(d.contractId); const t = P(c.tenantId); const p = PR(c.propertyId);
+    return `<tr>
+      <td><div class="cell-title">${esc(nombreCompleto(t))}</div><div class="cell-sub">${esc(p.direccion)}</div></td>
+      <td>${esc(d.servicio)}</td>
+      <td class="num tnum">${money(d.monto)}</td>
+      <td class="cell-sub">${esc(d.obs||'—')}</td>
+      <td class="row-actions"><button class="btn btn-sm" data-eliminar-deuda-servicio="${d.id}">Marcar regularizado</button></td>
+    </tr>`;
+  }).join('');
+  const debtorsAll = computeDebtors();
+  return `
+    <div class="page-head">
+      <div><h1 class="page-title">Servicios</h1><div class="page-sub">Lo que paga la inmobiliaria en inmuebles vacíos, y control de servicios de deudores</div></div>
+    </div>
+    <div class="card" style="margin-bottom:22px;">
+      <div class="card-pad" style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+        <div>
+          <div class="section-title">Pagados por la inmobiliaria</div>
+          <div class="page-sub">Se descuentan automáticamente de la liquidación del propietario correspondiente.</div>
+        </div>
+        <button class="btn btn-primary" data-action="nuevo-servicio-pagado">${icon('plus')}Registrar pago</button>
+      </div>
+      <div class="table-wrap" style="border-top:1px solid var(--border); border-radius:0 0 14px 14px; border-left:none; border-right:none; border-bottom:none;">
+        ${rowsPag.length? `<table><thead><tr><th>Propiedad</th><th>Servicio</th><th class="num">Monto</th><th>Fecha</th><th>Observación</th></tr></thead><tbody>${rowsPag}</tbody></table>`
+        : `<div class="empty-state">${icon('servicios')}<div class="empty-state-title">Sin pagos registrados</div></div>`}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-pad" style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+        <div>
+          <div class="section-title">Deudas de servicios</div>
+          <div class="page-sub">Solo controlamos servicios de los inquilinos que ya figuran como deudores en Cobranzas — no de todos los alquileres activos.</div>
+        </div>
+        <button class="btn btn-primary" data-action="nueva-deuda-servicio" ${debtorsAll.length?'':'disabled'}>${icon('plus')}Agregar deuda</button>
+      </div>
+      <div class="table-wrap" style="border-top:1px solid var(--border); border-radius:0 0 14px 14px; border-left:none; border-right:none; border-bottom:none;">
+        ${rowsDeuda.length? `<table><thead><tr><th>Inquilino</th><th>Servicio</th><th class="num">Monto</th><th>Observación</th><th></th></tr></thead><tbody>${rowsDeuda}</tbody></table>`
+        : `<div class="empty-state">${icon('check')}<div class="empty-state-title">Sin deudas de servicios cargadas</div></div>`}
+      </div>
+    </div>`;
+}
+
+function viewLiquidaciones(query){
+  let liqs = owners.map(o=>liquidacionOwner(o, PERIODO_ACTUAL));
+  if(query){
+    const q = query.toLowerCase();
+    liqs = liqs.filter(l=>nombreCompleto(l.owner).toLowerCase().includes(q));
+  }
+  const rows = liqs.map((l,i)=>`
+    <div class="liq-row" id="liqRow${i}">
+      <div class="liq-head" data-liq-toggle="${i}">
+        <svg class="liq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        <div style="flex:1;"><div class="cell-title">${esc(nombreCompleto(l.owner))}</div><div class="cell-sub">${contractsByOwner(l.ownerId).length} propiedad(es) en cartera</div></div>
+        <div class="liq-total-badge tnum">${money(l.total)}</div>
+      </div>
+      <div class="liq-detail">
+        ${l.detalle.length? l.detalle.map(d=>`<div class="liq-line"><span>${esc(d.property.direccion)} — ${esc(nombreCompleto(d.tenant))}</span><span class="tnum">${money(d.monto)}</span></div>`).join('') : `<div class="page-sub" style="padding:10px 0;">Sin cobranzas acreditadas este período.</div>`}
+        ${l.cobrado>0?`
+        <div class="liq-line"><span>Subtotal cobrado</span><span class="tnum">${money(l.cobrado)}</span></div>
+        <div class="liq-line"><span>Honorarios inmobiliaria (8%)</span><span class="tnum">- ${money(l.comision)}</span></div>
+        ${l.gastos.map(g=>`<div class="liq-line"><span>Arreglo — ${esc(g.desc)}</span><span class="tnum">- ${money(g.monto)}</span></div>`).join('')}
+        <div class="liq-line"><span>Total a liquidar</span><span class="tnum">${money(l.total)}</span></div>
+        <button class="btn btn-sm" style="margin-top:10px;" onclick="showToast('Imprimir liquidación — próximamente')">${icon('printer')}Imprimir liquidación</button>` : ''}
+      </div>
+    </div>`).join('');
+  return `
+    <div class="page-head"><div><h1 class="page-title">Liquidaciones</h1><div class="page-sub">${periodoLabel(PERIODO_ACTUAL)}</div></div></div>
+    <div class="search-wrap" style="max-width:340px; margin-bottom:16px;">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input class="search-input" id="liquidacionesFilterInput" placeholder="Buscar propietario..." value="${esc(query||'')}">
+    </div>
+    ${liqs.length? `<div class="card">${rows}</div>` : `<div class="empty-state">${icon('check')}<div class="empty-state-title">No encontramos propietarios</div></div>`}`;
+}
+
+function viewConfiguracion(){
+  const staff = [
+    {n:'Guillermo Caruso', r:'Administrador'}, {n:'Martillero a cargo', r:'Corredor responsable'}, {n:'Recepción', r:'Atención al público'},
+  ];
+  return `
+    <div class="page-head"><div><h1 class="page-title">Configuración</h1><div class="page-sub">Datos de la inmobiliaria — en esta etapa es solo de lectura</div></div></div>
+    <div class="grid-2">
+      <div class="card card-pad">
+        <div class="section-title" style="margin-bottom:12px;">Datos de la inmobiliaria</div>
+        <div class="form-grid">
+          <div class="field"><label>Nombre</label><input value="Caruso Propiedades" disabled></div>
+          <div class="field"><label>Localidad</label><input value="Paso del Rey, Moreno" disabled></div>
+          <div class="field"><label>Teléfono</label><input value="0237 15-XXXX-XXXX" disabled></div>
+          <div class="field"><label>Email</label><input value="contacto@carusopropiedades.com.ar" disabled></div>
+          <div class="field"><label>Comisión estándar</label><input value="8%" disabled></div>
+          <div class="field"><label>Moneda</label><input value="ARS" disabled></div>
+        </div>
+      </div>
+      <div class="card card-pad">
+        <div class="section-title" style="margin-bottom:8px;">Usuarios</div>
+        ${staff.map(s=>`<div class="staff-row"><div class="avatar" style="width:36px;height:36px;font-size:13px;">${esc(s.n[0])}</div><div><div class="cell-title">${esc(s.n)}</div><div class="cell-sub">${esc(s.r)}</div></div></div>`).join('')}
+        <div class="note-banner" style="margin-top:14px;">${icon('alert')}<div>Autenticación y permisos se definen en la siguiente etapa, junto con la arquitectura definitiva.</div></div>
+      </div>
+    </div>`;
+}
+
+/* ============================== ROUTER ============================== */
+function parseHash(){
+  let h = location.hash.slice(1) || '/dashboard';
+  const [path, qs] = h.split('?');
+  const parts = path.split('/').filter(Boolean);
+  const params = new URLSearchParams(qs||'');
+  return {parts, params};
+}
+function route(){
+  const activeEl = document.activeElement;
+  const activeId = activeEl && activeEl.id;
+  const selStart = activeEl && typeof activeEl.selectionStart==='number' ? activeEl.selectionStart : null;
+  const {parts, params} = parseHash();
+  const section = parts[0] || 'dashboard';
+  let html = '';
+  if(section==='dashboard') html = viewDashboard();
+  else if(section==='propiedades'){
+    if(parts[1]) html = viewFichaPropiedad(parts[1], params.get('tab'));
+    else html = viewPropiedades(params.get('filter'), params.get('q'));
+  }
+  else if(section==='personas') html = viewPersonas(params.get('q'));
+  else if(section==='contratos') html = viewContratos(params.get('filter'), params.get('q'));
+  else if(section==='cobranzas') html = viewCobranzas(params.get('sub'), params.get('q'));
+  else if(section==='deudores') html = viewDeudores(params.get('filter'), params.get('q'));
+  else if(section==='arreglos') html = viewArreglos(params.get('filter'), params.get('q'));
+  else if(section==='servicios') html = viewServicios();
+  else if(section==='liquidaciones') html = viewLiquidaciones(params.get('q'));
+  else if(section==='configuracion') html = viewConfiguracion();
+  else html = viewDashboard();
+
+  document.getElementById('view').innerHTML = html;
+  renderNav(section);
+  document.getElementById('todayPill').textContent = HOY.toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'});
+  document.body.classList.remove('sidebar-open');
+  if(activeId){
+    const el = document.getElementById(activeId);
+    if(el && el.focus){
+      el.focus({preventScroll:true});
+      if(selStart!=null && el.setSelectionRange){ try{ el.setSelectionRange(selStart, selStart); }catch(e){} }
+    } else {
+      window.scrollTo(0,0);
+    }
+  } else {
+    window.scrollTo(0,0);
+  }
+}
+window.addEventListener('hashchange', route);
+
+/* ============================== EVENTS ============================== */
+document.addEventListener('click', (e)=>{
+  // acciones específicas primero: pueden estar anidadas dentro de una fila clickeable (data-nav)
+  const cobrarEl = e.target.closest('[data-cobrar]');
+  if(cobrarEl){ cobrarModal(cobrarEl.getAttribute('data-cobrar')); return; }
+
+  const reciboEl = e.target.closest('[data-ver-recibo]');
+  if(reciboEl){ verRecibo(reciboEl.getAttribute('data-ver-recibo')); return; }
+
+  const deshacerPagoEl = e.target.closest('[data-deshacer-pago]');
+  if(deshacerPagoEl){ deshacerPago(deshacerPagoEl.getAttribute('data-deshacer-pago')); return; }
+
+  const resueltoEl0 = e.target.closest('[data-marcar-resuelto]');
+  if(resueltoEl0){
+    const r = repairs.find(x=>x.id===resueltoEl0.getAttribute('data-marcar-resuelto'));
+    if(r){
+      const prev = {...r};
+      r.estado='Resuelto'; r.fechaResuelto=TODAY_ISO; if(r.costo==null) r.costo=0;
+      showToast('Arreglo marcado como resuelto', ()=>{ Object.assign(r, prev); route(); showToast('Cambio deshecho'); });
+      route();
+    }
+    return;
+  }
+  const actEl0 = e.target.closest('[data-actualizar]');
+  if(actEl0){ actualizarContratoDesdeUI(actEl0.getAttribute('data-actualizar')); return; }
+
+  const guardarIdx0 = e.target.closest('[data-action="guardar-indices"]');
+  if(guardarIdx0){
+    INDICES.ICL = parseFloat(document.getElementById('indiceIcl').value)||0;
+    INDICES.IPC = parseFloat(document.getElementById('indiceIpc').value)||0;
+    showToast('Índices guardados');
+    route();
+    return;
+  }
+  const actTodos0 = e.target.closest('[data-action="actualizar-todos"]');
+  if(actTodos0){ actualizarTodosPendientes(); return; }
+
+  const nuevoSvc = e.target.closest('[data-action="nuevo-servicio-pagado"]');
+  if(nuevoSvc){ nuevoServicioPagadoModal(); return; }
+
+  const nuevaDeuda = e.target.closest('[data-action="nueva-deuda-servicio"]');
+  if(nuevaDeuda){ nuevaDeudaServicioModal(); return; }
+
+  const elimDeuda = e.target.closest('[data-eliminar-deuda-servicio]');
+  if(elimDeuda){
+    const id = elimDeuda.getAttribute('data-eliminar-deuda-servicio');
+    const idx = deudasServicios.findIndex(x=>x.id===id);
+    if(idx>-1){
+      const removed = deudasServicios[idx];
+      deudasServicios.splice(idx,1);
+      showToast('Deuda de servicio regularizada', ()=>{ deudasServicios.splice(idx,0,removed); route(); showToast('Deuda restaurada'); });
+      route();
+    }
+    return;
+  }
+
+  const garanteEl = e.target.closest('[data-agregar-garante]');
+  if(garanteEl){ agregarGaranteModal(garanteEl.getAttribute('data-agregar-garante')); return; }
+
+  const deudorFilterEl = e.target.closest('[data-deudorfilter]');
+  if(deudorFilterEl){ const {params:pd} = parseHash(); location.hash = `#/deudores?filter=${deudorFilterEl.getAttribute('data-deudorfilter')}${pd.get('q')?'&q='+encodeURIComponent(pd.get('q')):''}`; return; }
+
+  const nuevaDeudaContratoEl = e.target.closest('[data-nueva-deuda-contrato]');
+  if(nuevaDeudaContratoEl){ nuevaDeudaServicioModal(nuevaDeudaContratoEl.getAttribute('data-nueva-deuda-contrato')); return; }
+
+  const nuevoContratoEl = e.target.closest('[data-action="nuevo-contrato"]');
+  if(nuevoContratoEl){ nuevoContratoModal(); return; }
+
+  const modalCancel = e.target.closest('[data-modal-cancel]');
+  if(modalCancel){ closeModal(); return; }
+  if(e.target.id==='modalOverlay'){ closeModal(); return; }
+
+  const toastUndoEl = e.target.closest('[data-toast-undo]');
+  if(toastUndoEl){
+    const t = document.getElementById('toast');
+    if(t._undo) t._undo();
+    t.classList.remove('show');
+    return;
+  }
+
+  const navEl = e.target.closest('[data-nav]');
+  if(navEl){ e.preventDefault(); location.hash = '#'+navEl.getAttribute('data-nav'); if(navEl.hasAttribute('data-close-drawer')) closeDrawer(); return; }
+
+  const tabEl = e.target.closest('[data-ficha-tab]');
+  if(tabEl){ const [pid,tab] = tabEl.getAttribute('data-ficha-tab').split(':'); location.hash = `#/propiedades/${pid}?tab=${tab}`; return; }
+
+  const pillProp = e.target.closest('[data-propfilter]');
+  if(pillProp){ const f = pillProp.getAttribute('data-propfilter'); const {params} = parseHash(); location.hash = `#/propiedades?filter=${f}${params.get('q')?'&q='+encodeURIComponent(params.get('q')):''}`; return; }
+
+  const pillContrato = e.target.closest('[data-contratofilter]');
+  if(pillContrato){ const {params:pc} = parseHash(); location.hash = `#/contratos?filter=${pillContrato.getAttribute('data-contratofilter')}${pc.get('q')?'&q='+encodeURIComponent(pc.get('q')):''}`; return; }
+
+  const pillArreglo = e.target.closest('[data-arreglofilter]');
+  if(pillArreglo){ const {params:pa} = parseHash(); location.hash = `#/arreglos?filter=${pillArreglo.getAttribute('data-arreglofilter')}${pa.get('q')?'&q='+encodeURIComponent(pa.get('q')):''}`; return; }
+
+  const pillCobSub = e.target.closest('[data-cobranzasub]');
+  if(pillCobSub){ location.hash = `#/cobranzas?sub=${pillCobSub.getAttribute('data-cobranzasub')}`; return; }
+
+  const personaEl = e.target.closest('[data-persona]');
+  if(personaEl){ openDrawer(personaDrawer(personaEl.getAttribute('data-persona'))); return; }
+
+  const liqToggle = e.target.closest('[data-liq-toggle]');
+  if(liqToggle){ document.getElementById('liqRow'+liqToggle.getAttribute('data-liq-toggle')).classList.toggle('open'); return; }
+
+  if(e.target.id==='drawerCloseBtn' || e.target===document.getElementById('drawerOverlay')){ closeDrawer(); return; }
+});
+
+document.addEventListener('input', (e)=>{
+  const id = e.target.id;
+  if(id==='propFilterInput'){ const {params} = parseHash(); location.hash = `#/propiedades?filter=${params.get('filter')||'todos'}&q=${encodeURIComponent(e.target.value)}`; }
+  else if(id==='personaFilterInput'){ location.hash = `#/personas?q=${encodeURIComponent(e.target.value)}`; }
+  else if(id==='contratosFilterInput'){ const {params} = parseHash(); location.hash = `#/contratos?filter=${params.get('filter')||'activos'}&q=${encodeURIComponent(e.target.value)}`; }
+  else if(id==='arreglosFilterInput'){ const {params} = parseHash(); location.hash = `#/arreglos?filter=${params.get('filter')||'todos'}&q=${encodeURIComponent(e.target.value)}`; }
+  else if(id==='deudoresFilterInput'){ const {params} = parseHash(); location.hash = `#/deudores?filter=${params.get('filter')||'todos'}&q=${encodeURIComponent(e.target.value)}`; }
+  else if(id==='liquidacionesFilterInput'){ location.hash = `#/liquidaciones?q=${encodeURIComponent(e.target.value)}`; }
+  else if(id==='cobranzasFilterInput'){ const {params} = parseHash(); location.hash = `#/cobranzas?sub=mes&q=${encodeURIComponent(e.target.value)}`; }
+});
+
+/* global search */
+const searchInput = document.getElementById('globalSearch');
+const searchResults = document.getElementById('searchResults');
+searchInput.addEventListener('input', ()=>{
+  const q = searchInput.value.trim().toLowerCase();
+  if(!q){ searchResults.classList.remove('show'); return; }
+  const props = properties.filter(p=> (p.id+' '+p.direccion+' '+p.localidad+' '+p.tipo+' '+nombreCompleto(P(p.ownerId))+' '+nombreCompleto(P(p.tenantId))).toLowerCase().includes(q)).slice(0,5);
+  const ppl = persons.filter(p=> (nombreCompleto(p)+' '+p.dni).toLowerCase().includes(q)).slice(0,5);
+  if(!props.length && !ppl.length){ searchResults.innerHTML = `<div class="search-empty">Sin resultados para "${esc(searchInput.value)}"</div>`; searchResults.classList.add('show'); return; }
+  searchResults.innerHTML = `
+    ${props.length?`<div class="search-group-label">Propiedades</div>${props.map(p=>`<div class="search-result" data-nav="/propiedades/${p.id}"><div class="search-result-title">${esc(p.direccion)}</div><div class="search-result-sub">${esc(p.tipo)} · ${esc(p.localidad)} · ${estadoTxt(p.estado)}</div></div>`).join('')}`:''}
+    ${ppl.length?`<div class="search-group-label">Personas</div>${ppl.map(p=>`<div class="search-result" data-persona="${p.id}">${esc(nombreCompleto(p))}<div class="search-result-sub">${p.roles.join(' · ')}</div></div>`).join('')}`:''}
+  `;
+  searchResults.classList.add('show');
+});
+function estadoTxt(s){return s;}
+searchResults.addEventListener('click', (e)=>{
+  const navEl = e.target.closest('[data-nav]');
+  if(navEl){ location.hash = '#'+navEl.getAttribute('data-nav'); searchResults.classList.remove('show'); searchInput.value=''; return; }
+  const personaEl = e.target.closest('[data-persona]');
+  if(personaEl){ openDrawer(personaDrawer(personaEl.getAttribute('data-persona'))); searchResults.classList.remove('show'); searchInput.value=''; }
+});
+document.addEventListener('click', (e)=>{ if(!e.target.closest('.search-wrap')) searchResults.classList.remove('show'); });
+searchInput.addEventListener('keydown', (e)=>{ if(e.key==='Escape'){ searchResults.classList.remove('show'); searchInput.blur(); } });
+
+/* drawer */
+function openDrawer(html){ document.getElementById('drawer').innerHTML = html; document.getElementById('drawerOverlay').classList.add('show'); }
+function closeDrawer(){ document.getElementById('drawerOverlay').classList.remove('show'); }
+
+/* mobile nav */
+document.getElementById('hamburgerBtn').addEventListener('click', ()=>document.body.classList.add('sidebar-open'));
+document.getElementById('navOverlay').addEventListener('click', ()=>document.body.classList.remove('sidebar-open'));
+document.getElementById('backBtn').addEventListener('click', ()=>history.back());
+
+route();
+</script>
+
+</body></html>
