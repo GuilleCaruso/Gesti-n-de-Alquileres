@@ -467,7 +467,7 @@ const properties = [
   {id:'PR02', tipo:'Duplex', direccion:'Gaona 450', localidad:'Moreno', dormitorios:2, ambientes:3, banos:1, cochera:false, terraza:true, m2:78, estado:'Alquilada', ownerId:'PS02', tenantId:'PS06', obs:''},
   {id:'PR03', tipo:'Departamento', direccion:'Juan XXIII 88, 1°B', localidad:'Paso del Rey', dormitorios:1, ambientes:2, banos:1, cochera:false, m2:42, estado:'Disponible', ownerId:'PS03', tenantId:null, obs:''},
   {id:'PR04', tipo:'Local comercial', direccion:'San Martín 900', localidad:'Moreno', dormitorios:0, ambientes:1, banos:1, cochera:false, m2:95, estado:'Alquilada', ownerId:'PS02', tenantId:'PS07', obs:'Rubro: kiosco / despensa'},
-  {id:'PR05', tipo:'Casa', direccion:'Rivadavia 2200', localidad:'Francisco Álvarez', dormitorios:3, ambientes:5, banos:2, cochera:true, patio:true, m2:180, estado:'En venta', ownerId:'PS04', tenantId:null, obs:'Publicada en portales desde julio 2026'},
+  {id:'PR05', tipo:'Casa', direccion:'Rivadavia 2200', localidad:'Francisco Álvarez', dormitorios:3, ambientes:5, banos:2, cochera:true, patio:true, m2:180, estado:'Disponible', ownerId:'PS04', tenantId:null, obs:''},
   {id:'PR06', tipo:'Duplex', direccion:'Sarmiento 340', localidad:'Paso del Rey', dormitorios:2, ambientes:3, banos:1, cochera:true, m2:75, estado:'Alquilada', ownerId:'PS01', tenantId:'PS08', obs:''},
   {id:'PR07', tipo:'Duplex', direccion:'Sarmiento 342', localidad:'Paso del Rey', dormitorios:2, ambientes:3, banos:1, cochera:true, m2:75, estado:'Alquilada', ownerId:'PS01', tenantId:'PS09', obs:''},
   {id:'PR08', tipo:'Duplex', direccion:'Sarmiento 344', localidad:'Paso del Rey', dormitorios:2, ambientes:3, banos:1, cochera:true, m2:75, estado:'Disponible', ownerId:'PS01', tenantId:null, obs:''},
@@ -483,21 +483,22 @@ const properties = [
 const PR = id => properties.find(p=>p.id===id);
 
 const contracts = [
-  {id:'CT01', propertyId:'PR01', ownerId:'PS04', tenantId:'PS05', tenantId2:null, guarantorId:'PS13', inicio:'2025-03-01', fin:'2027-02-28', alquilerInicial:520000, alquilerActual:610000, metodo:'ICL', tipoAumento:'ICL', frecuencia:3, proxAct:'2026-12-01', estado:'Activo', deposito:610000, expensas:{aplica:true, monto:22000}, servicios:{aplica:false},
+  {id:'CT01', numero:'0154', propertyId:'PR01', ownerId:'PS04', tenantId:'PS05', tenantId2:null, guarantorId:'PS13', inicio:'2025-03-01', fin:'2027-02-28', alquilerInicial:520000, alquilerActual:610000, metodo:'ICL', tipoAumento:'ICL', frecuencia:3, proxAct:'2026-12-01', estado:'Activo', deposito:610000, expensas:{aplica:true, monto:22000}, servicios:{aplica:false},
     historial:[{fecha:'2025-06-01',anterior:520000,nuevo:560000,indice:'ICL +7,7%'},{fecha:'2025-09-01',anterior:560000,nuevo:610000,indice:'ICL +8,9%'}]},
-  {id:'CT02', propertyId:'PR02', ownerId:'PS02', tenantId:'PS06', tenantId2:null, guarantorId:null, inicio:'2024-10-01', fin:'2026-09-30', alquilerInicial:450000, alquilerActual:690000, metodo:'IPC', tipoAumento:'IPC', frecuencia:4, proxAct:'2026-09-01', estado:'Próximo a vencer', deposito:690000, expensas:{aplica:false}, servicios:{aplica:false},
+  {id:'CT02', numero:'0121', propertyId:'PR02', ownerId:'PS02', tenantId:'PS06', tenantId2:null, guarantorId:null, inicio:'2024-10-01', fin:'2026-09-30', alquilerInicial:450000, alquilerActual:690000, metodo:'IPC', tipoAumento:'IPC', frecuencia:4, proxAct:'2026-09-01', estado:'Próximo a vencer', deposito:690000, expensas:{aplica:false}, servicios:{aplica:false},
     historial:[{fecha:'2026-01-01',anterior:610000,nuevo:650000,indice:'IPC +6,6%'},{fecha:'2026-05-01',anterior:650000,nuevo:690000,indice:'IPC +6,2%'}]},
-  {id:'CT04', propertyId:'PR04', ownerId:'PS02', tenantId:'PS07', tenantId2:null, guarantorId:null, inicio:'2023-06-01', fin:'2028-05-31', alquilerInicial:300000, alquilerActual:720000, metodo:'Porcentaje fijo (10%)', tipoAumento:'Fijo', pctFijo:10, frecuencia:6, proxAct:'2026-12-01', estado:'Activo', deposito:720000, expensas:{aplica:false}, servicios:{aplica:false}, historial:[]},
-  {id:'CT05', propertyId:'PR06', ownerId:'PS01', tenantId:'PS08', tenantId2:null, guarantorId:null, inicio:'2025-01-15', fin:'2027-01-14', alquilerInicial:480000, alquilerActual:560000, metodo:'ICL', tipoAumento:'ICL', frecuencia:3, proxAct:'2026-10-15', estado:'Activo', deposito:560000, expensas:{aplica:false}, servicios:{aplica:true}, historial:[{fecha:'2026-04-15',anterior:520000,nuevo:560000,indice:'ICL +7,7%'}]},
-  {id:'CT06', propertyId:'PR07', ownerId:'PS01', tenantId:'PS09', tenantId2:null, guarantorId:null, inicio:'2025-02-01', fin:'2027-01-31', alquilerInicial:480000, alquilerActual:560000, metodo:'ICL', tipoAumento:'ICL', frecuencia:3, proxAct:'2026-11-01', estado:'Activo', deposito:560000, expensas:{aplica:false}, servicios:{aplica:false}, historial:[]},
-  {id:'CT07', propertyId:'PR09', ownerId:'PS01', tenantId:'PS12', tenantId2:null, guarantorId:null, inicio:'2025-05-01', fin:'2027-04-30', alquilerInicial:470000, alquilerActual:545000, metodo:'ICL', tipoAumento:'ICL', frecuencia:3, proxAct:'2026-11-01', estado:'Activo', deposito:545000, expensas:{aplica:false}, servicios:{aplica:false}, historial:[]},
-  {id:'CT08', propertyId:'PR10', ownerId:'PS02', tenantId:'PS10', tenantId2:null, guarantorId:'PS14', inicio:'2024-08-01', fin:'2027-07-31', alquilerInicial:380000, alquilerActual:520000, metodo:'IPC', tipoAumento:'IPC', frecuencia:4, proxAct:'2026-12-01', estado:'Activo', deposito:520000, expensas:{aplica:false}, servicios:{aplica:false}, historial:[{fecha:'2026-01-01',anterior:470000,nuevo:520000,indice:'IPC +10,6%'}]},
-  {id:'CT09', propertyId:'PR13', ownerId:'PS02', tenantId:'PS15', tenantId2:null, guarantorId:null, inicio:'2025-09-01', fin:'2027-08-31', alquilerInicial:400000, alquilerActual:470000, metodo:'Personalizado', tipoAumento:'Personalizado', frecuencia:6, proxAct:'2027-03-01', estado:'Activo', deposito:470000, expensas:{aplica:true, monto:15000}, servicios:{aplica:true}, historial:[]},
-  {id:'CT10', propertyId:'PR14', ownerId:'PS03', tenantId:'PS17', tenantId2:null, guarantorId:null, inicio:'2024-12-01', fin:'2026-11-30', alquilerInicial:500000, alquilerActual:780000, metodo:'ICL', tipoAumento:'ICL', frecuencia:3, proxAct:'2026-09-01', estado:'Activo', deposito:780000, expensas:{aplica:false}, servicios:{aplica:false},
+  {id:'CT04', numero:'0087', propertyId:'PR04', ownerId:'PS02', tenantId:'PS07', tenantId2:null, guarantorId:null, inicio:'2023-06-01', fin:'2028-05-31', alquilerInicial:300000, alquilerActual:720000, metodo:'Porcentaje fijo (10%)', tipoAumento:'Fijo', pctFijo:10, frecuencia:6, proxAct:'2026-12-01', estado:'Activo', deposito:720000, expensas:{aplica:false}, servicios:{aplica:false}, historial:[]},
+  {id:'CT05', numero:'0149', propertyId:'PR06', ownerId:'PS01', tenantId:'PS08', tenantId2:null, guarantorId:null, inicio:'2025-01-15', fin:'2027-01-14', alquilerInicial:480000, alquilerActual:560000, metodo:'ICL', tipoAumento:'ICL', frecuencia:3, proxAct:'2026-10-15', estado:'Activo', deposito:560000, expensas:{aplica:false}, servicios:{aplica:true}, historial:[{fecha:'2026-04-15',anterior:520000,nuevo:560000,indice:'ICL +7,7%'}]},
+  {id:'CT06', numero:'0151', propertyId:'PR07', ownerId:'PS01', tenantId:'PS09', tenantId2:null, guarantorId:null, inicio:'2025-02-01', fin:'2027-01-31', alquilerInicial:480000, alquilerActual:560000, metodo:'ICL', tipoAumento:'ICL', frecuencia:3, proxAct:'2026-11-01', estado:'Activo', deposito:560000, expensas:{aplica:false}, servicios:{aplica:false}, historial:[]},
+  {id:'CT07', numero:'0160', propertyId:'PR09', ownerId:'PS01', tenantId:'PS12', tenantId2:null, guarantorId:null, inicio:'2025-05-01', fin:'2027-04-30', alquilerInicial:470000, alquilerActual:545000, metodo:'ICL', tipoAumento:'ICL', frecuencia:3, proxAct:'2026-11-01', estado:'Activo', deposito:545000, expensas:{aplica:false}, servicios:{aplica:false}, historial:[]},
+  {id:'CT08', numero:'0112', propertyId:'PR10', ownerId:'PS02', tenantId:'PS10', tenantId2:null, guarantorId:'PS14', inicio:'2024-08-01', fin:'2027-07-31', alquilerInicial:380000, alquilerActual:520000, metodo:'IPC', tipoAumento:'IPC', frecuencia:4, proxAct:'2026-12-01', estado:'Activo', deposito:520000, expensas:{aplica:false}, servicios:{aplica:false}, historial:[{fecha:'2026-01-01',anterior:470000,nuevo:520000,indice:'IPC +10,6%'}]},
+  {id:'CT09', numero:'0172', propertyId:'PR13', ownerId:'PS02', tenantId:'PS15', tenantId2:null, guarantorId:null, inicio:'2025-09-01', fin:'2027-08-31', alquilerInicial:400000, alquilerActual:470000, metodo:'Personalizado', tipoAumento:'Personalizado', frecuencia:6, proxAct:'2027-03-01', estado:'Activo', deposito:470000, expensas:{aplica:true, monto:15000}, servicios:{aplica:true}, historial:[]},
+  {id:'CT10', numero:'0138', propertyId:'PR14', ownerId:'PS03', tenantId:'PS17', tenantId2:null, guarantorId:null, inicio:'2024-12-01', fin:'2026-11-30', alquilerInicial:500000, alquilerActual:780000, metodo:'ICL', tipoAumento:'ICL', frecuencia:3, proxAct:'2026-09-01', estado:'Activo', deposito:780000, expensas:{aplica:false}, servicios:{aplica:false},
     historial:[{fecha:'2025-12-01',anterior:660000,nuevo:720000,indice:'ICL +9,1%'},{fecha:'2026-03-01',anterior:720000,nuevo:780000,indice:'ICL +8,3%'}]},
-  {id:'CT11', propertyId:'PR15', ownerId:'PS03', tenantId:'PS11', tenantId2:null, guarantorId:null, inicio:'2025-04-01', fin:'2027-03-31', alquilerInicial:430000, alquilerActual:500000, metodo:'IPC', tipoAumento:'IPC', frecuencia:4, proxAct:'2026-12-01', estado:'Activo', deposito:500000, expensas:{aplica:false}, servicios:{aplica:false}, historial:[]},
+  {id:'CT11', numero:'0157', propertyId:'PR15', ownerId:'PS03', tenantId:'PS11', tenantId2:null, guarantorId:null, inicio:'2025-04-01', fin:'2027-03-31', alquilerInicial:430000, alquilerActual:500000, metodo:'IPC', tipoAumento:'IPC', frecuencia:4, proxAct:'2026-12-01', estado:'Activo', deposito:500000, expensas:{aplica:false}, servicios:{aplica:false}, historial:[]},
 ];
 const CT = id => contracts.find(c=>c.id===id);
+const numeroContrato = c => c ? (c.numero || c.id) : '—';
 const contractByProperty = pid => contracts.find(c=>c.propertyId===pid);
 const contractsByOwner = oid => contracts.filter(c=>c.ownerId===oid);
 const pendienteActualizacion = c => new Date(c.proxAct+'T00:00:00') <= HOY;
@@ -546,6 +547,8 @@ const payments = [
 ];
 const paymentsByContract = cid => payments.filter(p=>p.contractId===cid).sort((a,b)=>a.periodo.localeCompare(b.periodo));
 const pagoTotal = p => p.importe + (p.expensas||0) + (p.servicios||0);
+// lo que del pago NO va al propietario (expensas/servicios destildados al cobrar)
+const noLiquida = p => (p.expensas && p.expensasLiq===false ? p.expensas : 0) + (p.servicios && p.serviciosLiq===false ? p.servicios : 0);
 const saldoPendiente = p => pagoTotal(p) - (p.estado==='Parcial' ? (p.pagado||0) : 0);
 
 function computeDebtors(){
@@ -605,7 +608,8 @@ function liquidacionOwner(ownerId, periodo){
   cs.forEach(c=>{
     const pay = payments.find(p=>p.contractId===c.id && p.periodo===periodo);
     if(!pay) return;
-    const monto = pay.estado==='Pagado' ? pagoTotal(pay) : (pay.estado==='Parcial' ? (pay.pagado||0) : 0);
+    const bruto = pay.estado==='Pagado' ? pagoTotal(pay) : (pay.estado==='Parcial' ? (pay.pagado||0) : 0);
+    const monto = Math.max(0, bruto - (bruto>0 ? noLiquida(pay) : 0));
     if(monto>0){ cobrado += monto; detalle.push({property:PR(c.propertyId), tenant:P(c.tenantId), monto}); }
   });
   const ownerPropertyIds = properties.filter(pr=>pr.ownerId===ownerId).map(pr=>pr.id);
@@ -619,7 +623,7 @@ function liquidacionOwner(ownerId, periodo){
   const total = cobrado - comision - gastosTotal;
   return {ownerId, owner:P(ownerId), detalle, cobrado, comision, gastos, gastosTotal, total};
 }
-const owners = ['PS01','PS02','PS03','PS04'];
+const ownerIds = () => persons.filter(p=>properties.some(pr=>pr.ownerId===p.id)).map(p=>p.id);
 
 /* ============================== HELPERS ============================== */
 const money = n => '$ ' + Math.round(n).toLocaleString('es-AR');
@@ -737,7 +741,7 @@ function viewDashboard(){
     debtors.length ? {tipo:'warn', text:`<b>${debtors.length} inquilino${debtors.length>1?'s':''}</b> con pagos vencidos`, sub:debtors.map(d=>nombreCompleto(d.tenant)).join(' · '), nav:'/deudores'} : null,
     pendActualizacion.length ? {tipo:'warn', text:`<b>${pendActualizacion.length} contrato${pendActualizacion.length>1?'s':''}</b> necesita${pendActualizacion.length>1?'n':''} actualización de alquiler`, sub:pendActualizacion.map(c=>PR(c.propertyId).direccion).join(' · '), nav:'/cobranzas?sub=aumentos'} : null,
     pendientesMes ? {tipo:'warn', text:`<b>${pendientesMes} cobranzas</b> de ${periodoLabel(PERIODO_ACTUAL)} sin acreditar`, sub:'Pendientes, parciales o en gestión', nav:'/cobranzas'} : null,
-    {tipo:'info', text:`Liquidaciones de ${periodoLabel(PERIODO_ACTUAL)} listas para revisar`, sub:`${owners.length} propietarios`, nav:'/liquidaciones'},
+    {tipo:'info', text:`Liquidaciones de ${periodoLabel(PERIODO_ACTUAL)} listas para revisar`, sub:`${ownerIds().length} propietarios`, nav:'/liquidaciones'},
     {tipo:'ok', text:`<b>${pagadosMes} cobranzas</b> de ${periodoLabel(PERIODO_ACTUAL)} ya registradas como pagadas`, sub:'', nav:null},
   ].filter(Boolean);
 
@@ -790,12 +794,11 @@ function viewPropiedades(filter, query){
   let list = properties.slice();
   if(filter==='alquiladas') list = list.filter(p=>p.estado==='Alquilada');
   else if(filter==='disponibles') list = list.filter(p=>p.estado==='Disponible');
-  else if(filter==='venta') list = list.filter(p=>p.estado==='En venta');
   if(query){
     const q = query.toLowerCase();
     list = list.filter(p=> [p.id,p.tipo,p.direccion,p.localidad,p.estado, nombreCompleto(P(p.ownerId)), nombreCompleto(P(p.tenantId))].join(' ').toLowerCase().includes(q));
   }
-  const filters = [['todos','Todas'],['alquiladas','Alquiladas'],['disponibles','Disponibles'],['venta','En venta']];
+  const filters = [['todos','Todas'],['alquiladas','Alquiladas'],['disponibles','Disponibles']];
   const rows = list.map(p=>{
     const owner = P(p.ownerId); const tenant = P(p.tenantId); const c = contractByProperty(p.id);
     return `<tr class="clickable" data-nav="/propiedades/${p.id}">
@@ -809,7 +812,7 @@ function viewPropiedades(filter, query){
   return `
     <div class="page-head">
       <div><h1 class="page-title">Propiedades</h1><div class="page-sub">${list.length} de ${properties.length} propiedades</div></div>
-      <button class="btn btn-primary" onclick="showToast('Alta de propiedades — próximamente en esta etapa')">${icon('plus')}Nueva propiedad</button>
+      <button class="btn btn-primary" onclick="nuevaPropiedadModal()">${icon('plus')}Nueva propiedad</button>
     </div>
     <div style="display:flex; gap:14px; flex-wrap:wrap; align-items:center; margin-bottom:16px;">
       <div class="search-wrap" style="max-width:340px;">
@@ -848,7 +851,7 @@ function viewFichaPropiedad(id, tab){
     if(!c){ body = `<div class="empty-state">${icon('contratos')}<div class="empty-state-title">Sin contrato activo</div><div>Esta propiedad no tiene un contrato vigente.</div></div>`; }
     else {
       body = `<div class="kv-grid">
-        <div class="kv"><div class="kv-label">Contrato</div><div class="kv-value">#${c.id}</div></div>
+        <div class="kv"><div class="kv-label">N° de contrato</div><div class="kv-value tnum">${esc(numeroContrato(c))} <button class="btn btn-sm btn-ghost" onclick="editarNumeroContrato('${c.id}')">Editar</button></div></div>
         <div class="kv"><div class="kv-label">Estado</div><div class="kv-value">${estadoBadge(c.estado)}</div></div>
         <div class="kv"><div class="kv-label">Inicio</div><div class="kv-value tnum">${fdate(c.inicio)}</div></div>
         <div class="kv"><div class="kv-label">Fin</div><div class="kv-value tnum">${fdate(c.fin)}</div></div>
@@ -894,9 +897,10 @@ function viewFichaPropiedad(id, tab){
     }
   } else if(tab==='arreglos'){
     const list = repairsByProperty(p.id);
-    if(!list.length){ body = `<div class="empty-state">${icon('check')}<div class="empty-state-title">Sin arreglos registrados</div><div>Esta propiedad no tiene reparaciones en su historial.</div></div>`; }
+    const btnArreglo = `<button class="btn btn-sm" style="margin-bottom:14px;" onclick="nuevoArregloModal('${p.id}')">${icon('plus')}Registrar arreglo</button>`;
+    if(!list.length){ body = btnArreglo + `<div class="empty-state">${icon('check')}<div class="empty-state-title">Sin arreglos registrados</div><div>Esta propiedad no tiene reparaciones en su historial.</div></div>`; }
     else {
-      body = `<button class="btn btn-sm" style="margin-bottom:14px;" onclick="showToast('Registrar arreglo — próximamente en esta etapa')">${icon('plus')}Registrar arreglo</button>` +
+      body = btnArreglo +
       list.map(r=>`
         <div class="card card-pad" style="margin-bottom:12px;">
           <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;">
@@ -953,7 +957,7 @@ function viewPersonas(query){
   return `
     <div class="page-head">
       <div><h1 class="page-title">Personas</h1><div class="page-sub">${list.length} de ${persons.length} personas registradas</div></div>
-      <button class="btn btn-primary" onclick="showToast('Alta de personas — próximamente en esta etapa')">${icon('plus')}Nueva persona</button>
+      <button class="btn btn-primary" onclick="nuevaPersonaModal()">${icon('plus')}Nueva persona</button>
     </div>
     <div class="search-wrap" style="max-width:340px; margin-bottom:16px;">
       <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
@@ -982,7 +986,7 @@ function personaDrawer(id){
     </div>
     ${asOwner.length?`<div class="divider"></div><div class="kv-label" style="margin-bottom:8px;">Propiedades (propietario)</div>${asOwner.map(pr=>`<div class="task-row"><div class="task-text">${esc(pr.direccion)}<div class="task-sub">${esc(pr.localidad)}</div></div>${estadoBadge(pr.estado)}<button class="btn btn-sm" data-nav="/propiedades/${pr.id}" data-close-drawer="1">Ver</button></div>`).join('')}`:''}
     ${asTenant.length?`<div class="divider"></div><div class="kv-label" style="margin-bottom:8px;">Alquila</div>${asTenant.map(pr=>`<div class="task-row"><div class="task-text">${esc(pr.direccion)}<div class="task-sub">${esc(pr.localidad)}</div></div><button class="btn btn-sm" data-nav="/propiedades/${pr.id}" data-close-drawer="1">Ver</button></div>`).join('')}`:''}
-    ${asGuarantor.length?`<div class="divider"></div><div class="kv-label" style="margin-bottom:8px;">Garantías</div>${asGuarantor.map(c=>`<div class="task-row"><div class="task-text">${esc(PR(c.propertyId).direccion)}<div class="task-sub">Contrato #${c.id}</div></div><button class="btn btn-sm" data-nav="/propiedades/${c.propertyId}" data-close-drawer="1">Ver</button></div>`).join('')}`:''}
+    ${asGuarantor.length?`<div class="divider"></div><div class="kv-label" style="margin-bottom:8px;">Garantías</div>${asGuarantor.map(c=>`<div class="task-row"><div class="task-text">${esc(PR(c.propertyId).direccion)}<div class="task-sub">Contrato N° ${esc(numeroContrato(c))}</div></div><button class="btn btn-sm" data-nav="/propiedades/${c.propertyId}" data-close-drawer="1">Ver</button></div>`).join('')}`:''}
   `;
 }
 
@@ -997,14 +1001,14 @@ function viewContratos(filter, query){
     const q = query.toLowerCase();
     list = list.filter(c=>{
       const p = PR(c.propertyId); const t = P(c.tenantId); const o = P(c.ownerId);
-      return (c.id+' '+p.direccion+' '+p.localidad+' '+nombreCompleto(t)+' '+nombreCompleto(o)).toLowerCase().includes(q);
+      return (numeroContrato(c)+' '+p.direccion+' '+p.localidad+' '+nombreCompleto(t)+' '+nombreCompleto(o)).toLowerCase().includes(q);
     });
   }
   const filters = [['activos','Activos'],['vencer','Por vencer'],['pendiente','Actualización pendiente'],['finalizados','Finalizados']];
   const rows = list.map(c=>{
     const p = PR(c.propertyId); const t = P(c.tenantId);
     return `<tr class="clickable" data-nav="/propiedades/${p.id}?tab=contrato">
-      <td class="cell-title tnum">#${c.id}</td>
+      <td class="cell-title tnum">${esc(numeroContrato(c))}</td>
       <td><div class="cell-title">${esc(p.direccion)}</div><div class="cell-sub">${esc(p.localidad)}</div></td>
       <td>${esc(nombreCompleto(t))}</td>
       <td class="num tnum">${money(c.alquilerActual)}</td>
@@ -1043,7 +1047,8 @@ function nuevoContratoModal(){
         <label>Propiedad</label>
         <select id="ncPropiedad">${opts}</select>
       </div>
-      <div class="field" style="grid-column:1/-1;"><label>Propietario</label><input id="ncPropietario" disabled></div>
+      <div class="field"><label>Propietario</label><input id="ncPropietario" disabled></div>
+      <div class="field"><label>N° de contrato</label><input id="ncNumero" placeholder="Número interno de la inmobiliaria"></div>
     </div>
     <div class="divider"></div>
     <div class="form-grid" style="margin-bottom:12px;">
@@ -1093,6 +1098,8 @@ function nuevoContratoModal(){
     const valor = parseFloat(document.getElementById('ncValor').value)||0;
     const inq1Nombre = document.getElementById('ncInq1Nombre').value.trim();
     if(!propertyId || !inq1Nombre || valor<=0){ showToast('Completá al menos propiedad, inquilino y valor de alquiler'); return; }
+    const numero = document.getElementById('ncNumero').value.trim();
+    if(numero && contracts.some(x=>x.numero===numero)){ showToast('Ya existe un contrato con el N° '+numero); return; }
     const crearPersona = (nombreTxt, telefono, rol)=>{
       const partes = nombreTxt.split(' ');
       const p = {id:'PS'+Date.now()+Math.floor(Math.random()*1000), nombre:partes[0], apellido:partes.slice(1).join(' ')||'—', dni:'—', telefono:telefono||'—', email:'—', roles:[rol]};
@@ -1116,7 +1123,7 @@ function nuevoContratoModal(){
     const metodo = tipoAumento==='Fijo' ? `Porcentaje fijo (${pctFijo}%)` : (tipoAumento==='Personalizado' ? 'Personalizado' : tipoAumento);
     const id = 'CT'+Date.now();
     const contrato = {
-      id, propertyId, ownerId:PR(propertyId).ownerId, tenantId, tenantId2, guarantorId,
+      id, numero: numero || null, propertyId, ownerId:PR(propertyId).ownerId, tenantId, tenantId2, guarantorId,
       inicio, fin, alquilerInicial:valor, alquilerActual:valor, metodo, tipoAumento,
       pctFijo: tipoAumento==='Fijo' ? pctFijo : undefined, frecuencia, proxAct: addMonths(inicio, frecuencia),
       estado:'Activo', deposito,
@@ -1164,7 +1171,7 @@ function viewCobranzasMes(query){
     return `<tr>
       <td><div class="cell-title">${esc(prop.direccion)}</div><div class="cell-sub">${esc(prop.localidad)}</div></td>
       <td>${esc(nombreCompleto(t))}</td>
-      <td class="num tnum">${money(pagoTotal(p))}${detalle?`<div class="cell-sub">alquiler ${money(p.importe)} + ${detalle}</div>`:''}</td>
+      <td class="num tnum">${money(pagoTotal(p))}${detalle?`<div class="cell-sub">alquiler ${money(p.importe)} + ${detalle}</div>`:''}${noLiquida(p)?`<div class="cell-sub">${money(noLiquida(p))} no va a liquidación</div>`:''}</td>
       <td>${estadoBadge(p.estado)}</td>
       <td class="tnum">${fdate(p.fechaPago)}</td>
       <td class="row-actions">
@@ -1231,7 +1238,7 @@ function reciboHtml(p, copia, montoFijo){
             <div class="receipt-org"><b>${esc(INMOBILIARIA.nombre)}</b><div>${esc(INMOBILIARIA.localidad)} · ${esc(INMOBILIARIA.telefono)}</div></div>
             ${copia?`<div class="receipt-copy">${copia}</div>`:''}
           </div>
-          <div class="receipt-row"><span class="rl">Número</span><span class="rv">${esc(p.id)}</span><span class="rl" style="margin-left:14px;">Fecha</span><span class="rv">${fdate(TODAY_ISO)}</span></div>
+          <div class="receipt-row"><span class="rl">Contrato N°</span><span class="rv">${esc(numeroContrato(c))}</span><span class="rl" style="margin-left:14px;">Fecha</span><span class="rv">${fdate(TODAY_ISO)}</span></div>
           <div class="receipt-row"><span class="rl">Recibido de</span><span class="rv">${esc(recibidoDe)}</span></div>
           <div class="receipt-row"><span class="rl">La suma de $</span><span class="rv tnum" style="flex:none; min-width:120px;">${money(montoEsteRecibo).replace('$ ','')}</span></div>
           <div class="receipt-row"><span class="rl" style="white-space:normal;">${esc(numeroALetras(montoEsteRecibo).charAt(0).toUpperCase()+numeroALetras(montoEsteRecibo).slice(1))} pesos</span></div>
@@ -1303,10 +1310,10 @@ function planillaRecibosHtml(lista, pend){
   const rows = lista.map((p,i)=>{
     const c = CT(p.contractId); const prop = PR(c.propertyId);
     const estado = p.estado==='Parcial' ? `Parcial — cobrado ${money(p.pagado||0)}` : p.estado;
-    return `<tr><td>${i+1}</td><td>${esc(prop.direccion)}<br><span style="color:#555">${esc(prop.localidad)}</span></td><td>${esc(nombreCompleto(P(c.tenantId)))}</td><td class="num">${money(pagoTotal(p))}</td><td>${esc(estado)}</td><td>${pend.includes(p)?'<span class="doc-warn">⚠ Pendiente de actualizar</span>':'✓ Al día'}</td></tr>`;
+    return `<tr><td>${esc(numeroContrato(c))}</td><td>${esc(prop.direccion)}<br><span style="color:#555">${esc(prop.localidad)}</span></td><td>${esc(nombreCompleto(P(c.tenantId)))}</td><td class="num">${money(pagoTotal(p))}</td><td>${esc(estado)}</td><td>${pend.includes(p)?'<span class="doc-warn">⚠ Pendiente de actualizar</span>':'✓ Al día'}</td></tr>`;
   }).join('');
   return docHead('Planilla de control de recibos', periodoLabel(PERIODO_ACTUAL)) + `
-    <table><thead><tr><th>#</th><th>Propiedad</th><th>Inquilino</th><th class="num">Importe</th><th>Cobranza</th><th>Actualización</th></tr></thead>
+    <table><thead><tr><th>Contrato</th><th>Propiedad</th><th>Inquilino</th><th class="num">Importe</th><th>Cobranza</th><th>Actualización</th></tr></thead>
     <tbody>${rows}<tr class="doc-total"><td colspan="3">${lista.length} recibos</td><td class="num">${money(total)}</td><td colspan="2"></td></tr></tbody></table>
     ${pend.length?`<p class="doc-warn" style="margin-top:12px;">⚠ ${pend.length} contrato${pend.length>1?'s':''} pendiente${pend.length>1?'s':''} de actualizar: revisar el importe antes de entregar el recibo.</p>`:''}
     ${docFoot()}`;
@@ -1330,7 +1337,7 @@ function imprimirFicha(id){
     <div class="doc-kv">${kv('Nombre', esc(nombreCompleto(owner)))}${kv('DNI', esc(owner.dni))}${kv('Teléfono', esc(owner.telefono))}${kv('Email', esc(owner.email))}</div>`;
   if(c){
     const t = P(c.tenantId);
-    html += `<h3>Contrato actual #${esc(c.id)}</h3>
+    html += `<h3>Contrato actual N° ${esc(numeroContrato(c))}</h3>
     <div class="doc-kv">
       ${kv('Inquilino', esc(nombreCompleto(t))+' · '+esc(t.telefono))}${kv('Inquilino 2', c.tenantId2?esc(nombreCompleto(P(c.tenantId2))):'—')}
       ${kv('Garante', c.guarantorId?esc(nombreCompleto(P(c.guarantorId)))+' · '+esc(P(c.guarantorId).telefono):'—')}${kv('Estado', esc(c.estado))}
@@ -1375,7 +1382,7 @@ function imprimirLiquidacion(ownerId){
   imprimir([liquidacionPrintHtml(liquidacionOwner(ownerId, PERIODO_ACTUAL))]);
 }
 function imprimirTodasLiquidaciones(){
-  const liqs = owners.map(o=>liquidacionOwner(o, PERIODO_ACTUAL)).filter(l=>l.cobrado>0 || l.gastos.length);
+  const liqs = ownerIds().map(o=>liquidacionOwner(o, PERIODO_ACTUAL)).filter(l=>l.cobrado>0 || l.gastos.length);
   if(!liqs.length){ showToast('No hay liquidaciones con movimientos este período'); return; }
   imprimir(liqs.map(liquidacionPrintHtml));
 }
@@ -1395,11 +1402,13 @@ function cobrarModal(pid){
     <div class="page-sub" style="margin-bottom:14px;">${esc(prop.direccion)} — ${esc(nombreCompleto(t))} — ${periodoLabel(p.periodo)}</div>
     <div class="form-grid" style="margin-bottom:12px;">
       <div class="field"><label>Alquiler</label><input type="number" value="${p.importe}" disabled style="${inputStyle}"></div>
-      <div class="field"><label>Expensas</label><input type="number" id="cobroExpensas" min="0" step="100" value="${p.expensas||0}" style="${inputStyle}"></div>
-      <div class="field"><label>Servicios</label><input type="number" id="cobroServicios" min="0" step="100" value="${p.servicios||0}" style="${inputStyle}"></div>
+      <div class="field"><label>Expensas</label><input type="number" id="cobroExpensas" min="0" step="100" value="${p.expensas||0}" style="${inputStyle}">
+        <label style="display:flex; gap:6px; align-items:center; text-transform:none; letter-spacing:0; font-weight:600; color:var(--ink-600); font-size:12.5px;"><input type="checkbox" id="cobroExpensasLiq" ${p.expensasLiq===false?'':'checked'}> Sumar a la liquidación del propietario</label></div>
+      <div class="field"><label>Servicios</label><input type="number" id="cobroServicios" min="0" step="100" value="${p.servicios||0}" style="${inputStyle}">
+        <label style="display:flex; gap:6px; align-items:center; text-transform:none; letter-spacing:0; font-weight:600; color:var(--ink-600); font-size:12.5px;"><input type="checkbox" id="cobroServiciosLiq" ${p.serviciosLiq===false?'':'checked'}> Sumar a la liquidación del propietario</label></div>
       <div class="field"><label>Total del período</label><input type="text" id="cobroTotal" disabled style="${inputStyle} font-weight:700;"></div>
     </div>
-    <div class="page-sub" style="margin-bottom:14px;">Expensas y servicios son opcionales: dejalos en 0 si no corresponden este mes. Se suman al recibo y a la liquidación del propietario.</div>
+    <div class="page-sub" style="margin-bottom:14px;">Expensas y servicios son opcionales: dejalos en 0 si no corresponden este mes. Siempre van en el recibo; destildá "Sumar a la liquidación" cuando esa plata no le corresponde al propietario.</div>
     <div class="field" style="margin-bottom:16px;">
       <label id="cobroMontoLabel">Monto cobrado ahora</label>
       <input type="number" id="cobroMonto" style="${inputStyle}">
@@ -1425,6 +1434,8 @@ function cobrarModal(pid){
     const expensas = leer('cobroExpensas'), servicios = leer('cobroServicios');
     if(expensas) p.expensas = expensas; else delete p.expensas;
     if(servicios) p.servicios = servicios; else delete p.servicios;
+    if(expensas && !document.getElementById('cobroExpensasLiq').checked) p.expensasLiq = false; else delete p.expensasLiq;
+    if(servicios && !document.getElementById('cobroServiciosLiq').checked) p.serviciosLiq = false; else delete p.serviciosLiq;
     const nuevoPagado = pagadoYa + monto;
     const total = pagoTotal(p);
     const deshacer = ()=>{ restaurarPago(p, prev); route(); showToast('Pago deshecho'); };
@@ -1475,7 +1486,7 @@ function actualizarContratoDesdeUI(cid){
   const indiceLabel = c.tipoAumento==='Personalizado' ? 'Acuerdo entre partes' : (auto ? `${c.tipoAumento} ${c.tipoAumento==='Fijo'?c.pctFijo:INDICES[c.tipoAumento]}%` : 'Ajuste manual');
   const prev = {alquilerActual:c.alquilerActual, proxAct:c.proxAct};
   aplicarActualizacion(c, nuevo, indiceLabel);
-  showToast('Contrato #'+cid+' actualizado — nuevo alquiler '+money(nuevo), ()=>deshacerActualizacion(c, prev));
+  showToast('Contrato N° '+numeroContrato(c)+' actualizado — nuevo alquiler '+money(nuevo), ()=>deshacerActualizacion(c, prev));
   route();
 }
 function actualizarTodosPendientes(){
@@ -1534,10 +1545,148 @@ function viewAumentos(){
     <div class="page-sub" style="margin-top:10px;">Ordenado por los que vencen antes. El monto propuesto se redondea al múltiplo de $500 más cercano, pero podés escribir otro valor antes de actualizar.</div>`;
 }
 
+function editarNumeroContrato(cid){
+  const c = CT(cid);
+  showModal(`
+    <div class="section-title" style="margin-bottom:10px;">N° de contrato</div>
+    <div class="page-sub" style="margin-bottom:14px;">${esc(PR(c.propertyId).direccion)} — ${esc(nombreCompleto(P(c.tenantId)))}. Es el número interno de la inmobiliaria; aparece en el contrato, los recibos y la planilla.</div>
+    <div class="field" style="margin-bottom:16px;"><label>Número</label><input id="numContrato" value="${esc(c.numero||'')}"></div>
+    <div style="display:flex; gap:10px; justify-content:flex-end;">
+      <button class="btn" data-modal-cancel="1">Cancelar</button>
+      <button class="btn btn-primary" id="numSaveBtn">Guardar</button>
+    </div>`);
+  const inp = document.getElementById('numContrato'); inp.focus(); inp.select();
+  document.getElementById('numSaveBtn').onclick = ()=>{
+    const v = inp.value.trim();
+    if(!v){ showToast('Ingresá un número'); return; }
+    if(contracts.some(x=>x!==c && x.numero===v)){ showToast('Ya existe otro contrato con el N° '+v); return; }
+    const prev = c.numero;
+    c.numero = v;
+    closeModal();
+    showToast('N° de contrato actualizado', ()=>{ c.numero = prev; route(); showToast('Cambio deshecho'); });
+    route();
+  };
+}
+
+const checkStyle = 'display:flex; gap:7px; align-items:center; font-size:13.5px; font-weight:600;';
+function nuevaPropiedadModal(){
+  const propietarios = persons.filter(p=>p.roles.includes('Propietario')).sort((a,b)=>a.apellido.localeCompare(b.apellido));
+  showModal(`
+    <div class="section-title" style="margin-bottom:4px;">Nueva propiedad</div>
+    <div class="page-sub" style="margin-bottom:14px;">Queda como "Disponible" hasta que le armes un contrato.</div>
+    <div class="form-grid" style="margin-bottom:12px;">
+      <div class="field"><label>Tipo</label><select id="npTipo"><option>Casa</option><option>Departamento</option><option>Duplex</option><option>PH</option><option>Local comercial</option><option>Galpón</option><option>Terreno</option><option>Otro</option></select></div>
+      <div class="field"><label>Estado</label><select id="npEstado"><option>Disponible</option><option>Reservada</option><option>En mantenimiento</option></select></div>
+      <div class="field"><label>Dirección</label><input id="npDireccion" placeholder="Ej: Belgrano 1234, 1°B"></div>
+      <div class="field"><label>Localidad</label><input id="npLocalidad" value="Paso del Rey"></div>
+      <div class="field" style="grid-column:1/-1;"><label>Propietario</label>
+        <select id="npOwner">${propietarios.map(o=>`<option value="${o.id}">${esc(o.apellido)}, ${esc(o.nombre)}</option>`).join('')}</select>
+        <span class="cell-sub">¿No está en la lista? Cargalo primero en Personas con el rol "Propietario".</span></div>
+      <div class="field"><label>Ambientes</label><input type="number" id="npAmb" min="0" value="2"></div>
+      <div class="field"><label>Dormitorios</label><input type="number" id="npDorm" min="0" value="1"></div>
+      <div class="field"><label>Baños</label><input type="number" id="npBanos" min="0" value="1"></div>
+      <div class="field"><label>Superficie (m²)</label><input type="number" id="npM2" min="0"></div>
+    </div>
+    <div style="display:flex; gap:20px; flex-wrap:wrap; margin-bottom:12px;">
+      <label style="${checkStyle}"><input type="checkbox" id="npCochera"> Cochera</label>
+      <label style="${checkStyle}"><input type="checkbox" id="npPatio"> Patio</label>
+      <label style="${checkStyle}"><input type="checkbox" id="npTerraza"> Terraza</label>
+      <label style="${checkStyle}"><input type="checkbox" id="npBalcon"> Balcón</label>
+    </div>
+    <div class="field" style="margin-bottom:16px;"><label>Observaciones</label><input id="npObs" placeholder="Opcional"></div>
+    <div style="display:flex; gap:10px; justify-content:flex-end;">
+      <button class="btn" data-modal-cancel="1">Cancelar</button>
+      <button class="btn btn-primary" id="npSaveBtn">Guardar propiedad</button>
+    </div>`, true);
+  document.getElementById('npSaveBtn').onclick = ()=>{
+    const val = id => document.getElementById(id).value.trim();
+    const num = id => Math.max(0, parseInt(val(id),10)||0);
+    const chk = id => document.getElementById(id).checked;
+    if(!val('npDireccion') || !val('npLocalidad')){ showToast('Completá dirección y localidad'); return; }
+    if(!val('npOwner')){ showToast('Primero cargá al propietario en Personas'); return; }
+    const n = properties.length + 1;
+    const id = 'PR' + String(n).padStart(2,'0') + (PR('PR'+String(n).padStart(2,'0')) ? '-'+Date.now() : '');
+    properties.push({id, tipo:val('npTipo'), direccion:val('npDireccion'), localidad:val('npLocalidad'), dormitorios:num('npDorm'), ambientes:num('npAmb'), banos:num('npBanos'),
+      cochera:chk('npCochera'), patio:chk('npPatio'), terraza:chk('npTerraza'), balcon:chk('npBalcon'), m2:num('npM2'), estado:val('npEstado'), ownerId:val('npOwner'), tenantId:null, obs:val('npObs')});
+    closeModal();
+    showToast('Propiedad creada');
+    location.hash = '#/propiedades/'+id;
+  };
+}
+
+function nuevaPersonaModal(){
+  const roles = ['Propietario','Inquilino','Garante','Contacto'];
+  showModal(`
+    <div class="section-title" style="margin-bottom:14px;">Nueva persona</div>
+    <div class="form-grid" style="margin-bottom:12px;">
+      <div class="field"><label>Nombre</label><input id="nperNombre"></div>
+      <div class="field"><label>Apellido</label><input id="nperApellido"></div>
+      <div class="field"><label>DNI</label><input id="nperDni" placeholder="Ej: 30.123.456"></div>
+      <div class="field"><label>CUIT / CUIL</label><input id="nperCuit" placeholder="Opcional"></div>
+      <div class="field"><label>Teléfono / WhatsApp</label><input id="nperTel" placeholder="Ej: 11-2233-4455"></div>
+      <div class="field"><label>Email</label><input id="nperEmail" placeholder="Opcional"></div>
+      <div class="field" style="grid-column:1/-1;"><label>Domicilio</label><input id="nperDom" placeholder="Opcional"></div>
+    </div>
+    <div class="field" style="margin-bottom:6px;"><label>Roles (puede tener más de uno)</label></div>
+    <div style="display:flex; gap:20px; flex-wrap:wrap; margin-bottom:18px;">
+      ${roles.map(r=>`<label style="${checkStyle}"><input type="checkbox" class="nperRol" value="${r}"> ${r}</label>`).join('')}
+    </div>
+    <div style="display:flex; gap:10px; justify-content:flex-end;">
+      <button class="btn" data-modal-cancel="1">Cancelar</button>
+      <button class="btn btn-primary" id="nperSaveBtn">Guardar persona</button>
+    </div>`, true);
+  document.getElementById('nperSaveBtn').onclick = ()=>{
+    const val = id => document.getElementById(id).value.trim();
+    const rolesSel = [...document.querySelectorAll('.nperRol:checked')].map(x=>x.value);
+    if(!val('nperNombre') || !val('nperApellido')){ showToast('Completá nombre y apellido'); return; }
+    if(!rolesSel.length){ showToast('Elegí al menos un rol'); return; }
+    const dni = val('nperDni');
+    if(dni && persons.some(x=>x.dni===dni)){ showToast('Ya hay una persona cargada con ese DNI'); return; }
+    const id = 'PS'+Date.now();
+    persons.push({id, nombre:val('nperNombre'), apellido:val('nperApellido'), dni:dni||'—', cuit:val('nperCuit'), telefono:val('nperTel')||'—', email:val('nperEmail')||'—', domicilio:val('nperDom'), roles:rolesSel});
+    closeModal();
+    showToast('Persona creada');
+    route();
+    openDrawer(personaDrawer(id));
+  };
+}
+
+function nuevoArregloModal(propertyId){
+  const props = properties.filter(p=>p.estado!=='Baja');
+  showModal(`
+    <div class="section-title" style="margin-bottom:14px;">Registrar arreglo</div>
+    <div class="form-grid" style="margin-bottom:12px;">
+      <div class="field" style="grid-column:1/-1;"><label>Propiedad</label>
+        <select id="naProp">${props.map(p=>`<option value="${p.id}" ${p.id===propertyId?'selected':''}>${esc(p.direccion)} — ${esc(p.localidad)}</option>`).join('')}</select></div>
+      <div class="field" style="grid-column:1/-1;"><label>¿Qué pasa?</label><input id="naDesc" placeholder="Ej: Pérdida de agua en el baño"></div>
+      <div class="field"><label>Fecha de aviso</label><input type="date" id="naFecha" value="${TODAY_ISO}"></div>
+      <div class="field"><label>Especialista</label><input id="naEsp" placeholder="Opcional — Ej: Plomería Ríos"></div>
+      <div class="field"><label>Costo / presupuesto</label><input type="number" id="naCosto" min="0" placeholder="Opcional"></div>
+      <div class="field"><label>Lo paga</label><select id="naPaga"><option value="">A definir</option><option>Propietario</option><option>Inquilino</option></select></div>
+      <div class="field" style="grid-column:1/-1;"><label>Observaciones</label><input id="naObs" placeholder="Opcional"></div>
+    </div>
+    <label style="${checkStyle} margin-bottom:18px;"><input type="checkbox" id="naUrgente"> Urgente</label>
+    <div class="page-sub" style="margin-bottom:14px;">Si lo paga el propietario, cuando lo marques como resuelto se descuenta de su liquidación del mes.</div>
+    <div style="display:flex; gap:10px; justify-content:flex-end;">
+      <button class="btn" data-modal-cancel="1">Cancelar</button>
+      <button class="btn btn-primary" id="naSaveBtn">Guardar arreglo</button>
+    </div>`, true);
+  document.getElementById('naSaveBtn').onclick = ()=>{
+    const val = id => document.getElementById(id).value.trim();
+    if(!val('naDesc')){ showToast('Describí el arreglo'); return; }
+    const costo = val('naCosto') ? Math.max(0, parseFloat(val('naCosto'))||0) : null;
+    repairs.push({id:'AR'+Date.now(), propertyId:val('naProp'), descripcion:val('naDesc'), fechaAviso:val('naFecha')||TODAY_ISO, especialista:val('naEsp')||null,
+      estado:'Pendiente', costo, fechaResuelto:null, pagadoPor:val('naPaga')||null, urgente:document.getElementById('naUrgente').checked, obs:val('naObs'), documentos:[]});
+    closeModal();
+    showToast('Arreglo registrado');
+    route();
+  };
+}
+
 function agregarGaranteModal(cid){
   showModal(`
     <div class="section-title" style="margin-bottom:10px;">Agregar garante</div>
-    <div class="page-sub" style="margin-bottom:14px;">Contrato #${esc(cid)}</div>
+    <div class="page-sub" style="margin-bottom:14px;">Contrato N° ${esc(numeroContrato(CT(cid)))}</div>
     <div class="field" style="margin-bottom:10px;"><label>Nombre y apellido</label><input id="garNombre" placeholder="Ej: Roberto Sosa"></div>
     <div class="field" style="margin-bottom:16px;"><label>Teléfono</label><input id="garTelefono" placeholder="Ej: 11-4455-6677"></div>
     <div style="display:flex; gap:10px; justify-content:flex-end;">
@@ -1631,7 +1780,7 @@ function viewArreglos(filter, query){
   return `
     <div class="page-head">
       <div><h1 class="page-title">Arreglos</h1><div class="page-sub">Reparaciones y mantenimiento reportados por inquilinos o propietarios</div></div>
-      <button class="btn btn-primary" onclick="showToast('Registrar arreglo — próximamente en esta etapa')">${icon('plus')}Nuevo arreglo</button>
+      <button class="btn btn-primary" onclick="nuevoArregloModal()">${icon('plus')}Nuevo arreglo</button>
     </div>
     <div style="display:flex; gap:14px; flex-wrap:wrap; align-items:center; margin-bottom:16px;">
       <div class="search-wrap" style="max-width:340px;">
@@ -1749,7 +1898,7 @@ function viewServicios(){
 }
 
 function viewLiquidaciones(query){
-  let liqs = owners.map(o=>liquidacionOwner(o, PERIODO_ACTUAL));
+  let liqs = ownerIds().map(o=>liquidacionOwner(o, PERIODO_ACTUAL));
   if(query){
     const q = query.toLowerCase();
     liqs = liqs.filter(l=>nombreCompleto(l.owner).toLowerCase().includes(q));
@@ -1958,7 +2107,7 @@ document.addEventListener('click', (e)=>{
   const liqToggle = e.target.closest('[data-liq-toggle]');
   if(liqToggle){ document.getElementById('liqRow'+liqToggle.getAttribute('data-liq-toggle')).classList.toggle('open'); return; }
 
-  if(e.target.id==='drawerCloseBtn' || e.target===document.getElementById('drawerOverlay')){ closeDrawer(); return; }
+  if(e.target.closest('#drawerCloseBtn') || e.target===document.getElementById('drawerOverlay')){ closeDrawer(); return; }
 });
 
 document.addEventListener('input', (e)=>{

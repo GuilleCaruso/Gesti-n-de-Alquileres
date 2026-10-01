@@ -34,6 +34,10 @@ Funciones clave ya hechas: cobrar / deshacer pago, generar recibo, actualizar co
 
 ## Decisiones tomadas
 
+- No se administran propiedades en venta: solo alquiladas y disponibles (más reservada / en mantenimiento / baja).
+- Cada contrato tiene un N° interno de la inmobiliaria, editable y único. En el recibo reemplaza al antiguo "Número".
+- Expensas y servicios cobrados van por defecto a la liquidación del propietario; se pueden excluir con el tilde.
+
 - Datos de la inmobiliaria: tel. 11 3449-8819 · info@carusopropiedades.com.
 - Recibos **sin duplicado**. Individual: 1 recibo. Recibos del mes: 2 por hoja A4 con línea de corte.
 - Recibos del mes por el importe completo, para firmar al cobrar (confirmado por Guillermo).
@@ -71,12 +75,18 @@ Funciones clave ya hechas: cobrar / deshacer pago, generar recibo, actualizar co
 - [x] Impresiones: recibo, recibos del mes con planilla de control, ficha de propiedad, liquidación (individual y todas).
 - [x] Teléfono y mail reales en impresos y Configuración.
 - [x] Al cobrar se pueden cargar expensas y servicios.
+- [x] Tilde "Sumar a la liquidación del propietario" para expensas y servicios (por defecto tildado).
+- [x] N° de contrato interno editable; aparece en recibos, planilla, contratos y ficha impresa.
+- [x] Altas funcionando: nueva propiedad, nueva persona, registrar arreglo (desde Arreglos y desde la ficha).
+- [x] Se quitó "En venta" de Propiedades.
+- [ ] Definir si los honorarios (8%) se calculan sobre expensas y servicios o solo sobre el alquiler.
 - [ ] Crear `PROJECT_RULES.md` antes de la Etapa 2.
 - [ ] Recorrer el prototipo pantalla por pantalla y anotar ajustes.
 - [ ] Definir cómo se guardan los datos (sin esto la app no sirve para uso real).
 
 ## Historial
 
+- **01/10/2026** – Altas (propiedad, persona, arreglo), N° de contrato editable, tilde de liquidación, sin "En venta". Corregido: la X del panel de persona no cerraba.
 - **01/10/2026** – Recibos sin duplicado, datos de contacto reales, expensas/servicios editables al cobrar.
 - **01/10/2026** – Impresiones completas (recibo, recibos del mes, ficha, liquidaciones) y corregido texto duplicado "Arreglo — Arreglo" en liquidaciones. Publicado en el link del prototipo.
 - **01/10/2026** – PDF y logo al repo; logo real en la barra lateral.
