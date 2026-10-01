@@ -629,7 +629,7 @@ const periodoLabel = p => { const [y,m] = p.split('-'); const s = MESES[+m-1]; r
 const esc = s => String(s??'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 /* ============================== IMPRESIÓN ============================== */
-const INMOBILIARIA = {nombre:'Caruso Propiedades', localidad:'Paso del Rey, Moreno', telefono:'0237 15-XXXX-XXXX', email:'contacto@carusopropiedades.com.ar'};
+const INMOBILIARIA = {nombre:'Caruso Propiedades', localidad:'Paso del Rey, Moreno', telefono:'11 3449-8819', email:'info@carusopropiedades.com'};
 const LOGO_SRC = document.querySelector('.brand-logo').src;
 function imprimir(paginas){
   document.getElementById('printArea').innerHTML = `<div class="doc">${paginas.map(h=>`<div class="doc-page">${h}</div>`).join('')}</div>`;
@@ -1247,19 +1247,15 @@ function reciboHtml(p, copia, montoFijo){
       </div>
     </div>`;
 }
-// Una hoja A4 con original (para el inquilino) y duplicado (para la inmobiliaria)
-function reciboPagina(p, montoFijo){
-  return reciboHtml(p, 'ORIGINAL', montoFijo) + `<div class="receipt-cut"><span>✂ cortar aquí</span></div>` + reciboHtml(p, 'DUPLICADO', montoFijo);
-}
+const CORTE = `<div class="receipt-cut"><span>✂ cortar aquí</span></div>`;
 function imprimirRecibo(pid){
   const p = payments.find(x=>x.id===pid);
-  if(p) imprimir([reciboPagina(p)]);
+  if(p) imprimir([reciboHtml(p)]);
 }
 function verRecibo(pid){
   const p = payments.find(x=>x.id===pid);
   if(!p) return;
-  showModal(reciboHtml(p) + `<div class="page-sub" style="margin-top:12px;">Se imprime en una hoja A4 con original y duplicado.</div>
-  <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:14px;">
+  showModal(reciboHtml(p) + `<div style="display:flex; gap:10px; justify-content:flex-end; margin-top:18px;">
     <button class="btn" data-modal-cancel="1">Cerrar</button>
     <button class="btn btn-primary" onclick="imprimirRecibo('${p.id}')">${icon('printer')}Imprimir</button>
   </div>`, true);
@@ -1272,7 +1268,7 @@ function imprimirRecibosMesModal(){
   const listos = pays.length - pend.length;
   showModal(`
     <div class="section-title" style="margin-bottom:4px;">Imprimir recibos — ${periodoLabel(PERIODO_ACTUAL)}</div>
-    <div class="page-sub" style="margin-bottom:14px;">Un recibo por cada alquiler del período (original y duplicado en la misma hoja), estén cobrados o no, por el importe completo del mes.</div>
+    <div class="page-sub" style="margin-bottom:14px;">Un recibo por cada alquiler del período, estén cobrados o no, por el importe completo del mes. Salen dos recibos por hoja A4 para ahorrar papel.</div>
     <div class="task-list" style="margin-bottom:14px;">
       <div class="task-row"><span class="task-dot" style="background:var(--ok-600)"></span><div class="task-text"><b>${listos} recibo${listos!==1?'s':''}</b> listo${listos!==1?'s':''}</div></div>
       <div class="task-row"><span class="task-dot" style="background:var(--warn-600)"></span><div class="task-text"><b>${pend.length} pendiente${pend.length!==1?'s':''} de actualizar</b>${pend.length?`<div class="task-sub">Se imprimirían con el alquiler anterior: ${pend.map(p=>esc(PR(CT(p.contractId).propertyId).direccion)).join(' · ')}</div>`:'<div class="task-sub">Todos los contratos están al día.</div>'}</div>${pend.length?`<button class="btn btn-sm" data-nav="/cobranzas?sub=aumentos" onclick="closeModal()">Actualizar</button>`:''}</div>
@@ -1293,7 +1289,11 @@ function imprimirRecibosMesModal(){
     if(!lista.length){ showToast('No hay recibos para imprimir'); return; }
     const paginas = [];
     if(document.getElementById('rcPlanilla').checked) paginas.push(planillaRecibosHtml(lista, pend));
-    lista.forEach(p=>paginas.push(reciboPagina(p, pagoTotal(p))));
+    for(let i=0; i<lista.length; i+=2){
+      const a = reciboHtml(lista[i], null, pagoTotal(lista[i]));
+      const b = lista[i+1] ? CORTE + reciboHtml(lista[i+1], null, pagoTotal(lista[i+1])) : '';
+      paginas.push(a + b);
+    }
     closeModal();
     imprimir(paginas);
   };
@@ -1380,37 +1380,63 @@ function imprimirTodasLiquidaciones(){
   imprimir(liqs.map(liquidacionPrintHtml));
 }
 
+// vuelve el pago exactamente a como estaba (incluye borrar campos que no existían antes)
+function restaurarPago(p, prev){
+  Object.keys(p).forEach(k=>{ if(!(k in prev)) delete p[k]; });
+  Object.assign(p, prev);
+}
 function cobrarModal(pid){
   const p = payments.find(x=>x.id===pid);
   const c = CT(p.contractId); const prop = PR(c.propertyId); const t = P(c.tenantId);
-  const saldo = saldoPendiente(p);
+  const pagadoYa = p.estado==='Parcial' ? (p.pagado||0) : 0;
+  const inputStyle = 'text-align:right;';
   showModal(`
     <div class="section-title" style="margin-bottom:10px;">Registrar cobro</div>
     <div class="page-sub" style="margin-bottom:14px;">${esc(prop.direccion)} — ${esc(nombreCompleto(t))} — ${periodoLabel(p.periodo)}</div>
+    <div class="form-grid" style="margin-bottom:12px;">
+      <div class="field"><label>Alquiler</label><input type="number" value="${p.importe}" disabled style="${inputStyle}"></div>
+      <div class="field"><label>Expensas</label><input type="number" id="cobroExpensas" min="0" step="100" value="${p.expensas||0}" style="${inputStyle}"></div>
+      <div class="field"><label>Servicios</label><input type="number" id="cobroServicios" min="0" step="100" value="${p.servicios||0}" style="${inputStyle}"></div>
+      <div class="field"><label>Total del período</label><input type="text" id="cobroTotal" disabled style="${inputStyle} font-weight:700;"></div>
+    </div>
+    <div class="page-sub" style="margin-bottom:14px;">Expensas y servicios son opcionales: dejalos en 0 si no corresponden este mes. Se suman al recibo y a la liquidación del propietario.</div>
     <div class="field" style="margin-bottom:16px;">
-      <label>Monto cobrado ahora (saldo pendiente: ${money(saldo)})</label>
-      <input type="number" id="cobroMonto" value="${saldo}">
+      <label id="cobroMontoLabel">Monto cobrado ahora</label>
+      <input type="number" id="cobroMonto" style="${inputStyle}">
     </div>
     <div style="display:flex; gap:10px; justify-content:flex-end;">
       <button class="btn" data-modal-cancel="1">Cancelar</button>
       <button class="btn btn-primary" id="cobroConfirmBtn">Confirmar cobro</button>
-    </div>`);
+    </div>`, true);
+  const leer = id => Math.max(0, parseFloat(document.getElementById(id).value)||0);
+  const totalActual = () => p.importe + leer('cobroExpensas') + leer('cobroServicios');
+  const refrescar = ()=>{
+    const total = totalActual(); const saldo = Math.max(0, total - pagadoYa);
+    document.getElementById('cobroTotal').value = money(total);
+    document.getElementById('cobroMontoLabel').textContent = `Monto cobrado ahora (saldo pendiente: ${money(saldo)}${pagadoYa?' — ya pagó '+money(pagadoYa):''})`;
+    document.getElementById('cobroMonto').value = saldo;
+  };
+  ['cobroExpensas','cobroServicios'].forEach(id=>document.getElementById(id).addEventListener('input', refrescar));
+  refrescar();
   document.getElementById('cobroConfirmBtn').onclick = ()=>{
     const monto = parseFloat(document.getElementById('cobroMonto').value)||0;
     if(monto<=0){ showToast('Ingresá un monto válido'); return; }
     const prev = {...p};
-    const pagadoYa = p.estado==='Parcial' ? (p.pagado||0) : 0;
+    const expensas = leer('cobroExpensas'), servicios = leer('cobroServicios');
+    if(expensas) p.expensas = expensas; else delete p.expensas;
+    if(servicios) p.servicios = servicios; else delete p.servicios;
     const nuevoPagado = pagadoYa + monto;
     const total = pagoTotal(p);
+    const deshacer = ()=>{ restaurarPago(p, prev); route(); showToast('Pago deshecho'); };
     closeModal();
     if(nuevoPagado >= total){
       p.estado='Pagado'; p.fechaPago=TODAY_ISO; delete p.pagado;
-      showToast('Pago completo registrado', ()=>{ Object.assign(p, prev); if(!('pagado' in prev)) delete p.pagado; route(); showToast('Pago deshecho'); });
+      showToast('Pago completo registrado', deshacer);
       route();
       verRecibo(pid);
     } else {
       p.estado='Parcial'; p.pagado=nuevoPagado; p.fechaPago=TODAY_ISO;
-      showToast(`Pago parcial registrado — quedan pendientes ${money(total-nuevoPagado)}`, ()=>{ Object.assign(p, prev); if(!('pagado' in prev)) delete p.pagado; route(); showToast('Pago deshecho'); });
+      showToast(`Pago parcial registrado — quedan pendientes ${money(total-nuevoPagado)}`, deshacer);
       route();
     }
   };
@@ -1419,7 +1445,7 @@ function deshacerPago(pid){
   const pg = payments.find(x=>x.id===pid);
   const prev = {...pg};
   pg.estado='Pendiente'; pg.fechaPago=null; delete pg.pagado;
-  showToast('Pago revertido a pendiente', ()=>{ Object.assign(pg, prev); route(); showToast('Se restauró el pago'); });
+  showToast('Pago revertido a pendiente', ()=>{ restaurarPago(pg, prev); route(); showToast('Se restauró el pago'); });
   route();
 }
 
@@ -1766,8 +1792,8 @@ function viewConfiguracion(){
         <div class="form-grid">
           <div class="field"><label>Nombre</label><input value="Caruso Propiedades" disabled></div>
           <div class="field"><label>Localidad</label><input value="Paso del Rey, Moreno" disabled></div>
-          <div class="field"><label>Teléfono</label><input value="0237 15-XXXX-XXXX" disabled></div>
-          <div class="field"><label>Email</label><input value="contacto@carusopropiedades.com.ar" disabled></div>
+          <div class="field"><label>Teléfono</label><input value="11 3449-8819" disabled></div>
+          <div class="field"><label>Email</label><input value="info@carusopropiedades.com" disabled></div>
           <div class="field"><label>Comisión estándar</label><input value="8%" disabled></div>
           <div class="field"><label>Moneda</label><input value="ARS" disabled></div>
         </div>

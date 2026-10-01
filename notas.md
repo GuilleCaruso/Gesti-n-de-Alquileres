@@ -34,6 +34,11 @@ Funciones clave ya hechas: cobrar / deshacer pago, generar recibo, actualizar co
 
 ## Decisiones tomadas
 
+- Datos de la inmobiliaria: tel. 11 3449-8819 · info@carusopropiedades.com.
+- Recibos **sin duplicado**. Individual: 1 recibo. Recibos del mes: 2 por hoja A4 con línea de corte.
+- Recibos del mes por el importe completo, para firmar al cobrar (confirmado por Guillermo).
+- Al cobrar: alquiler fijo (viene del contrato) + expensas y servicios opcionales y editables. Se suman al recibo y a la liquidación.
+
 - Prototipo publicado en https://claude.ai/artifact/4Mbn7nLqpn2jaFfhnBsaBU (se actualiza en el mismo link).
 - Recibos del mes: se imprime uno por cada alquiler del período, por el importe completo, cobrado o no. Los pendientes de actualizar se avisan antes de imprimir y figuran en la planilla de control; se puede elegir imprimir solo los listos.
 
@@ -63,15 +68,16 @@ Funciones clave ya hechas: cobrar / deshacer pago, generar recibo, actualizar co
 - [x] Subir al repo el PDF y el logo.
 - [x] Poner el logo real en la barra lateral.
 - [x] Logo en recibos e impresiones.
-- [x] Impresiones: recibo (original + duplicado), recibos del mes con planilla de control, ficha de propiedad, liquidación (individual y todas).
-- [ ] Confirmar formato del recibo (¿original + duplicado en una hoja A4 está bien?).
-- [ ] Cargar teléfono real de la inmobiliaria (hoy dice 0237 15-XXXX-XXXX en los impresos).
+- [x] Impresiones: recibo, recibos del mes con planilla de control, ficha de propiedad, liquidación (individual y todas).
+- [x] Teléfono y mail reales en impresos y Configuración.
+- [x] Al cobrar se pueden cargar expensas y servicios.
 - [ ] Crear `PROJECT_RULES.md` antes de la Etapa 2.
 - [ ] Recorrer el prototipo pantalla por pantalla y anotar ajustes.
 - [ ] Definir cómo se guardan los datos (sin esto la app no sirve para uso real).
 
 ## Historial
 
+- **01/10/2026** – Recibos sin duplicado, datos de contacto reales, expensas/servicios editables al cobrar.
 - **01/10/2026** – Impresiones completas (recibo, recibos del mes, ficha, liquidaciones) y corregido texto duplicado "Arreglo — Arreglo" en liquidaciones. Publicado en el link del prototipo.
 - **01/10/2026** – PDF y logo al repo; logo real en la barra lateral.
 - **30/09/2026** – Se carga el contexto del chat anterior en estas notas.
