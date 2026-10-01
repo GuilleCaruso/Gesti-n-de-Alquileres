@@ -34,6 +34,9 @@ Funciones clave ya hechas: cobrar / deshacer pago, generar recibo, actualizar co
 
 ## Decisiones tomadas
 
+- Prototipo publicado en https://claude.ai/artifact/4Mbn7nLqpn2jaFfhnBsaBU (se actualiza en el mismo link).
+- Recibos del mes: se imprime uno por cada alquiler del período, por el importe completo, cobrado o no. Los pendientes de actualizar se avisan antes de imprimir y figuran en la planilla de control; se puede elegir imprimir solo los listos.
+
 - Primero el prototipo visual, después la arquitectura real.
 - Identidad visual: **verde inglés + naranja** tomados del logo de Caruso Propiedades. Logo real ya incorporado en la barra lateral (01/10/2026).
 - Deudores **se calculan** a partir de las cobranzas (no es una lista aparte).
@@ -59,14 +62,17 @@ Funciones clave ya hechas: cobrar / deshacer pago, generar recibo, actualizar co
 - [x] Cargar el contexto del chat anterior (parcial: la transcripción corta en la primera versión).
 - [x] Subir al repo el PDF y el logo.
 - [x] Poner el logo real en la barra lateral.
-- [ ] Logo en recibos e impresiones.
-- [ ] Botones de impresión que hoy dicen "próximamente": ficha, recibos del mes, liquidación.
+- [x] Logo en recibos e impresiones.
+- [x] Impresiones: recibo (original + duplicado), recibos del mes con planilla de control, ficha de propiedad, liquidación (individual y todas).
+- [ ] Confirmar formato del recibo (¿original + duplicado en una hoja A4 está bien?).
+- [ ] Cargar teléfono real de la inmobiliaria (hoy dice 0237 15-XXXX-XXXX en los impresos).
 - [ ] Crear `PROJECT_RULES.md` antes de la Etapa 2.
 - [ ] Recorrer el prototipo pantalla por pantalla y anotar ajustes.
 - [ ] Definir cómo se guardan los datos (sin esto la app no sirve para uso real).
 
 ## Historial
 
+- **01/10/2026** – Impresiones completas (recibo, recibos del mes, ficha, liquidaciones) y corregido texto duplicado "Arreglo — Arreglo" en liquidaciones. Publicado en el link del prototipo.
 - **01/10/2026** – PDF y logo al repo; logo real en la barra lateral.
 - **30/09/2026** – Se carga el contexto del chat anterior en estas notas.
 - **30/09/2026** – Se sube `caruso-propiedades.html` al repo y se crea `notas.md`.

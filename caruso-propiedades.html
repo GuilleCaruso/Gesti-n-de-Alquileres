@@ -282,12 +282,38 @@ td.num, th.num{text-align:right;}
 .modal-box.wide{width:min(680px,100%);}
 .modal-overlay.show .modal-box{transform:translateY(0);}
 
+/* ---------- impresión ---------- */
+#printArea{display:none;}
 @media print {
-  body > *:not(#modalOverlay){ display:none !important; }
-  #modalOverlay{ position:static !important; background:none !important; opacity:1 !important; padding:0 !important; }
-  #modalOverlay .modal-box{ box-shadow:none !important; width:100% !important; max-height:none !important; }
-  .modal-box > *:not(.receipt-print){ display:none !important; }
+  @page{ size:A4; margin:12mm; }
+  body{ background:#fff !important; }
+  body > *:not(#printArea){ display:none !important; }
+  #printArea{ display:block !important; }
 }
+.doc{color:#111; background:#fff; font-family:"Public Sans",sans-serif; font-size:12.5px; line-height:1.4;}
+.doc-page{break-after:page; page-break-after:always;}
+.doc-page:last-child{break-after:auto; page-break-after:auto;}
+.doc-head{display:flex; align-items:center; gap:14px; border-bottom:2px solid #111; padding-bottom:10px; margin-bottom:14px;}
+.doc-logo{height:54px; width:auto; border-radius:4px; flex:none;}
+.doc-org{line-height:1.35; font-size:11.5px;}
+.doc-org b{font-size:15px;}
+.doc-title{margin-left:auto; text-align:right;}
+.doc-title h2{font-family:"Fraunces",serif; font-size:19px; margin:0;}
+.doc-title div{font-size:11.5px; color:#444;}
+.doc h3{font-size:11.5px; text-transform:uppercase; letter-spacing:.6px; margin:16px 0 6px; border-bottom:1px solid #999; padding-bottom:3px;}
+.doc-kv{display:grid; grid-template-columns:repeat(2,1fr); gap:3px 22px;}
+.doc-kv span{color:#555;}
+.doc table{width:100%; border-collapse:collapse; font-size:11.5px;}
+.doc thead th{border-bottom:1.5px solid #111; padding:5px 6px; text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:.3px; color:#333;}
+.doc tbody td{border-bottom:1px solid #ccc; padding:5px 6px; vertical-align:top;}
+.doc .num{text-align:right; font-variant-numeric:tabular-nums;}
+.doc tr.doc-total td{font-weight:800; font-size:13px; border-top:2px solid #111; border-bottom:none;}
+.doc-warn{font-weight:700;}
+.doc-sign{display:flex; justify-content:space-between; gap:50px; margin-top:56px;}
+.doc-sign div{flex:1; border-top:1px solid #111; text-align:center; padding-top:4px; font-size:11px;}
+.doc-foot{margin-top:18px; font-size:10px; color:#666; text-align:center;}
+.receipt-cut{border-top:1px dashed #555; margin:22px 0; text-align:center; font-size:10px; color:#666; line-height:0;}
+.receipt-cut span{background:#fff; padding:0 8px;}
 
 /* ---------- recibo formal ---------- */
 .receipt-box{display:flex; border:2px solid #1a1a1a; background:#fff; color:#1a1a1a; font-family:"Public Sans",sans-serif;}
@@ -305,6 +331,11 @@ td.num, th.num{text-align:right;}
 .receipt-breakdown .kv-label{color:#444;}
 .receipt-breakdown .tnum{font-weight:700; font-size:14px; margin-top:2px;}
 .receipt-sign{text-align:right; margin-top:24px; font-size:13px;}
+.receipt-head{display:flex; align-items:center; gap:12px; padding-bottom:8px; border-bottom:2px solid #1a1a1a;}
+.receipt-head img{height:44px; width:auto; border-radius:4px; flex:none;}
+.receipt-org{font-size:11px; line-height:1.35;}
+.receipt-org b{font-size:14px;}
+.receipt-copy{margin-left:auto; font-weight:800; font-size:10.5px; letter-spacing:2px; border:1.5px solid #1a1a1a; padding:3px 8px; border-radius:4px;}
 
 .form-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:14px;}
 .field{display:flex; flex-direction:column; gap:5px;}
@@ -363,6 +394,7 @@ td.num, th.num{text-align:right;}
 <div class="drawer-overlay" id="drawerOverlay"><div class="drawer" id="drawer"></div></div>
 <div class="modal-overlay" id="modalOverlay"><div class="modal-box"></div></div>
 <div class="toast" id="toast"></div>
+<div id="printArea"></div>
 
 <script>
 /* ============================== ICONS ============================== */
@@ -595,6 +627,22 @@ const fdate = iso => iso ? new Date(iso+'T00:00:00').toLocaleDateString('es-AR')
 const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 const periodoLabel = p => { const [y,m] = p.split('-'); const s = MESES[+m-1]; return s.charAt(0).toUpperCase()+s.slice(1)+' '+y; };
 const esc = s => String(s??'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ============================== IMPRESIÓN ============================== */
+const INMOBILIARIA = {nombre:'Caruso Propiedades', localidad:'Paso del Rey, Moreno', telefono:'0237 15-XXXX-XXXX', email:'contacto@carusopropiedades.com.ar'};
+const LOGO_SRC = document.querySelector('.brand-logo').src;
+function imprimir(paginas){
+  document.getElementById('printArea').innerHTML = `<div class="doc">${paginas.map(h=>`<div class="doc-page">${h}</div>`).join('')}</div>`;
+  setTimeout(()=>window.print(), 60);
+}
+function docHead(titulo, sub){
+  return `<div class="doc-head">
+    <img class="doc-logo" src="${LOGO_SRC}" alt="">
+    <div class="doc-org"><b>${esc(INMOBILIARIA.nombre)}</b><div>${esc(INMOBILIARIA.localidad)}</div><div>${esc(INMOBILIARIA.telefono)} · ${esc(INMOBILIARIA.email)}</div></div>
+    <div class="doc-title"><h2>${esc(titulo)}</h2><div>${sub}</div></div>
+  </div>`;
+}
+const docFoot = () => `<div class="doc-foot">Impreso el ${fdate(TODAY_ISO)} · ${esc(INMOBILIARIA.nombre)}</div>`;
 
 function estadoBadge(estado){
   const map = {
@@ -879,7 +927,7 @@ function viewFichaPropiedad(id, tab){
         <div class="ficha-title">${esc(p.tipo)} — ${esc(p.direccion)}</div>
         <div class="ficha-meta">${esc(p.localidad)} · ${estadoBadge(p.estado)}</div>
       </div>
-      <button class="btn" onclick="showToast('Imprimir ficha — próximamente en esta etapa')">${icon('printer')}Imprimir</button>
+      <button class="btn" onclick="imprimirFicha('${p.id}')">${icon('printer')}Imprimir ficha</button>
     </div>
     <div class="tabs">${tabs.map(([k,l])=>`<button class="tab-btn ${tab===k?'active':''}" data-ficha-tab="${p.id}:${k}">${l}</button>`).join('')}</div>
     <div>${body}</div>`;
@@ -1092,7 +1140,7 @@ function viewCobranzas(sub, query){
   return `
     <div class="page-head">
       <div><h1 class="page-title">Cobranzas</h1><div class="page-sub">${periodoLabel(PERIODO_ACTUAL)}</div></div>
-      ${sub==='mes'?`<button class="btn" onclick="showToast('Impresión de recibos del período — próximamente en esta etapa')">${icon('printer')}Imprimir recibos del mes</button>`:''}
+      ${sub==='mes'?`<button class="btn" onclick="imprimirRecibosMesModal()">${icon('printer')}Imprimir recibos del mes</button>`:''}
     </div>
     ${subnav}
     ${sub==='aumentos'?viewAumentos():viewCobranzasMes(query)}`;
@@ -1166,18 +1214,23 @@ function numeroALetras(n){
   if(resto>0) out += tres(resto);
   return out.trim();
 }
-function reciboHtml(p){
+function reciboHtml(p, copia, montoFijo){
   const c = CT(p.contractId); const prop = PR(c.propertyId); const t = P(c.tenantId); const t2 = c.tenantId2 ? P(c.tenantId2) : null;
   const [y,m] = p.periodo.split('-').map(Number);
   const rangoInicio = new Date(y, m-1, 1).toLocaleDateString('es-AR');
   const rangoFin = new Date(y, m, 0).toLocaleDateString('es-AR');
-  const montoEsteRecibo = p.estado==='Parcial' ? (p.pagado||0) : pagoTotal(p);
+  const montoEsteRecibo = montoFijo!=null ? montoFijo : (p.estado==='Parcial' ? (p.pagado||0) : pagoTotal(p));
   const recibidoDe = t2 ? `${nombreCompleto(t)} y ${nombreCompleto(t2)}` : nombreCompleto(t);
   return `
     <div class="receipt-print">
       <div class="receipt-box">
         <div class="receipt-side">RECIBO DE ALQUILER</div>
         <div class="receipt-body">
+          <div class="receipt-head">
+            <img src="${LOGO_SRC}" alt="">
+            <div class="receipt-org"><b>${esc(INMOBILIARIA.nombre)}</b><div>${esc(INMOBILIARIA.localidad)} · ${esc(INMOBILIARIA.telefono)}</div></div>
+            ${copia?`<div class="receipt-copy">${copia}</div>`:''}
+          </div>
           <div class="receipt-row"><span class="rl">Número</span><span class="rv">${esc(p.id)}</span><span class="rl" style="margin-left:14px;">Fecha</span><span class="rv">${fdate(TODAY_ISO)}</span></div>
           <div class="receipt-row"><span class="rl">Recibido de</span><span class="rv">${esc(recibidoDe)}</span></div>
           <div class="receipt-row"><span class="rl">La suma de $</span><span class="rv tnum" style="flex:none; min-width:120px;">${money(montoEsteRecibo).replace('$ ','')}</span></div>
@@ -1194,14 +1247,139 @@ function reciboHtml(p){
       </div>
     </div>`;
 }
+// Una hoja A4 con original (para el inquilino) y duplicado (para la inmobiliaria)
+function reciboPagina(p, montoFijo){
+  return reciboHtml(p, 'ORIGINAL', montoFijo) + `<div class="receipt-cut"><span>✂ cortar aquí</span></div>` + reciboHtml(p, 'DUPLICADO', montoFijo);
+}
+function imprimirRecibo(pid){
+  const p = payments.find(x=>x.id===pid);
+  if(p) imprimir([reciboPagina(p)]);
+}
 function verRecibo(pid){
   const p = payments.find(x=>x.id===pid);
   if(!p) return;
-  showModal(reciboHtml(p) + `<div style="display:flex; gap:10px; justify-content:flex-end; margin-top:18px;">
+  showModal(reciboHtml(p) + `<div class="page-sub" style="margin-top:12px;">Se imprime en una hoja A4 con original y duplicado.</div>
+  <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:14px;">
     <button class="btn" data-modal-cancel="1">Cerrar</button>
-    <button class="btn btn-primary" onclick="window.print()">${icon('printer')}Imprimir</button>
+    <button class="btn btn-primary" onclick="imprimirRecibo('${p.id}')">${icon('printer')}Imprimir</button>
   </div>`, true);
 }
+
+/* recibos del mes: todos los alquileres del período, con los pendientes de actualizar identificados */
+function imprimirRecibosMesModal(){
+  const pays = payments.filter(p=>p.periodo===PERIODO_ACTUAL);
+  const pend = pays.filter(p=>pendienteActualizacion(CT(p.contractId)));
+  const listos = pays.length - pend.length;
+  showModal(`
+    <div class="section-title" style="margin-bottom:4px;">Imprimir recibos — ${periodoLabel(PERIODO_ACTUAL)}</div>
+    <div class="page-sub" style="margin-bottom:14px;">Un recibo por cada alquiler del período (original y duplicado en la misma hoja), estén cobrados o no, por el importe completo del mes.</div>
+    <div class="task-list" style="margin-bottom:14px;">
+      <div class="task-row"><span class="task-dot" style="background:var(--ok-600)"></span><div class="task-text"><b>${listos} recibo${listos!==1?'s':''}</b> listo${listos!==1?'s':''}</div></div>
+      <div class="task-row"><span class="task-dot" style="background:var(--warn-600)"></span><div class="task-text"><b>${pend.length} pendiente${pend.length!==1?'s':''} de actualizar</b>${pend.length?`<div class="task-sub">Se imprimirían con el alquiler anterior: ${pend.map(p=>esc(PR(CT(p.contractId).propertyId).direccion)).join(' · ')}</div>`:'<div class="task-sub">Todos los contratos están al día.</div>'}</div>${pend.length?`<button class="btn btn-sm" data-nav="/cobranzas?sub=aumentos" onclick="closeModal()">Actualizar</button>`:''}</div>
+    </div>
+    ${pend.length?`<div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px; font-size:13.5px;">
+      <label style="display:flex; gap:8px; align-items:center;"><input type="radio" name="rcAlcance" value="todos" checked> Imprimir todos (${pays.length})</label>
+      <label style="display:flex; gap:8px; align-items:center;"><input type="radio" name="rcAlcance" value="listos"> Solo los listos (${listos})</label>
+    </div>`:''}
+    <label style="display:flex; gap:8px; align-items:center; font-size:13.5px; margin-bottom:18px;"><input type="checkbox" id="rcPlanilla" checked> Incluir planilla de control (primera hoja, para la oficina)</label>
+    <div style="display:flex; gap:10px; justify-content:flex-end;">
+      <button class="btn" data-modal-cancel="1">Cancelar</button>
+      <button class="btn btn-primary" id="rcPrintBtn">${icon('printer')}Imprimir</button>
+    </div>`, true);
+  document.getElementById('rcPrintBtn').onclick = ()=>{
+    const sel = document.querySelector('input[name="rcAlcance"]:checked');
+    const soloListos = sel && sel.value==='listos';
+    const lista = soloListos ? pays.filter(p=>!pend.includes(p)) : pays;
+    if(!lista.length){ showToast('No hay recibos para imprimir'); return; }
+    const paginas = [];
+    if(document.getElementById('rcPlanilla').checked) paginas.push(planillaRecibosHtml(lista, pend));
+    lista.forEach(p=>paginas.push(reciboPagina(p, pagoTotal(p))));
+    closeModal();
+    imprimir(paginas);
+  };
+}
+function planillaRecibosHtml(lista, pend){
+  const total = lista.reduce((s,p)=>s+pagoTotal(p),0);
+  const rows = lista.map((p,i)=>{
+    const c = CT(p.contractId); const prop = PR(c.propertyId);
+    const estado = p.estado==='Parcial' ? `Parcial — cobrado ${money(p.pagado||0)}` : p.estado;
+    return `<tr><td>${i+1}</td><td>${esc(prop.direccion)}<br><span style="color:#555">${esc(prop.localidad)}</span></td><td>${esc(nombreCompleto(P(c.tenantId)))}</td><td class="num">${money(pagoTotal(p))}</td><td>${esc(estado)}</td><td>${pend.includes(p)?'<span class="doc-warn">⚠ Pendiente de actualizar</span>':'✓ Al día'}</td></tr>`;
+  }).join('');
+  return docHead('Planilla de control de recibos', periodoLabel(PERIODO_ACTUAL)) + `
+    <table><thead><tr><th>#</th><th>Propiedad</th><th>Inquilino</th><th class="num">Importe</th><th>Cobranza</th><th>Actualización</th></tr></thead>
+    <tbody>${rows}<tr class="doc-total"><td colspan="3">${lista.length} recibos</td><td class="num">${money(total)}</td><td colspan="2"></td></tr></tbody></table>
+    ${pend.length?`<p class="doc-warn" style="margin-top:12px;">⚠ ${pend.length} contrato${pend.length>1?'s':''} pendiente${pend.length>1?'s':''} de actualizar: revisar el importe antes de entregar el recibo.</p>`:''}
+    ${docFoot()}`;
+}
+
+/* ficha de propiedad */
+function imprimirFicha(id){
+  const p = PR(id); if(!p) return;
+  const owner = P(p.ownerId); const c = contractByProperty(p.id); const s = services[p.id];
+  const kv = (l,v)=>`<div><span>${l}:</span> <b>${v}</b></div>`;
+  let html = docHead('Ficha de propiedad', `#${esc(p.id)} · ${esc(p.estado)}`) + `
+    <h3>Datos de la propiedad</h3>
+    <div class="doc-kv">
+      ${kv('Tipo', esc(p.tipo))}${kv('Dirección', esc(p.direccion))}
+      ${kv('Localidad', esc(p.localidad))}${kv('Superficie', p.m2+' m²')}
+      ${kv('Ambientes', `${p.ambientes} amb · ${p.dormitorios} dorm · ${p.banos} baño${p.banos>1?'s':''}`)}
+      ${kv('Extras', [p.cochera&&'Cochera',p.patio&&'Patio',p.terraza&&'Terraza',p.balcon&&'Balcón'].filter(Boolean).join(' · ')||'—')}
+    </div>
+    ${p.obs?`<p><span style="color:#555">Observaciones:</span> ${esc(p.obs)}</p>`:''}
+    <h3>Propietario</h3>
+    <div class="doc-kv">${kv('Nombre', esc(nombreCompleto(owner)))}${kv('DNI', esc(owner.dni))}${kv('Teléfono', esc(owner.telefono))}${kv('Email', esc(owner.email))}</div>`;
+  if(c){
+    const t = P(c.tenantId);
+    html += `<h3>Contrato actual #${esc(c.id)}</h3>
+    <div class="doc-kv">
+      ${kv('Inquilino', esc(nombreCompleto(t))+' · '+esc(t.telefono))}${kv('Inquilino 2', c.tenantId2?esc(nombreCompleto(P(c.tenantId2))):'—')}
+      ${kv('Garante', c.guarantorId?esc(nombreCompleto(P(c.guarantorId)))+' · '+esc(P(c.guarantorId).telefono):'—')}${kv('Estado', esc(c.estado))}
+      ${kv('Inicio', fdate(c.inicio))}${kv('Fin', fdate(c.fin))}
+      ${kv('Alquiler actual', money(c.alquilerActual))}${kv('Depósito', money(c.deposito))}
+      ${kv('Actualización', esc(c.metodo)+' · cada '+c.frecuencia+' meses')}${kv('Próxima actualización', fdate(c.proxAct)+(pendienteActualizacion(c)?' <span class="doc-warn">⚠ PENDIENTE</span>':''))}
+      ${kv('Expensas', c.expensas&&c.expensas.aplica?money(c.expensas.monto||0):'No')}${kv('Servicios a reintegrar', c.servicios&&c.servicios.aplica?'Sí':'No')}
+    </div>`;
+    const pays = paymentsByContract(c.id).slice(-6);
+    if(pays.length) html += `<h3>Últimas cobranzas</h3><table><thead><tr><th>Período</th><th class="num">Importe</th><th>Estado</th><th>Fecha de pago</th></tr></thead><tbody>
+      ${pays.map(pg=>`<tr><td>${periodoLabel(pg.periodo)}</td><td class="num">${money(pagoTotal(pg))}</td><td>${esc(pg.estado)}${pg.estado==='Parcial'?' ('+money(pg.pagado||0)+')':''}</td><td>${fdate(pg.fechaPago)}</td></tr>`).join('')}</tbody></table>`;
+  } else {
+    html += `<h3>Contrato</h3><p>Sin contrato vigente.</p>`;
+  }
+  if(s){
+    const fila = (n,x)=>`<tr><td>${n}</td><td>${x.titular==='—'?'—':esc(nombreCompleto(P(x.titular)))}</td><td>${esc(x.estado)}</td></tr>`;
+    html += `<h3>Servicios</h3><table><thead><tr><th>Servicio</th><th>Titular</th><th>Estado</th></tr></thead><tbody>${fila('Gas',s.gas)}${fila('Luz',s.luz)}${fila('Agua',s.agua)}${fila('Municipal (ABL)',s.municipal)}</tbody></table>`;
+  }
+  const arr = repairsByProperty(p.id);
+  if(arr.length) html += `<h3>Arreglos</h3><table><thead><tr><th>Aviso</th><th>Descripción</th><th>Estado</th><th class="num">Costo</th></tr></thead><tbody>
+    ${arr.map(r=>`<tr><td>${fdate(r.fechaAviso)}</td><td>${esc(r.descripcion)}</td><td>${esc(r.estado)}</td><td class="num">${r.costo!=null?money(r.costo):'—'}</td></tr>`).join('')}</tbody></table>`;
+  imprimir([html + docFoot()]);
+}
+
+/* liquidaciones */
+function liquidacionPrintHtml(l){
+  const o = l.owner;
+  return docHead('Liquidación al propietario', periodoLabel(PERIODO_ACTUAL)) + `
+    <div class="doc-kv" style="margin-bottom:6px;"><div><span>Propietario:</span> <b>${esc(nombreCompleto(o))}</b></div><div><span>DNI:</span> <b>${esc(o.dni)}</b></div><div><span>Teléfono:</span> <b>${esc(o.telefono)}</b></div><div><span>Propiedades en cartera:</span> <b>${contractsByOwner(l.ownerId).length}</b></div></div>
+    <h3>Detalle</h3>
+    <table><thead><tr><th>Concepto</th><th class="num">Importe</th></tr></thead><tbody>
+      ${l.detalle.length? l.detalle.map(d=>`<tr><td>Alquiler cobrado — ${esc(d.property.direccion)} (${esc(nombreCompleto(d.tenant))})</td><td class="num">${money(d.monto)}</td></tr>`).join('') : `<tr><td colspan="2">Sin cobranzas acreditadas este período.</td></tr>`}
+      <tr><td><b>Subtotal cobrado</b></td><td class="num"><b>${money(l.cobrado)}</b></td></tr>
+      <tr><td>Honorarios inmobiliaria (8%)</td><td class="num">- ${money(l.comision)}</td></tr>
+      ${l.gastos.map(g=>`<tr><td>${esc(g.desc)}</td><td class="num">- ${money(g.monto)}</td></tr>`).join('')}
+      <tr class="doc-total"><td>Total a liquidar</td><td class="num">${money(l.total)}</td></tr>
+    </tbody></table>
+    <div class="doc-sign"><div>Firma del propietario</div><div>${esc(INMOBILIARIA.nombre)}</div></div>
+    ${docFoot()}`;
+}
+function imprimirLiquidacion(ownerId){
+  imprimir([liquidacionPrintHtml(liquidacionOwner(ownerId, PERIODO_ACTUAL))]);
+}
+function imprimirTodasLiquidaciones(){
+  const liqs = owners.map(o=>liquidacionOwner(o, PERIODO_ACTUAL)).filter(l=>l.cobrado>0 || l.gastos.length);
+  if(!liqs.length){ showToast('No hay liquidaciones con movimientos este período'); return; }
+  imprimir(liqs.map(liquidacionPrintHtml));
+}
+
 function cobrarModal(pid){
   const p = payments.find(x=>x.id===pid);
   const c = CT(p.contractId); const prop = PR(c.propertyId); const t = P(c.tenantId);
@@ -1562,13 +1740,13 @@ function viewLiquidaciones(query){
         ${l.cobrado>0?`
         <div class="liq-line"><span>Subtotal cobrado</span><span class="tnum">${money(l.cobrado)}</span></div>
         <div class="liq-line"><span>Honorarios inmobiliaria (8%)</span><span class="tnum">- ${money(l.comision)}</span></div>
-        ${l.gastos.map(g=>`<div class="liq-line"><span>Arreglo — ${esc(g.desc)}</span><span class="tnum">- ${money(g.monto)}</span></div>`).join('')}
+        ${l.gastos.map(g=>`<div class="liq-line"><span>${esc(g.desc)}</span><span class="tnum">- ${money(g.monto)}</span></div>`).join('')}
         <div class="liq-line"><span>Total a liquidar</span><span class="tnum">${money(l.total)}</span></div>
-        <button class="btn btn-sm" style="margin-top:10px;" onclick="showToast('Imprimir liquidación — próximamente')">${icon('printer')}Imprimir liquidación</button>` : ''}
+        <button class="btn btn-sm" style="margin-top:10px;" onclick="imprimirLiquidacion('${l.ownerId}')">${icon('printer')}Imprimir liquidación</button>` : ''}
       </div>
     </div>`).join('');
   return `
-    <div class="page-head"><div><h1 class="page-title">Liquidaciones</h1><div class="page-sub">${periodoLabel(PERIODO_ACTUAL)}</div></div></div>
+    <div class="page-head"><div><h1 class="page-title">Liquidaciones</h1><div class="page-sub">${periodoLabel(PERIODO_ACTUAL)}</div></div><button class="btn" onclick="imprimirTodasLiquidaciones()">${icon('printer')}Imprimir todas</button></div>
     <div class="search-wrap" style="max-width:340px; margin-bottom:16px;">
       <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
       <input class="search-input" id="liquidacionesFilterInput" placeholder="Buscar propietario..." value="${esc(query||'')}">
