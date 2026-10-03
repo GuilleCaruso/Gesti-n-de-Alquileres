@@ -588,13 +588,28 @@ const services = {
 
 const repairs = [
   {id:'AR01', propertyId:'PR07', descripcion:'Pérdida en la cañería de la cocina', fechaAviso:'2026-09-07', especialista:'Plomería Ríos', estado:'Arreglado', costo:15000, fechaResuelto:'2026-09-09', fechaPagado:null, pagadoPor:'Propietario', urgente:false, obs:'', documentos:[{nombre:'foto_cañeria_cocina.jpg'},{nombre:'factura_plomeria_rios.pdf'}]},
-  {id:'AR02', propertyId:'PR12', descripcion:'Filtración de techo y pintura general', fechaAviso:'2026-08-15', especialista:'Pintores Moreno', estado:'Pagado', costo:60000, fechaResuelto:'2026-09-05', fechaPagado:'2026-09-10', pagadoPor:'Propietario', urgente:false, obs:'Motivo por el cual la propiedad está en mantenimiento antes de re-alquilar.', documentos:[{nombre:'foto_humedad_living.jpg'},{nombre:'factura_pintores_moreno.pdf'}]},
+  {id:'AR02', propertyId:'PR12', descripcion:'Filtración de techo y pintura general', fechaAviso:'2026-08-15', especialista:'Pintores Moreno', estado:'Arreglado', costo:60000, fechaResuelto:'2026-09-13', fechaPagado:null, pagadoPor:'Propietario', urgente:false, obs:'Motivo por el cual la propiedad está en mantenimiento antes de re-alquilar.', documentos:[{nombre:'foto_humedad_living.jpg'},{nombre:'factura_pintores_moreno.pdf'}]},
   {id:'AR03', propertyId:'PR06', descripcion:'Persiana rota en dormitorio principal', fechaAviso:'2026-08-20', especialista:'Carpintería Bazán', estado:'Pagado', costo:18000, fechaResuelto:'2026-08-25', fechaPagado:'2026-08-28', pagadoPor:'Inquilino', urgente:false, obs:'Rotura por mal uso — se descuenta del depósito, no de la liquidación del propietario.', documentos:[{nombre:'factura_bazan.pdf'}]},
   {id:'AR04', propertyId:'PR02', descripcion:'Termotanque no calienta', fechaAviso:'2026-09-10', especialista:'Gas Fernández', estado:'En curso', costo:35000, fechaResuelto:null, pagadoPor:'Propietario', urgente:false, obs:'Presupuesto aprobado, a la espera del repuesto.', documentos:[{nombre:'foto_termotanque.jpg'},{nombre:'presupuesto_gas_fernandez.pdf'}]},
   {id:'AR05', propertyId:'PR10', descripcion:'Pérdida de agua en el baño', fechaAviso:'2026-09-13', especialista:null, estado:'Pendiente', costo:null, fechaResuelto:null, pagadoPor:null, urgente:false, obs:'', documentos:[{nombre:'foto_perdida_bano.jpg'}]},
   {id:'AR06', propertyId:'PR13', descripcion:'Olor a gas — revisar instalación', fechaAviso:'2026-09-14', especialista:null, estado:'Pendiente', costo:null, fechaResuelto:null, pagadoPor:null, urgente:true, obs:'Inquilino reporta olor a gas en la cocina. Contactar urgente a gasista matriculado.', documentos:[]},
 ];
 const ARREGLO_ESTADOS = ['Pendiente','En curso','Arreglado','Pagado'];
+// liquidaciones ya pagadas al propietario: 'ownerId|periodo' → fecha de pago
+const liquidacionesPagadas = {'PS04|2026-09':'2026-09-12'};
+const liqKey = (ownerId, periodo) => ownerId+'|'+periodo;
+const liquidacionPagada = (ownerId, periodo) => liquidacionesPagadas[liqKey(ownerId, periodo)] || null;
+const nextPeriodo = p => { const [y,m] = p.split('-').map(Number); return m===12 ? `${y+1}-01` : `${y}-${String(m+1).padStart(2,'0')}`; };
+// En qué liquidación se descuenta un arreglo a cargo del propietario:
+// la del mes en que se arregló (y se le pagó al especialista) si todavía no se le pagó al propietario; si ya se pagó, la siguiente.
+function periodoDescuento(r){
+  if(r.periodoLiquidacion) return r.periodoLiquidacion;
+  if(r.pagadoPor!=='Propietario' || !r.fechaResuelto) return null;
+  const ownerId = PR(r.propertyId).ownerId;
+  let per = r.fechaResuelto.slice(0,7);
+  while(liquidacionPagada(ownerId, per)) per = nextPeriodo(per);
+  return per;
+}
 const arregloActivo = r => r.estado!=='Pagado';
 const repairsByProperty = pid => repairs.filter(r=>r.propertyId===pid).sort((a,b)=>b.fechaAviso.localeCompare(a.fechaAviso));
 
@@ -621,7 +636,7 @@ function liquidacionOwner(ownerId, periodo){
   });
   const ownerPropertyIds = properties.filter(pr=>pr.ownerId===ownerId).map(pr=>pr.id);
   const gastosArreglos = repairs.filter(r=> ownerPropertyIds.includes(r.propertyId) && r.pagadoPor==='Propietario' && r.costo &&
-      ((r.estado==='Arreglado' && periodo===PERIODO_ACTUAL) || (r.estado==='Pagado' && r.fechaPagado && r.fechaPagado.slice(0,7)===periodo)))
+      (r.estado==='Arreglado' || r.estado==='Pagado') && periodoDescuento(r)===periodo)
     .map(r=>({desc:`Arreglo — ${r.descripcion} (${PR(r.propertyId).direccion})`, monto:r.costo||0}));
   const gastosServicios = serviciosPagados.filter(s=> ownerPropertyIds.includes(s.propertyId) && s.fecha.slice(0,7)===periodo)
     .map(s=>({desc:`Servicio — ${s.servicio} (${PR(s.propertyId).direccion})`, monto:s.monto}));
@@ -922,7 +937,7 @@ function viewFichaPropiedad(id, tab){
               <div class="tnum" style="margin-top:4px; font-weight:700;">${r.costo!=null?money(r.costo):'Sin costo cargado'}</div>
             </div>
           </div>
-          <div class="cell-sub" style="margin-top:6px;">Paga: ${esc(r.pagadoPor||'a definir')}${r.fechaResuelto?' · Arreglado el '+fdate(r.fechaResuelto):''}${r.fechaPagado?' · Pagado el '+fdate(r.fechaPagado):''}</div>
+          <div class="cell-sub" style="margin-top:6px;">Paga: ${esc(r.pagadoPor||'a definir')}${r.fechaResuelto?' · Arreglado y pagado al especialista el '+fdate(r.fechaResuelto):''}${arregloLiqTexto(r)}</div>
           ${r.obs?`<div style="margin-top:6px; font-size:13px;">${esc(r.obs)}</div>`:''}
           ${r.documentos.length?`<div class="chiprow" style="margin-top:10px;">${r.documentos.map(d=>`<span class="badge badge-neutral" style="cursor:pointer;" onclick="showToast('Vista previa de documentos — próximamente')">${icon('doc')}${esc(d.nombre)}</span>`).join('')}</div>`:''}
           <div style="display:flex; gap:8px; margin-top:12px;">${arregloAcciones(r)}</div>
@@ -1710,8 +1725,15 @@ function nuevaPersonaModal(){
 function arregloAcciones(r){
   const editar = `<button class="btn btn-sm btn-ghost" data-editar-arreglo="${r.id}">Editar</button>`;
   if(r.estado==='Pendiente' || r.estado==='En curso') return `<button class="btn btn-sm" data-arreglo-etapa="${r.id}:Arreglado">Marcar arreglado</button>${editar}`;
-  if(r.estado==='Arreglado') return `<button class="btn btn-sm btn-primary" data-arreglo-etapa="${r.id}:Pagado">Marcar pagado</button>${editar}`;
+  if(r.estado==='Arreglado' && r.pagadoPor==='Propietario') return `<span class="cell-sub" style="align-self:center;">Se descuenta en liq. ${periodoLabel(periodoDescuento(r))}</span>${editar}`;
+  if(r.estado==='Arreglado') return `<button class="btn btn-sm btn-primary" data-arreglo-etapa="${r.id}:Pagado">Marcar cobrado al inquilino</button>${editar}`;
   return editar;
+}
+function arregloLiqTexto(r){
+  if(r.pagadoPor==='Propietario' && r.estado==='Arreglado') return ' · Se descuenta en la liquidación de '+periodoLabel(periodoDescuento(r));
+  if(r.pagadoPor==='Propietario' && r.estado==='Pagado') return ' · Descontado en la liquidación de '+periodoLabel(periodoDescuento(r)||r.fechaPagado.slice(0,7));
+  if(r.estado==='Pagado' && r.fechaPagado) return ' · Cobrado al inquilino el '+fdate(r.fechaPagado);
+  return '';
 }
 function cambiarEtapaArreglo(id, etapa){
   const r = repairs.find(x=>x.id===id); if(!r) return;
@@ -1724,7 +1746,7 @@ function cambiarEtapaArreglo(id, etapa){
   r.estado = etapa;
   if(etapa==='Arreglado'){ r.fechaResuelto = TODAY_ISO; r.fechaPagado = null; }
   if(etapa==='Pagado'){ r.fechaPagado = TODAY_ISO; if(!r.fechaResuelto) r.fechaResuelto = TODAY_ISO; }
-  const msg = etapa==='Pagado' ? 'Arreglo pagado — queda en el historial de la propiedad' : (r.pagadoPor==='Propietario' ? 'Arreglado — se descuenta en la liquidación del propietario' : 'Arreglado — falta registrar el pago');
+  const msg = etapa==='Pagado' ? 'Arreglo cerrado — queda en el historial de la propiedad' : (r.pagadoPor==='Propietario' ? 'Arreglado — se descuenta en la liquidación de '+periodoLabel(periodoDescuento(r)) : 'Arreglado — falta cobrárselo al inquilino');
   showToast(msg, ()=>{ Object.keys(r).forEach(k=>{ if(!(k in prev)) delete r[k]; }); Object.assign(r, prev); route(); showToast('Cambio deshecho'); });
   route();
 }
@@ -1743,11 +1765,11 @@ function arregloModal(propertyId, repairId, estadoForzado){
       <div class="field"><label>Especialista</label><input id="naEsp" placeholder="Opcional — Ej: Plomería Ríos" value="${esc(r&&r.especialista||'')}"></div>
       <div class="field"><label>Costo (presupuesto o final)</label><input type="number" id="naCosto" min="0" placeholder="Se puede cargar después" value="${r&&r.costo!=null?r.costo:''}"></div>
       <div class="field"><label>Lo paga</label><select id="naPaga"><option value="">A definir</option>${['Propietario','Inquilino'].map(o=>`<option ${r&&r.pagadoPor===o?'selected':''}>${o}</option>`).join('')}</select></div>
-      <div class="field"></div>
+      <div class="field"><label>Fecha arreglado y pagado al especialista</label><input type="date" id="naFechaArreglo" value="${r&&r.fechaResuelto?r.fechaResuelto:TODAY_ISO}"></div>
       <div class="field" style="grid-column:1/-1;"><label>Observaciones</label><input id="naObs" placeholder="Opcional" value="${esc(r&&r.obs||'')}"></div>
     </div>
     <label style="${checkStyle} margin-bottom:18px;"><input type="checkbox" id="naUrgente" ${r&&r.urgente?'checked':''}> Urgente</label>
-    <div class="page-sub" style="margin-bottom:14px;">Etapas: <b>Pendiente → En curso → Arreglado → Pagado</b>. Si lo paga el propietario, al pasar a "Arreglado" se descuenta en su liquidación. Cuando está "Pagado" sale de la lista de Arreglos y queda en el historial de la propiedad.</div>
+    <div class="page-sub" style="margin-bottom:14px;">Etapas: <b>Pendiente → En curso → Arreglado → Pagado</b>. "Arreglado" = terminado y ya le pagamos al especialista. Si lo paga el propietario, se descuenta en la liquidación de ese mes si todavía no se la pagamos; si ya se la pagamos, en la del mes siguiente. Pasa a "Pagado" solo cuando se marca pagada esa liquidación, y queda en el historial de la propiedad.</div>
     <div style="display:flex; gap:10px; justify-content:flex-end;">
       <button class="btn" data-modal-cancel="1">Cancelar</button>
       <button class="btn btn-primary" id="naSaveBtn">${r?'Guardar cambios':'Guardar arreglo'}</button>
@@ -1761,8 +1783,9 @@ function arregloModal(propertyId, repairId, estadoForzado){
     const datos = {propertyId:val('naProp'), descripcion:val('naDesc'), fechaAviso:val('naFecha')||TODAY_ISO, especialista:val('naEsp')||null,
       estado, costo, pagadoPor, urgente:document.getElementById('naUrgente').checked, obs:val('naObs')};
     const base = r || {};
-    datos.fechaResuelto = (estado==='Arreglado' || estado==='Pagado') ? (base.fechaResuelto || TODAY_ISO) : null;
+    datos.fechaResuelto = (estado==='Arreglado' || estado==='Pagado') ? (val('naFechaArreglo') || TODAY_ISO) : null;
     datos.fechaPagado = estado==='Pagado' ? (base.fechaPagado || TODAY_ISO) : null;
+    if(estado!=='Pagado') datos.periodoLiquidacion = null;
     closeModal();
     if(r){
       const prev = {...r};
@@ -1860,7 +1883,7 @@ function viewArreglos(filter, query){
     list = list.filter(r=>{ const p = PR(r.propertyId); return (r.descripcion+' '+p.direccion+' '+p.localidad+' '+(r.especialista||'')).toLowerCase().includes(q); });
   }
   list.sort((a,b)=>b.fechaAviso.localeCompare(a.fechaAviso));
-  const filtros = [['abiertos','Abiertos'],['pendientes','Pendientes'],['curso','En curso'],['arreglados','Arreglados — falta pagar'],['historial','Historial (pagados)']];
+  const filtros = [['abiertos','Abiertos'],['pendientes','Pendientes'],['curso','En curso'],['arreglados','Arreglados — a descontar'],['historial','Historial (pagados)']];
   const rows = list.map(r=>{
     const p = PR(r.propertyId);
     return `<tr class="clickable" data-editar-arreglo="${r.id}">
@@ -1888,7 +1911,7 @@ function viewArreglos(filter, query){
       ${list.length? `<table><thead><tr><th>Arreglo</th><th>Aviso</th><th>Especialista</th><th class="num">Costo</th><th>Estado</th><th></th></tr></thead><tbody>${rows}</tbody></table>`
       : `<div class="empty-state">${icon('check')}<div class="empty-state-title">No hay arreglos en este filtro</div></div>`}
     </div>
-    <div class="page-sub" style="margin-top:10px;">Hacé clic en un arreglo para editarlo (costo, especialista, etapa). Los arreglados a cargo del propietario se descuentan de su liquidación; al marcarlos pagados pasan al historial de la propiedad.</div>`;
+    <div class="page-sub" style="margin-top:10px;">Hacé clic en un arreglo para editarlo (costo, especialista, etapa). Los arreglados a cargo del propietario se descuentan en su liquidación (la del mes si todavía no se le pagó; si ya se pagó, la siguiente) y pasan al historial cuando esa liquidación se marca pagada.</div>`;
 }
 
 function nuevoServicioPagadoModal(){
@@ -1992,6 +2015,23 @@ function viewServicios(){
     </div>`;
 }
 
+function arreglosProximoMes(ownerId){
+  return repairs.filter(r=>r.estado==='Arreglado' && r.pagadoPor==='Propietario' && PR(r.propertyId).ownerId===ownerId && periodoDescuento(r)===nextPeriodo(PERIODO_ACTUAL));
+}
+function marcarLiquidacionPagada(ownerId){
+  const key = liqKey(ownerId, PERIODO_ACTUAL);
+  const incluidos = repairs.filter(r=>r.estado==='Arreglado' && r.pagadoPor==='Propietario' && PR(r.propertyId).ownerId===ownerId && periodoDescuento(r)===PERIODO_ACTUAL);
+  const prevs = incluidos.map(r=>({r, prev:{...r}}));
+  liquidacionesPagadas[key] = TODAY_ISO;
+  // los arreglos descontados en esta liquidación quedan cerrados
+  incluidos.forEach(r=>{ r.estado='Pagado'; r.periodoLiquidacion=PERIODO_ACTUAL; r.fechaPagado=TODAY_ISO; });
+  showToast(`Liquidación de ${nombreCompleto(P(ownerId))} marcada como pagada${incluidos.length?' — '+incluidos.length+' arreglo(s) cerrado(s)':''}`, ()=>{
+    delete liquidacionesPagadas[key];
+    prevs.forEach(({r,prev})=>{ Object.keys(r).forEach(k=>{ if(!(k in prev)) delete r[k]; }); Object.assign(r, prev); });
+    route(); showToast('Cambio deshecho');
+  });
+  route();
+}
 function viewLiquidaciones(query){
   let liqs = ownerIds().map(o=>liquidacionOwner(o, PERIODO_ACTUAL));
   if(query){
@@ -2003,6 +2043,7 @@ function viewLiquidaciones(query){
       <div class="liq-head" data-liq-toggle="${i}">
         <svg class="liq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
         <div style="flex:1;"><div class="cell-title">${esc(nombreCompleto(l.owner))}</div><div class="cell-sub">${contractsByOwner(l.ownerId).length} propiedad(es) en cartera</div></div>
+        ${liquidacionPagada(l.ownerId, PERIODO_ACTUAL)?`<span class="badge badge-ok">${icon('check')}Pagada ${fdate(liquidacionPagada(l.ownerId, PERIODO_ACTUAL))}</span>`:''}
         <div class="liq-total-badge tnum">${money(l.total)}</div>
       </div>
       <div class="liq-detail">
@@ -2012,7 +2053,11 @@ function viewLiquidaciones(query){
         ${l.detalle.map(d=>`<div class="liq-line"><span>Honorarios — ${esc(d.property.direccion)} (${honorariosLabel(d.contract)})</span><span class="tnum">- ${money(d.honorarios)}</span></div>`).join('')}
         ${l.gastos.map(g=>`<div class="liq-line"><span>${esc(g.desc)}</span><span class="tnum">- ${money(g.monto)}</span></div>`).join('')}
         <div class="liq-line"><span>Total a liquidar</span><span class="tnum">${money(l.total)}</span></div>
-        <button class="btn btn-sm" style="margin-top:10px;" onclick="imprimirLiquidacion('${l.ownerId}')">${icon('printer')}Imprimir liquidación</button>` : ''}
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;">
+          <button class="btn btn-sm" onclick="imprimirLiquidacion('${l.ownerId}')">${icon('printer')}Imprimir liquidación</button>
+          ${liquidacionPagada(l.ownerId, PERIODO_ACTUAL) ? '' : `<button class="btn btn-sm btn-primary" onclick="marcarLiquidacionPagada('${l.ownerId}')">${icon('check')}Marcar pagada al propietario</button>`}
+        </div>` : ''}
+        ${arreglosProximoMes(l.ownerId).length?`<div class="note-banner info" style="margin-top:12px;">${icon('alert')}<div>Pasan a la liquidación de ${periodoLabel(nextPeriodo(PERIODO_ACTUAL))} (esta ya fue pagada): ${arreglosProximoMes(l.ownerId).map(r=>esc(r.descripcion)+' '+money(r.costo)).join(' · ')}</div></div>`:''}
       </div>
     </div>`).join('');
   return `

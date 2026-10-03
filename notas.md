@@ -34,7 +34,11 @@ Funciones clave ya hechas: cobrar / deshacer pago, generar recibo, actualizar co
 
 ## Decisiones tomadas
 
-- Arreglos: etapas **Pendiente → En curso → Arreglado → Pagado**. El costo se puede cargar o cambiar en cualquier momento. Para pasar a Arreglado hace falta costo final y quién paga. Si paga el propietario, al estar Arreglado se descuenta en su liquidación. Al marcarse Pagado sale de la lista de Arreglos y queda en el historial de la propiedad (pestaña Arreglos de la ficha y ficha impresa).
+- Arreglos: etapas **Pendiente → En curso → Arreglado → Pagado** (En curso confirmado). El costo se puede cargar o cambiar en cualquier momento.
+  - **Arreglado** = terminado y ya se le pagó al especialista (se registra la fecha). Requiere costo y quién paga.
+  - Si paga el propietario: se descuenta en la liquidación del mes del arreglo si todavía no se le pagó al propietario; si ya se le pagó, en la del mes siguiente (ej.: arreglado el 8/9 → septiembre, o octubre si septiembre ya se pagó).
+  - Las liquidaciones se marcan **"pagadas al propietario"**; en ese momento sus arreglos pasan a **Pagado** y quedan en el historial de la propiedad.
+  - Si paga el inquilino: se cierra con "Marcar cobrado al inquilino".
 - Si las expensas/servicios no van al propietario, no se cobran honorarios sobre ellos.
 
 - Honorarios: se cobran sobre todo lo abonado. Cada contrato define su esquema: porcentaje (habitual 5%, a veces 10% o 4%) o monto fijo mensual. Se descuentan de la liquidación del propietario, una línea por contrato.
@@ -94,6 +98,7 @@ Funciones clave ya hechas: cobrar / deshacer pago, generar recibo, actualizar co
 
 ## Historial
 
+- **03/10/2026** – Liquidaciones "pagadas al propietario" y regla de en qué liquidación se descuenta cada arreglo.
 - **03/10/2026** – Arreglos editables con etapas y historial por propiedad.
 - **03/10/2026** – Honorarios configurables por contrato (porcentaje o monto fijo).
 - **01/10/2026** – Altas (propiedad, persona, arreglo), N° de contrato editable, tilde de liquidación, sin "En venta". Corregido: la X del panel de persona no cerraba.
