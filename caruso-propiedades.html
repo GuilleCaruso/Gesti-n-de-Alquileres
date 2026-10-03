@@ -660,7 +660,8 @@ const INMOBILIARIA = {nombre:'Caruso Propiedades', localidad:'Paso del Rey, More
 const LOGO_SRC = document.querySelector('.brand-logo').src;
 function imprimir(paginas){
   document.getElementById('printArea').innerHTML = `<div class="doc">${paginas.map(h=>`<div class="doc-page">${h}</div>`).join('')}</div>`;
-  setTimeout(()=>window.print(), 60);
+  // print() en el mismo clic: con demora, algunos navegadores (y la vista dentro de Claude) lo bloquean
+  window.print();
 }
 function docHead(titulo, sub){
   return `<div class="doc-head">
@@ -939,7 +940,7 @@ function viewFichaPropiedad(id, tab){
           </div>
           <div class="cell-sub" style="margin-top:6px;">Paga: ${esc(r.pagadoPor||'a definir')}${r.fechaResuelto?' · Arreglado y pagado al especialista el '+fdate(r.fechaResuelto):''}${arregloLiqTexto(r)}</div>
           ${r.obs?`<div style="margin-top:6px; font-size:13px;">${esc(r.obs)}</div>`:''}
-          ${r.documentos.length?`<div class="chiprow" style="margin-top:10px;">${r.documentos.map(d=>`<span class="badge badge-neutral" style="cursor:pointer;" onclick="showToast('Vista previa de documentos — próximamente')">${icon('doc')}${esc(d.nombre)}</span>`).join('')}</div>`:''}
+          ${r.documentos.length?`<div class="chiprow" style="margin-top:10px;">${r.documentos.map(d=>`<span class="badge badge-neutral" title="Los archivos se podrán abrir en la app real">${icon('doc')}${esc(d.nombre)}</span>`).join('')}<span class="cell-sub" style="align-self:center;">Adjuntos de ejemplo — abrirlos llega con la app real</span></div>`:''}
           <div style="display:flex; gap:8px; margin-top:12px;">${arregloAcciones(r)}</div>
         </div>`).join('');
     }
