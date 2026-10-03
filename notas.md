@@ -34,6 +34,9 @@ Funciones clave ya hechas: cobrar / deshacer pago, generar recibo, actualizar co
 
 ## Decisiones tomadas
 
+- Honorarios: se cobran sobre todo lo abonado. Cada contrato define su esquema: porcentaje (habitual 5%, a veces 10% o 4%) o monto fijo mensual. Se descuentan de la liquidación del propietario, una línea por contrato.
+- Método de trabajo: definir todo en el prototipo antes de construir la app real (acordado).
+
 - No se administran propiedades en venta: solo alquiladas y disponibles (más reservada / en mantenimiento / baja).
 - Cada contrato tiene un N° interno de la inmobiliaria, editable y único. En el recibo reemplaza al antiguo "Número".
 - Expensas y servicios cobrados van por defecto a la liquidación del propietario; se pueden excluir con el tilde.
@@ -79,13 +82,15 @@ Funciones clave ya hechas: cobrar / deshacer pago, generar recibo, actualizar co
 - [x] N° de contrato interno editable; aparece en recibos, planilla, contratos y ficha impresa.
 - [x] Altas funcionando: nueva propiedad, nueva persona, registrar arreglo (desde Arreglos y desde la ficha).
 - [x] Se quitó "En venta" de Propiedades.
-- [ ] Definir si los honorarios (8%) se calculan sobre expensas y servicios o solo sobre el alquiler.
+- [x] Honorarios por contrato: % (5% por defecto) o monto fijo mensual; editable en la ficha y al crear el contrato.
+- [ ] Confirmar: si expensas/servicios se destildan de la liquidación, ¿igual se cobran honorarios sobre ellos?
 - [ ] Crear `PROJECT_RULES.md` antes de la Etapa 2.
 - [ ] Recorrer el prototipo pantalla por pantalla y anotar ajustes.
 - [ ] Definir cómo se guardan los datos (sin esto la app no sirve para uso real).
 
 ## Historial
 
+- **03/10/2026** – Honorarios configurables por contrato (porcentaje o monto fijo).
 - **01/10/2026** – Altas (propiedad, persona, arreglo), N° de contrato editable, tilde de liquidación, sin "En venta". Corregido: la X del panel de persona no cerraba.
 - **01/10/2026** – Recibos sin duplicado, datos de contacto reales, expensas/servicios editables al cobrar.
 - **01/10/2026** – Impresiones completas (recibo, recibos del mes, ficha, liquidaciones) y corregido texto duplicado "Arreglo — Arreglo" en liquidaciones. Publicado en el link del prototipo.

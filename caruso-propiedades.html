@@ -483,22 +483,27 @@ const properties = [
 const PR = id => properties.find(p=>p.id===id);
 
 const contracts = [
-  {id:'CT01', numero:'0154', propertyId:'PR01', ownerId:'PS04', tenantId:'PS05', tenantId2:null, guarantorId:'PS13', inicio:'2025-03-01', fin:'2027-02-28', alquilerInicial:520000, alquilerActual:610000, metodo:'ICL', tipoAumento:'ICL', frecuencia:3, proxAct:'2026-12-01', estado:'Activo', deposito:610000, expensas:{aplica:true, monto:22000}, servicios:{aplica:false},
+  {id:'CT01', honorarios:{tipo:'porcentaje', valor:5}, numero:'0154', propertyId:'PR01', ownerId:'PS04', tenantId:'PS05', tenantId2:null, guarantorId:'PS13', inicio:'2025-03-01', fin:'2027-02-28', alquilerInicial:520000, alquilerActual:610000, metodo:'ICL', tipoAumento:'ICL', frecuencia:3, proxAct:'2026-12-01', estado:'Activo', deposito:610000, expensas:{aplica:true, monto:22000}, servicios:{aplica:false},
     historial:[{fecha:'2025-06-01',anterior:520000,nuevo:560000,indice:'ICL +7,7%'},{fecha:'2025-09-01',anterior:560000,nuevo:610000,indice:'ICL +8,9%'}]},
-  {id:'CT02', numero:'0121', propertyId:'PR02', ownerId:'PS02', tenantId:'PS06', tenantId2:null, guarantorId:null, inicio:'2024-10-01', fin:'2026-09-30', alquilerInicial:450000, alquilerActual:690000, metodo:'IPC', tipoAumento:'IPC', frecuencia:4, proxAct:'2026-09-01', estado:'Próximo a vencer', deposito:690000, expensas:{aplica:false}, servicios:{aplica:false},
+  {id:'CT02', honorarios:{tipo:'porcentaje', valor:5}, numero:'0121', propertyId:'PR02', ownerId:'PS02', tenantId:'PS06', tenantId2:null, guarantorId:null, inicio:'2024-10-01', fin:'2026-09-30', alquilerInicial:450000, alquilerActual:690000, metodo:'IPC', tipoAumento:'IPC', frecuencia:4, proxAct:'2026-09-01', estado:'Próximo a vencer', deposito:690000, expensas:{aplica:false}, servicios:{aplica:false},
     historial:[{fecha:'2026-01-01',anterior:610000,nuevo:650000,indice:'IPC +6,6%'},{fecha:'2026-05-01',anterior:650000,nuevo:690000,indice:'IPC +6,2%'}]},
-  {id:'CT04', numero:'0087', propertyId:'PR04', ownerId:'PS02', tenantId:'PS07', tenantId2:null, guarantorId:null, inicio:'2023-06-01', fin:'2028-05-31', alquilerInicial:300000, alquilerActual:720000, metodo:'Porcentaje fijo (10%)', tipoAumento:'Fijo', pctFijo:10, frecuencia:6, proxAct:'2026-12-01', estado:'Activo', deposito:720000, expensas:{aplica:false}, servicios:{aplica:false}, historial:[]},
-  {id:'CT05', numero:'0149', propertyId:'PR06', ownerId:'PS01', tenantId:'PS08', tenantId2:null, guarantorId:null, inicio:'2025-01-15', fin:'2027-01-14', alquilerInicial:480000, alquilerActual:560000, metodo:'ICL', tipoAumento:'ICL', frecuencia:3, proxAct:'2026-10-15', estado:'Activo', deposito:560000, expensas:{aplica:false}, servicios:{aplica:true}, historial:[{fecha:'2026-04-15',anterior:520000,nuevo:560000,indice:'ICL +7,7%'}]},
-  {id:'CT06', numero:'0151', propertyId:'PR07', ownerId:'PS01', tenantId:'PS09', tenantId2:null, guarantorId:null, inicio:'2025-02-01', fin:'2027-01-31', alquilerInicial:480000, alquilerActual:560000, metodo:'ICL', tipoAumento:'ICL', frecuencia:3, proxAct:'2026-11-01', estado:'Activo', deposito:560000, expensas:{aplica:false}, servicios:{aplica:false}, historial:[]},
-  {id:'CT07', numero:'0160', propertyId:'PR09', ownerId:'PS01', tenantId:'PS12', tenantId2:null, guarantorId:null, inicio:'2025-05-01', fin:'2027-04-30', alquilerInicial:470000, alquilerActual:545000, metodo:'ICL', tipoAumento:'ICL', frecuencia:3, proxAct:'2026-11-01', estado:'Activo', deposito:545000, expensas:{aplica:false}, servicios:{aplica:false}, historial:[]},
-  {id:'CT08', numero:'0112', propertyId:'PR10', ownerId:'PS02', tenantId:'PS10', tenantId2:null, guarantorId:'PS14', inicio:'2024-08-01', fin:'2027-07-31', alquilerInicial:380000, alquilerActual:520000, metodo:'IPC', tipoAumento:'IPC', frecuencia:4, proxAct:'2026-12-01', estado:'Activo', deposito:520000, expensas:{aplica:false}, servicios:{aplica:false}, historial:[{fecha:'2026-01-01',anterior:470000,nuevo:520000,indice:'IPC +10,6%'}]},
-  {id:'CT09', numero:'0172', propertyId:'PR13', ownerId:'PS02', tenantId:'PS15', tenantId2:null, guarantorId:null, inicio:'2025-09-01', fin:'2027-08-31', alquilerInicial:400000, alquilerActual:470000, metodo:'Personalizado', tipoAumento:'Personalizado', frecuencia:6, proxAct:'2027-03-01', estado:'Activo', deposito:470000, expensas:{aplica:true, monto:15000}, servicios:{aplica:true}, historial:[]},
-  {id:'CT10', numero:'0138', propertyId:'PR14', ownerId:'PS03', tenantId:'PS17', tenantId2:null, guarantorId:null, inicio:'2024-12-01', fin:'2026-11-30', alquilerInicial:500000, alquilerActual:780000, metodo:'ICL', tipoAumento:'ICL', frecuencia:3, proxAct:'2026-09-01', estado:'Activo', deposito:780000, expensas:{aplica:false}, servicios:{aplica:false},
+  {id:'CT04', honorarios:{tipo:'porcentaje', valor:10}, numero:'0087', propertyId:'PR04', ownerId:'PS02', tenantId:'PS07', tenantId2:null, guarantorId:null, inicio:'2023-06-01', fin:'2028-05-31', alquilerInicial:300000, alquilerActual:720000, metodo:'Porcentaje fijo (10%)', tipoAumento:'Fijo', pctFijo:10, frecuencia:6, proxAct:'2026-12-01', estado:'Activo', deposito:720000, expensas:{aplica:false}, servicios:{aplica:false}, historial:[]},
+  {id:'CT05', honorarios:{tipo:'porcentaje', valor:5}, numero:'0149', propertyId:'PR06', ownerId:'PS01', tenantId:'PS08', tenantId2:null, guarantorId:null, inicio:'2025-01-15', fin:'2027-01-14', alquilerInicial:480000, alquilerActual:560000, metodo:'ICL', tipoAumento:'ICL', frecuencia:3, proxAct:'2026-10-15', estado:'Activo', deposito:560000, expensas:{aplica:false}, servicios:{aplica:true}, historial:[{fecha:'2026-04-15',anterior:520000,nuevo:560000,indice:'ICL +7,7%'}]},
+  {id:'CT06', honorarios:{tipo:'porcentaje', valor:5}, numero:'0151', propertyId:'PR07', ownerId:'PS01', tenantId:'PS09', tenantId2:null, guarantorId:null, inicio:'2025-02-01', fin:'2027-01-31', alquilerInicial:480000, alquilerActual:560000, metodo:'ICL', tipoAumento:'ICL', frecuencia:3, proxAct:'2026-11-01', estado:'Activo', deposito:560000, expensas:{aplica:false}, servicios:{aplica:false}, historial:[]},
+  {id:'CT07', honorarios:{tipo:'porcentaje', valor:5}, numero:'0160', propertyId:'PR09', ownerId:'PS01', tenantId:'PS12', tenantId2:null, guarantorId:null, inicio:'2025-05-01', fin:'2027-04-30', alquilerInicial:470000, alquilerActual:545000, metodo:'ICL', tipoAumento:'ICL', frecuencia:3, proxAct:'2026-11-01', estado:'Activo', deposito:545000, expensas:{aplica:false}, servicios:{aplica:false}, historial:[]},
+  {id:'CT08', honorarios:{tipo:'porcentaje', valor:5}, numero:'0112', propertyId:'PR10', ownerId:'PS02', tenantId:'PS10', tenantId2:null, guarantorId:'PS14', inicio:'2024-08-01', fin:'2027-07-31', alquilerInicial:380000, alquilerActual:520000, metodo:'IPC', tipoAumento:'IPC', frecuencia:4, proxAct:'2026-12-01', estado:'Activo', deposito:520000, expensas:{aplica:false}, servicios:{aplica:false}, historial:[{fecha:'2026-01-01',anterior:470000,nuevo:520000,indice:'IPC +10,6%'}]},
+  {id:'CT09', honorarios:{tipo:'fijo', valor:40000}, numero:'0172', propertyId:'PR13', ownerId:'PS02', tenantId:'PS15', tenantId2:null, guarantorId:null, inicio:'2025-09-01', fin:'2027-08-31', alquilerInicial:400000, alquilerActual:470000, metodo:'Personalizado', tipoAumento:'Personalizado', frecuencia:6, proxAct:'2027-03-01', estado:'Activo', deposito:470000, expensas:{aplica:true, monto:15000}, servicios:{aplica:true}, historial:[]},
+  {id:'CT10', honorarios:{tipo:'porcentaje', valor:5}, numero:'0138', propertyId:'PR14', ownerId:'PS03', tenantId:'PS17', tenantId2:null, guarantorId:null, inicio:'2024-12-01', fin:'2026-11-30', alquilerInicial:500000, alquilerActual:780000, metodo:'ICL', tipoAumento:'ICL', frecuencia:3, proxAct:'2026-09-01', estado:'Activo', deposito:780000, expensas:{aplica:false}, servicios:{aplica:false},
     historial:[{fecha:'2025-12-01',anterior:660000,nuevo:720000,indice:'ICL +9,1%'},{fecha:'2026-03-01',anterior:720000,nuevo:780000,indice:'ICL +8,3%'}]},
-  {id:'CT11', numero:'0157', propertyId:'PR15', ownerId:'PS03', tenantId:'PS11', tenantId2:null, guarantorId:null, inicio:'2025-04-01', fin:'2027-03-31', alquilerInicial:430000, alquilerActual:500000, metodo:'IPC', tipoAumento:'IPC', frecuencia:4, proxAct:'2026-12-01', estado:'Activo', deposito:500000, expensas:{aplica:false}, servicios:{aplica:false}, historial:[]},
+  {id:'CT11', honorarios:{tipo:'porcentaje', valor:4}, numero:'0157', propertyId:'PR15', ownerId:'PS03', tenantId:'PS11', tenantId2:null, guarantorId:null, inicio:'2025-04-01', fin:'2027-03-31', alquilerInicial:430000, alquilerActual:500000, metodo:'IPC', tipoAumento:'IPC', frecuencia:4, proxAct:'2026-12-01', estado:'Activo', deposito:500000, expensas:{aplica:false}, servicios:{aplica:false}, historial:[]},
 ];
 const CT = id => contracts.find(c=>c.id===id);
 const numeroContrato = c => c ? (c.numero || c.id) : '—';
+const HONORARIOS_DEFAULT = {tipo:'porcentaje', valor:5};
+const honorariosDe = c => c.honorarios || HONORARIOS_DEFAULT;
+const honorariosLabel = c => { const h = honorariosDe(c); return h.tipo==='fijo' ? 'monto fijo '+money(h.valor) : h.valor+'%'; };
+// honorarios de un mes: % sobre lo que se liquida, o el monto fijo si hubo cobro (nunca más que lo cobrado)
+const calcHonorarios = (c, monto) => { if(monto<=0) return 0; const h = honorariosDe(c); return h.tipo==='fijo' ? Math.min(h.valor, monto) : Math.round(monto*h.valor/100); };
 const contractByProperty = pid => contracts.find(c=>c.propertyId===pid);
 const contractsByOwner = oid => contracts.filter(c=>c.ownerId===oid);
 const pendienteActualizacion = c => new Date(c.proxAct+'T00:00:00') <= HOY;
@@ -610,7 +615,7 @@ function liquidacionOwner(ownerId, periodo){
     if(!pay) return;
     const bruto = pay.estado==='Pagado' ? pagoTotal(pay) : (pay.estado==='Parcial' ? (pay.pagado||0) : 0);
     const monto = Math.max(0, bruto - (bruto>0 ? noLiquida(pay) : 0));
-    if(monto>0){ cobrado += monto; detalle.push({property:PR(c.propertyId), tenant:P(c.tenantId), monto}); }
+    if(monto>0){ cobrado += monto; detalle.push({contract:c, property:PR(c.propertyId), tenant:P(c.tenantId), monto, honorarios:calcHonorarios(c, monto)}); }
   });
   const ownerPropertyIds = properties.filter(pr=>pr.ownerId===ownerId).map(pr=>pr.id);
   const gastosArreglos = repairs.filter(r=> ownerPropertyIds.includes(r.propertyId) && r.estado==='Resuelto' && r.pagadoPor==='Propietario' && r.fechaResuelto && r.fechaResuelto.slice(0,7)===periodo)
@@ -619,7 +624,7 @@ function liquidacionOwner(ownerId, periodo){
     .map(s=>({desc:`Servicio — ${s.servicio} (${PR(s.propertyId).direccion})`, monto:s.monto}));
   const gastos = [...gastosArreglos, ...gastosServicios];
   const gastosTotal = gastos.reduce((s,g)=>s+g.monto,0);
-  const comision = Math.round(cobrado*0.08);
+  const comision = detalle.reduce((s,d)=>s+d.honorarios,0);
   const total = cobrado - comision - gastosTotal;
   return {ownerId, owner:P(ownerId), detalle, cobrado, comision, gastos, gastosTotal, total};
 }
@@ -863,6 +868,7 @@ function viewFichaPropiedad(id, tab){
         <div class="kv"><div class="kv-label">Garante</div><div class="kv-value">${c.guarantorId?`<a data-persona="${c.guarantorId}">${esc(nombreCompleto(P(c.guarantorId)))}</a>`:'—'}</div></div>
         <div class="kv"><div class="kv-label">Inquilino 2</div><div class="kv-value">${c.tenantId2?`<a data-persona="${c.tenantId2}">${esc(nombreCompleto(P(c.tenantId2)))}</a>`:'—'}</div></div>
         <div class="kv"><div class="kv-label">Expensas</div><div class="kv-value">${c.expensas&&c.expensas.aplica?'Sí — '+money(c.expensas.monto||0):'No'}</div></div>
+        <div class="kv"><div class="kv-label">Honorarios inmobiliaria</div><div class="kv-value">${esc(honorariosLabel(c))} <button class="btn btn-sm btn-ghost" onclick="editarHonorarios('${c.id}')">Editar</button></div></div>
         <div class="kv"><div class="kv-label">Servicios a reintegrar</div><div class="kv-value">${c.servicios&&c.servicios.aplica?'Sí':'No'}</div></div>
       </div>
       <div class="divider"></div>
@@ -1085,6 +1091,8 @@ function nuevoContratoModal(){
       <input type="number" id="ncExpensasMonto" placeholder="Monto expensas" style="max-width:160px; padding:8px 10px; border:1px solid var(--border-strong); border-radius:9px; background:var(--paper-50); color:var(--ink-900);">
       <label style="display:flex; align-items:center; gap:8px; font-size:13.5px; font-weight:600;"><input type="checkbox" id="ncPagaServicios"> ¿Paga servicios a reintegrar al propietario?</label>
     </div>
+    <div class="divider"></div>
+    <div style="margin-bottom:16px;">${honorariosFields(HONORARIOS_DEFAULT)}</div>
     <div style="display:flex; gap:10px; justify-content:flex-end;">
       <button class="btn" data-modal-cancel="1">Cancelar</button>
       <button class="btn btn-primary" id="ncSaveBtn">Crear contrato</button>
@@ -1093,12 +1101,14 @@ function nuevoContratoModal(){
   const updateOwner = ()=>{ document.getElementById('ncPropietario').value = nombreCompleto(P(PR(propSel.value).ownerId)); };
   propSel.addEventListener('change', updateOwner);
   updateOwner();
+  bindHonorariosFields();
   document.getElementById('ncSaveBtn').onclick = ()=>{
     const propertyId = propSel.value;
     const valor = parseFloat(document.getElementById('ncValor').value)||0;
     const inq1Nombre = document.getElementById('ncInq1Nombre').value.trim();
     if(!propertyId || !inq1Nombre || valor<=0){ showToast('Completá al menos propiedad, inquilino y valor de alquiler'); return; }
     const numero = document.getElementById('ncNumero').value.trim();
+    const honorarios = leerHonorarios(); if(!honorarios) return;
     if(numero && contracts.some(x=>x.numero===numero)){ showToast('Ya existe un contrato con el N° '+numero); return; }
     const crearPersona = (nombreTxt, telefono, rol)=>{
       const partes = nombreTxt.split(' ');
@@ -1123,7 +1133,7 @@ function nuevoContratoModal(){
     const metodo = tipoAumento==='Fijo' ? `Porcentaje fijo (${pctFijo}%)` : (tipoAumento==='Personalizado' ? 'Personalizado' : tipoAumento);
     const id = 'CT'+Date.now();
     const contrato = {
-      id, numero: numero || null, propertyId, ownerId:PR(propertyId).ownerId, tenantId, tenantId2, guarantorId,
+      id, numero: numero || null, honorarios, propertyId, ownerId:PR(propertyId).ownerId, tenantId, tenantId2, guarantorId,
       inicio, fin, alquilerInicial:valor, alquilerActual:valor, metodo, tipoAumento,
       pctFijo: tipoAumento==='Fijo' ? pctFijo : undefined, frecuencia, proxAct: addMonths(inicio, frecuencia),
       estado:'Activo', deposito,
@@ -1344,7 +1354,7 @@ function imprimirFicha(id){
       ${kv('Inicio', fdate(c.inicio))}${kv('Fin', fdate(c.fin))}
       ${kv('Alquiler actual', money(c.alquilerActual))}${kv('Depósito', money(c.deposito))}
       ${kv('Actualización', esc(c.metodo)+' · cada '+c.frecuencia+' meses')}${kv('Próxima actualización', fdate(c.proxAct)+(pendienteActualizacion(c)?' <span class="doc-warn">⚠ PENDIENTE</span>':''))}
-      ${kv('Expensas', c.expensas&&c.expensas.aplica?money(c.expensas.monto||0):'No')}${kv('Servicios a reintegrar', c.servicios&&c.servicios.aplica?'Sí':'No')}
+      ${kv('Honorarios', esc(honorariosLabel(c)))}${kv('Expensas', c.expensas&&c.expensas.aplica?money(c.expensas.monto||0):'No')}${kv('Servicios a reintegrar', c.servicios&&c.servicios.aplica?'Sí':'No')}
     </div>`;
     const pays = paymentsByContract(c.id).slice(-6);
     if(pays.length) html += `<h3>Últimas cobranzas</h3><table><thead><tr><th>Período</th><th class="num">Importe</th><th>Estado</th><th>Fecha de pago</th></tr></thead><tbody>
@@ -1371,7 +1381,7 @@ function liquidacionPrintHtml(l){
     <table><thead><tr><th>Concepto</th><th class="num">Importe</th></tr></thead><tbody>
       ${l.detalle.length? l.detalle.map(d=>`<tr><td>Alquiler cobrado — ${esc(d.property.direccion)} (${esc(nombreCompleto(d.tenant))})</td><td class="num">${money(d.monto)}</td></tr>`).join('') : `<tr><td colspan="2">Sin cobranzas acreditadas este período.</td></tr>`}
       <tr><td><b>Subtotal cobrado</b></td><td class="num"><b>${money(l.cobrado)}</b></td></tr>
-      <tr><td>Honorarios inmobiliaria (8%)</td><td class="num">- ${money(l.comision)}</td></tr>
+      ${l.detalle.map(d=>`<tr><td>Honorarios inmobiliaria — ${esc(d.property.direccion)} (${honorariosLabel(d.contract)})</td><td class="num">- ${money(d.honorarios)}</td></tr>`).join('')}
       ${l.gastos.map(g=>`<tr><td>${esc(g.desc)}</td><td class="num">- ${money(g.monto)}</td></tr>`).join('')}
       <tr class="doc-total"><td>Total a liquidar</td><td class="num">${money(l.total)}</td></tr>
     </tbody></table>
@@ -1543,6 +1553,48 @@ function viewAumentos(){
       <table><thead><tr><th>Propiedad</th><th>Índice</th><th class="num">Alquiler actual</th><th class="num">Alquiler nuevo</th><th>Vencimiento</th><th></th></tr></thead><tbody>${rows}</tbody></table>
     </div>
     <div class="page-sub" style="margin-top:10px;">Ordenado por los que vencen antes. El monto propuesto se redondea al múltiplo de $500 más cercano, pero podés escribir otro valor antes de actualizar.</div>`;
+}
+
+function honorariosFields(h){
+  return `<div class="form-grid">
+    <div class="field"><label>Honorarios</label><select id="honTipo"><option value="porcentaje" ${h.tipo==='porcentaje'?'selected':''}>Porcentaje sobre lo cobrado</option><option value="fijo" ${h.tipo==='fijo'?'selected':''}>Monto fijo mensual</option></select></div>
+    <div class="field"><label id="honValorLabel">${h.tipo==='fijo'?'Monto fijo ($)':'Porcentaje (%)'}</label><input type="number" id="honValor" min="0" step="0.5" value="${h.valor}"></div>
+  </div>`;
+}
+function bindHonorariosFields(){
+  const sel = document.getElementById('honTipo');
+  sel.addEventListener('change', ()=>{
+    const fijo = sel.value==='fijo';
+    document.getElementById('honValorLabel').textContent = fijo ? 'Monto fijo ($)' : 'Porcentaje (%)';
+    document.getElementById('honValor').step = fijo ? '500' : '0.5';
+    document.getElementById('honValor').value = fijo ? '' : HONORARIOS_DEFAULT.valor;
+  });
+}
+function leerHonorarios(){
+  const tipo = document.getElementById('honTipo').value;
+  const valor = parseFloat(document.getElementById('honValor').value);
+  if(!(valor>=0) || (tipo==='porcentaje' && valor>100)){ showToast(tipo==='fijo'?'Ingresá un monto válido':'Ingresá un porcentaje entre 0 y 100'); return null; }
+  return {tipo, valor};
+}
+function editarHonorarios(cid){
+  const c = CT(cid);
+  showModal(`
+    <div class="section-title" style="margin-bottom:10px;">Honorarios del contrato N° ${esc(numeroContrato(c))}</div>
+    <div class="page-sub" style="margin-bottom:14px;">${esc(PR(c.propertyId).direccion)} — ${esc(nombreCompleto(P(c.ownerId)))}. Se descuentan de la liquidación del propietario cada mes que hay cobro.</div>
+    ${honorariosFields(honorariosDe(c))}
+    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:16px;">
+      <button class="btn" data-modal-cancel="1">Cancelar</button>
+      <button class="btn btn-primary" id="honSaveBtn">Guardar</button>
+    </div>`);
+  bindHonorariosFields();
+  document.getElementById('honSaveBtn').onclick = ()=>{
+    const h = leerHonorarios(); if(!h) return;
+    const prev = c.honorarios;
+    c.honorarios = h;
+    closeModal();
+    showToast('Honorarios actualizados: '+honorariosLabel(c), ()=>{ c.honorarios = prev; route(); showToast('Cambio deshecho'); });
+    route();
+  };
 }
 
 function editarNumeroContrato(cid){
@@ -1914,7 +1966,7 @@ function viewLiquidaciones(query){
         ${l.detalle.length? l.detalle.map(d=>`<div class="liq-line"><span>${esc(d.property.direccion)} — ${esc(nombreCompleto(d.tenant))}</span><span class="tnum">${money(d.monto)}</span></div>`).join('') : `<div class="page-sub" style="padding:10px 0;">Sin cobranzas acreditadas este período.</div>`}
         ${l.cobrado>0?`
         <div class="liq-line"><span>Subtotal cobrado</span><span class="tnum">${money(l.cobrado)}</span></div>
-        <div class="liq-line"><span>Honorarios inmobiliaria (8%)</span><span class="tnum">- ${money(l.comision)}</span></div>
+        ${l.detalle.map(d=>`<div class="liq-line"><span>Honorarios — ${esc(d.property.direccion)} (${honorariosLabel(d.contract)})</span><span class="tnum">- ${money(d.honorarios)}</span></div>`).join('')}
         ${l.gastos.map(g=>`<div class="liq-line"><span>${esc(g.desc)}</span><span class="tnum">- ${money(g.monto)}</span></div>`).join('')}
         <div class="liq-line"><span>Total a liquidar</span><span class="tnum">${money(l.total)}</span></div>
         <button class="btn btn-sm" style="margin-top:10px;" onclick="imprimirLiquidacion('${l.ownerId}')">${icon('printer')}Imprimir liquidación</button>` : ''}
@@ -1943,7 +1995,7 @@ function viewConfiguracion(){
           <div class="field"><label>Localidad</label><input value="Paso del Rey, Moreno" disabled></div>
           <div class="field"><label>Teléfono</label><input value="11 3449-8819" disabled></div>
           <div class="field"><label>Email</label><input value="info@carusopropiedades.com" disabled></div>
-          <div class="field"><label>Comisión estándar</label><input value="8%" disabled></div>
+          <div class="field"><label>Honorarios por defecto</label><input value="5% (se define en cada contrato)" disabled></div>
           <div class="field"><label>Moneda</label><input value="ARS" disabled></div>
         </div>
       </div>
