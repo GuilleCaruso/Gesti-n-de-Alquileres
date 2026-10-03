@@ -587,13 +587,15 @@ const services = {
 };
 
 const repairs = [
-  {id:'AR01', propertyId:'PR07', descripcion:'Pérdida en la cañería de la cocina', fechaAviso:'2026-09-07', especialista:'Plomería Ríos', estado:'Resuelto', costo:15000, fechaResuelto:'2026-09-09', pagadoPor:'Propietario', urgente:false, obs:'', documentos:[{nombre:'foto_cañeria_cocina.jpg'},{nombre:'factura_plomeria_rios.pdf'}]},
-  {id:'AR02', propertyId:'PR12', descripcion:'Filtración de techo y pintura general', fechaAviso:'2026-08-15', especialista:'Pintores Moreno', estado:'Resuelto', costo:60000, fechaResuelto:'2026-09-05', pagadoPor:'Propietario', urgente:false, obs:'Motivo por el cual la propiedad está en mantenimiento antes de re-alquilar.', documentos:[{nombre:'foto_humedad_living.jpg'},{nombre:'factura_pintores_moreno.pdf'}]},
-  {id:'AR03', propertyId:'PR06', descripcion:'Persiana rota en dormitorio principal', fechaAviso:'2026-08-20', especialista:'Carpintería Bazán', estado:'Resuelto', costo:18000, fechaResuelto:'2026-08-25', pagadoPor:'Inquilino', urgente:false, obs:'Rotura por mal uso — se descuenta del depósito, no de la liquidación del propietario.', documentos:[{nombre:'factura_bazan.pdf'}]},
+  {id:'AR01', propertyId:'PR07', descripcion:'Pérdida en la cañería de la cocina', fechaAviso:'2026-09-07', especialista:'Plomería Ríos', estado:'Arreglado', costo:15000, fechaResuelto:'2026-09-09', fechaPagado:null, pagadoPor:'Propietario', urgente:false, obs:'', documentos:[{nombre:'foto_cañeria_cocina.jpg'},{nombre:'factura_plomeria_rios.pdf'}]},
+  {id:'AR02', propertyId:'PR12', descripcion:'Filtración de techo y pintura general', fechaAviso:'2026-08-15', especialista:'Pintores Moreno', estado:'Pagado', costo:60000, fechaResuelto:'2026-09-05', fechaPagado:'2026-09-10', pagadoPor:'Propietario', urgente:false, obs:'Motivo por el cual la propiedad está en mantenimiento antes de re-alquilar.', documentos:[{nombre:'foto_humedad_living.jpg'},{nombre:'factura_pintores_moreno.pdf'}]},
+  {id:'AR03', propertyId:'PR06', descripcion:'Persiana rota en dormitorio principal', fechaAviso:'2026-08-20', especialista:'Carpintería Bazán', estado:'Pagado', costo:18000, fechaResuelto:'2026-08-25', fechaPagado:'2026-08-28', pagadoPor:'Inquilino', urgente:false, obs:'Rotura por mal uso — se descuenta del depósito, no de la liquidación del propietario.', documentos:[{nombre:'factura_bazan.pdf'}]},
   {id:'AR04', propertyId:'PR02', descripcion:'Termotanque no calienta', fechaAviso:'2026-09-10', especialista:'Gas Fernández', estado:'En curso', costo:35000, fechaResuelto:null, pagadoPor:'Propietario', urgente:false, obs:'Presupuesto aprobado, a la espera del repuesto.', documentos:[{nombre:'foto_termotanque.jpg'},{nombre:'presupuesto_gas_fernandez.pdf'}]},
   {id:'AR05', propertyId:'PR10', descripcion:'Pérdida de agua en el baño', fechaAviso:'2026-09-13', especialista:null, estado:'Pendiente', costo:null, fechaResuelto:null, pagadoPor:null, urgente:false, obs:'', documentos:[{nombre:'foto_perdida_bano.jpg'}]},
   {id:'AR06', propertyId:'PR13', descripcion:'Olor a gas — revisar instalación', fechaAviso:'2026-09-14', especialista:null, estado:'Pendiente', costo:null, fechaResuelto:null, pagadoPor:null, urgente:true, obs:'Inquilino reporta olor a gas en la cocina. Contactar urgente a gasista matriculado.', documentos:[]},
 ];
+const ARREGLO_ESTADOS = ['Pendiente','En curso','Arreglado','Pagado'];
+const arregloActivo = r => r.estado!=='Pagado';
 const repairsByProperty = pid => repairs.filter(r=>r.propertyId===pid).sort((a,b)=>b.fechaAviso.localeCompare(a.fechaAviso));
 
 const serviciosPagados = [
@@ -618,7 +620,8 @@ function liquidacionOwner(ownerId, periodo){
     if(monto>0){ cobrado += monto; detalle.push({contract:c, property:PR(c.propertyId), tenant:P(c.tenantId), monto, honorarios:calcHonorarios(c, monto)}); }
   });
   const ownerPropertyIds = properties.filter(pr=>pr.ownerId===ownerId).map(pr=>pr.id);
-  const gastosArreglos = repairs.filter(r=> ownerPropertyIds.includes(r.propertyId) && r.estado==='Resuelto' && r.pagadoPor==='Propietario' && r.fechaResuelto && r.fechaResuelto.slice(0,7)===periodo)
+  const gastosArreglos = repairs.filter(r=> ownerPropertyIds.includes(r.propertyId) && r.pagadoPor==='Propietario' && r.costo &&
+      ((r.estado==='Arreglado' && periodo===PERIODO_ACTUAL) || (r.estado==='Pagado' && r.fechaPagado && r.fechaPagado.slice(0,7)===periodo)))
     .map(r=>({desc:`Arreglo — ${r.descripcion} (${PR(r.propertyId).direccion})`, monto:r.costo||0}));
   const gastosServicios = serviciosPagados.filter(s=> ownerPropertyIds.includes(s.propertyId) && s.fecha.slice(0,7)===periodo)
     .map(s=>({desc:`Servicio — ${s.servicio} (${PR(s.propertyId).direccion})`, monto:s.monto}));
@@ -659,7 +662,7 @@ function estadoBadge(estado){
     'Activo':['ok','check'], 'Próximo a vencer':['warn','alert'], 'Finalizado':['neutral',null], 'Rescindido':['danger',null], 'Suspendido':['neutral',null],
     'Pagado':['ok','check'], 'Pendiente':['warn','alert'], 'Parcial':['info',null], 'Vencido':['danger','alert'], 'En gestión':['violet',null],
     'Al día':['ok','check'], 'Con deuda':['danger','alert'], 'Pendiente cambio de titularidad':['warn','alert'], 'Baja de servicio':['neutral',null],
-    'En curso':['info',null], 'Resuelto':['ok','check'],
+    'En curso':['info',null], 'Arreglado':['violet','check'],
   };
   const [cls,ic] = map[estado] || ['neutral',null];
   return `<span class="badge badge-${cls}">${ic?icon(ic):''}${esc(estado)}</span>`;
@@ -713,7 +716,7 @@ const NAV = [
 function navCount(key){
   if(key==='deudores') return computeDebtors().length;
   if(key==='cobranzas') return contracts.filter(pendienteActualizacion).length;
-  if(key==='arreglos') return repairs.filter(r=>r.estado!=='Resuelto').length;
+  if(key==='arreglos') return repairs.filter(arregloActivo).length;
   return 0;
 }
 function renderNav(activeKey){
@@ -738,11 +741,11 @@ function viewDashboard(){
   const pagadosMes = pagosDelMes.filter(p=>p.estado==='Pagado').length;
   const debtors = computeDebtors();
   const pendActualizacion = contracts.filter(pendienteActualizacion);
-  const arreglosPend = repairs.filter(r=>r.estado!=='Resuelto');
+  const arreglosPend = repairs.filter(arregloActivo);
   const arreglosUrgentes = arreglosPend.filter(r=>r.urgente);
 
   const tareas = [
-    arreglosPend.length ? {tipo: arreglosUrgentes.length?'danger':'warn', text:`<b>${arreglosPend.length} arreglo${arreglosPend.length>1?'s':''}</b> sin resolver${arreglosUrgentes.length?' — incluye 1 urgente':''}`, sub:arreglosPend.map(r=>r.descripcion+' ('+PR(r.propertyId).direccion+')').join(' · '), nav:'/arreglos'} : null,
+    arreglosPend.length ? {tipo: arreglosUrgentes.length?'danger':'warn', text:`<b>${arreglosPend.length} arreglo${arreglosPend.length>1?'s':''}</b> abiertos (sin terminar o sin pagar)${arreglosUrgentes.length?' — incluye 1 urgente':''}`, sub:arreglosPend.map(r=>r.descripcion+' ('+PR(r.propertyId).direccion+')').join(' · '), nav:'/arreglos'} : null,
     debtors.length ? {tipo:'warn', text:`<b>${debtors.length} inquilino${debtors.length>1?'s':''}</b> con pagos vencidos`, sub:debtors.map(d=>nombreCompleto(d.tenant)).join(' · '), nav:'/deudores'} : null,
     pendActualizacion.length ? {tipo:'warn', text:`<b>${pendActualizacion.length} contrato${pendActualizacion.length>1?'s':''}</b> necesita${pendActualizacion.length>1?'n':''} actualización de alquiler`, sub:pendActualizacion.map(c=>PR(c.propertyId).direccion).join(' · '), nav:'/cobranzas?sub=aumentos'} : null,
     pendientesMes ? {tipo:'warn', text:`<b>${pendientesMes} cobranzas</b> de ${periodoLabel(PERIODO_ACTUAL)} sin acreditar`, sub:'Pendientes, parciales o en gestión', nav:'/cobranzas'} : null,
@@ -903,7 +906,7 @@ function viewFichaPropiedad(id, tab){
     }
   } else if(tab==='arreglos'){
     const list = repairsByProperty(p.id);
-    const btnArreglo = `<button class="btn btn-sm" style="margin-bottom:14px;" onclick="nuevoArregloModal('${p.id}')">${icon('plus')}Registrar arreglo</button>`;
+    const btnArreglo = `<button class="btn btn-sm" style="margin-bottom:14px;" onclick="arregloModal('${p.id}')">${icon('plus')}Registrar arreglo</button>`;
     if(!list.length){ body = btnArreglo + `<div class="empty-state">${icon('check')}<div class="empty-state-title">Sin arreglos registrados</div><div>Esta propiedad no tiene reparaciones en su historial.</div></div>`; }
     else {
       body = btnArreglo +
@@ -919,10 +922,10 @@ function viewFichaPropiedad(id, tab){
               <div class="tnum" style="margin-top:4px; font-weight:700;">${r.costo!=null?money(r.costo):'Sin costo cargado'}</div>
             </div>
           </div>
-          ${r.fechaResuelto?`<div class="cell-sub" style="margin-top:6px;">Resuelto el ${fdate(r.fechaResuelto)} · Paga: ${esc(r.pagadoPor||'—')}</div>`:''}
+          <div class="cell-sub" style="margin-top:6px;">Paga: ${esc(r.pagadoPor||'a definir')}${r.fechaResuelto?' · Arreglado el '+fdate(r.fechaResuelto):''}${r.fechaPagado?' · Pagado el '+fdate(r.fechaPagado):''}</div>
           ${r.obs?`<div style="margin-top:6px; font-size:13px;">${esc(r.obs)}</div>`:''}
           ${r.documentos.length?`<div class="chiprow" style="margin-top:10px;">${r.documentos.map(d=>`<span class="badge badge-neutral" style="cursor:pointer;" onclick="showToast('Vista previa de documentos — próximamente')">${icon('doc')}${esc(d.nombre)}</span>`).join('')}</div>`:''}
-          ${r.estado!=='Resuelto'?`<button class="btn btn-sm" style="margin-top:12px;" data-marcar-resuelto="${r.id}">Marcar resuelto</button>`:''}
+          <div style="display:flex; gap:8px; margin-top:12px;">${arregloAcciones(r)}</div>
         </div>`).join('');
     }
   } else if(tab==='documentos'){
@@ -1703,34 +1706,72 @@ function nuevaPersonaModal(){
   };
 }
 
-function nuevoArregloModal(propertyId){
-  const props = properties.filter(p=>p.estado!=='Baja');
+// acciones según la etapa: Pendiente/En curso → Arreglado → Pagado (pasa al historial)
+function arregloAcciones(r){
+  const editar = `<button class="btn btn-sm btn-ghost" data-editar-arreglo="${r.id}">Editar</button>`;
+  if(r.estado==='Pendiente' || r.estado==='En curso') return `<button class="btn btn-sm" data-arreglo-etapa="${r.id}:Arreglado">Marcar arreglado</button>${editar}`;
+  if(r.estado==='Arreglado') return `<button class="btn btn-sm btn-primary" data-arreglo-etapa="${r.id}:Pagado">Marcar pagado</button>${editar}`;
+  return editar;
+}
+function cambiarEtapaArreglo(id, etapa){
+  const r = repairs.find(x=>x.id===id); if(!r) return;
+  if(etapa==='Arreglado' && (r.costo==null || !r.pagadoPor)){
+    showToast('Antes de marcarlo arreglado, cargá el costo final y quién lo paga');
+    arregloModal(r.propertyId, r.id, 'Arreglado');
+    return;
+  }
+  const prev = {...r};
+  r.estado = etapa;
+  if(etapa==='Arreglado'){ r.fechaResuelto = TODAY_ISO; r.fechaPagado = null; }
+  if(etapa==='Pagado'){ r.fechaPagado = TODAY_ISO; if(!r.fechaResuelto) r.fechaResuelto = TODAY_ISO; }
+  const msg = etapa==='Pagado' ? 'Arreglo pagado — queda en el historial de la propiedad' : (r.pagadoPor==='Propietario' ? 'Arreglado — se descuenta en la liquidación del propietario' : 'Arreglado — falta registrar el pago');
+  showToast(msg, ()=>{ Object.keys(r).forEach(k=>{ if(!(k in prev)) delete r[k]; }); Object.assign(r, prev); route(); showToast('Cambio deshecho'); });
+  route();
+}
+function arregloModal(propertyId, repairId, estadoForzado){
+  const r = repairId ? repairs.find(x=>x.id===repairId) : null;
+  const props = properties.filter(p=>p.estado!=='Baja' || (r && p.id===r.propertyId));
+  const estadoSel = estadoForzado || (r ? r.estado : 'Pendiente');
   showModal(`
-    <div class="section-title" style="margin-bottom:14px;">Registrar arreglo</div>
+    <div class="section-title" style="margin-bottom:14px;">${r?'Editar arreglo':'Registrar arreglo'}</div>
     <div class="form-grid" style="margin-bottom:12px;">
       <div class="field" style="grid-column:1/-1;"><label>Propiedad</label>
-        <select id="naProp">${props.map(p=>`<option value="${p.id}" ${p.id===propertyId?'selected':''}>${esc(p.direccion)} — ${esc(p.localidad)}</option>`).join('')}</select></div>
-      <div class="field" style="grid-column:1/-1;"><label>¿Qué pasa?</label><input id="naDesc" placeholder="Ej: Pérdida de agua en el baño"></div>
-      <div class="field"><label>Fecha de aviso</label><input type="date" id="naFecha" value="${TODAY_ISO}"></div>
-      <div class="field"><label>Especialista</label><input id="naEsp" placeholder="Opcional — Ej: Plomería Ríos"></div>
-      <div class="field"><label>Costo / presupuesto</label><input type="number" id="naCosto" min="0" placeholder="Opcional"></div>
-      <div class="field"><label>Lo paga</label><select id="naPaga"><option value="">A definir</option><option>Propietario</option><option>Inquilino</option></select></div>
-      <div class="field" style="grid-column:1/-1;"><label>Observaciones</label><input id="naObs" placeholder="Opcional"></div>
+        <select id="naProp">${props.map(p=>`<option value="${p.id}" ${p.id===(r?r.propertyId:propertyId)?'selected':''}>${esc(p.direccion)} — ${esc(p.localidad)}</option>`).join('')}</select></div>
+      <div class="field" style="grid-column:1/-1;"><label>¿Qué pasa?</label><input id="naDesc" placeholder="Ej: Pérdida de agua en el baño" value="${esc(r?r.descripcion:'')}"></div>
+      <div class="field"><label>Fecha de aviso</label><input type="date" id="naFecha" value="${r?r.fechaAviso:TODAY_ISO}"></div>
+      <div class="field"><label>Etapa</label><select id="naEstado">${ARREGLO_ESTADOS.map(e=>`<option ${e===estadoSel?'selected':''}>${e}</option>`).join('')}</select></div>
+      <div class="field"><label>Especialista</label><input id="naEsp" placeholder="Opcional — Ej: Plomería Ríos" value="${esc(r&&r.especialista||'')}"></div>
+      <div class="field"><label>Costo (presupuesto o final)</label><input type="number" id="naCosto" min="0" placeholder="Se puede cargar después" value="${r&&r.costo!=null?r.costo:''}"></div>
+      <div class="field"><label>Lo paga</label><select id="naPaga"><option value="">A definir</option>${['Propietario','Inquilino'].map(o=>`<option ${r&&r.pagadoPor===o?'selected':''}>${o}</option>`).join('')}</select></div>
+      <div class="field"></div>
+      <div class="field" style="grid-column:1/-1;"><label>Observaciones</label><input id="naObs" placeholder="Opcional" value="${esc(r&&r.obs||'')}"></div>
     </div>
-    <label style="${checkStyle} margin-bottom:18px;"><input type="checkbox" id="naUrgente"> Urgente</label>
-    <div class="page-sub" style="margin-bottom:14px;">Si lo paga el propietario, cuando lo marques como resuelto se descuenta de su liquidación del mes.</div>
+    <label style="${checkStyle} margin-bottom:18px;"><input type="checkbox" id="naUrgente" ${r&&r.urgente?'checked':''}> Urgente</label>
+    <div class="page-sub" style="margin-bottom:14px;">Etapas: <b>Pendiente → En curso → Arreglado → Pagado</b>. Si lo paga el propietario, al pasar a "Arreglado" se descuenta en su liquidación. Cuando está "Pagado" sale de la lista de Arreglos y queda en el historial de la propiedad.</div>
     <div style="display:flex; gap:10px; justify-content:flex-end;">
       <button class="btn" data-modal-cancel="1">Cancelar</button>
-      <button class="btn btn-primary" id="naSaveBtn">Guardar arreglo</button>
+      <button class="btn btn-primary" id="naSaveBtn">${r?'Guardar cambios':'Guardar arreglo'}</button>
     </div>`, true);
   document.getElementById('naSaveBtn').onclick = ()=>{
     const val = id => document.getElementById(id).value.trim();
     if(!val('naDesc')){ showToast('Describí el arreglo'); return; }
     const costo = val('naCosto') ? Math.max(0, parseFloat(val('naCosto'))||0) : null;
-    repairs.push({id:'AR'+Date.now(), propertyId:val('naProp'), descripcion:val('naDesc'), fechaAviso:val('naFecha')||TODAY_ISO, especialista:val('naEsp')||null,
-      estado:'Pendiente', costo, fechaResuelto:null, pagadoPor:val('naPaga')||null, urgente:document.getElementById('naUrgente').checked, obs:val('naObs'), documentos:[]});
+    const estado = val('naEstado'), pagadoPor = val('naPaga')||null;
+    if((estado==='Arreglado' || estado==='Pagado') && (costo==null || !pagadoPor)){ showToast('Para "'+estado+'" cargá el costo y quién lo paga'); return; }
+    const datos = {propertyId:val('naProp'), descripcion:val('naDesc'), fechaAviso:val('naFecha')||TODAY_ISO, especialista:val('naEsp')||null,
+      estado, costo, pagadoPor, urgente:document.getElementById('naUrgente').checked, obs:val('naObs')};
+    const base = r || {};
+    datos.fechaResuelto = (estado==='Arreglado' || estado==='Pagado') ? (base.fechaResuelto || TODAY_ISO) : null;
+    datos.fechaPagado = estado==='Pagado' ? (base.fechaPagado || TODAY_ISO) : null;
     closeModal();
-    showToast('Arreglo registrado');
+    if(r){
+      const prev = {...r};
+      Object.assign(r, datos);
+      showToast('Arreglo actualizado', ()=>{ Object.assign(r, prev); route(); showToast('Cambio deshecho'); });
+    } else {
+      repairs.push({id:'AR'+Date.now(), ...datos, documentos:[]});
+      showToast('Arreglo registrado');
+    }
     route();
   };
 }
@@ -1807,32 +1848,34 @@ function viewDeudores(filter, query){
 }
 
 function viewArreglos(filter, query){
-  filter = filter || 'todos';
+  filter = filter || 'abiertos';
   let list = repairs.slice();
-  if(filter==='pendientes') list = list.filter(r=>r.estado==='Pendiente');
+  if(filter==='abiertos') list = list.filter(arregloActivo);
+  else if(filter==='pendientes') list = list.filter(r=>r.estado==='Pendiente');
   else if(filter==='curso') list = list.filter(r=>r.estado==='En curso');
-  else if(filter==='resueltos') list = list.filter(r=>r.estado==='Resuelto');
+  else if(filter==='arreglados') list = list.filter(r=>r.estado==='Arreglado');
+  else if(filter==='historial') list = list.filter(r=>r.estado==='Pagado');
   if(query){
     const q = query.toLowerCase();
     list = list.filter(r=>{ const p = PR(r.propertyId); return (r.descripcion+' '+p.direccion+' '+p.localidad+' '+(r.especialista||'')).toLowerCase().includes(q); });
   }
   list.sort((a,b)=>b.fechaAviso.localeCompare(a.fechaAviso));
-  const filtros = [['todos','Todos'],['pendientes','Pendientes'],['curso','En curso'],['resueltos','Resueltos']];
+  const filtros = [['abiertos','Abiertos'],['pendientes','Pendientes'],['curso','En curso'],['arreglados','Arreglados — falta pagar'],['historial','Historial (pagados)']];
   const rows = list.map(r=>{
     const p = PR(r.propertyId);
-    return `<tr class="clickable" data-nav="/propiedades/${p.id}?tab=arreglos">
-      <td><div class="cell-title">${esc(r.descripcion)}</div><div class="cell-sub">${esc(p.direccion)}, ${esc(p.localidad)}</div></td>
+    return `<tr class="clickable" data-editar-arreglo="${r.id}">
+      <td><div class="cell-title">${esc(r.descripcion)}</div><div class="cell-sub"><a data-nav="/propiedades/${p.id}?tab=arreglos" style="text-decoration:underline;">${esc(p.direccion)}, ${esc(p.localidad)}</a> · paga ${esc(r.pagadoPor||'a definir')}</div></td>
       <td class="tnum">${fdate(r.fechaAviso)}</td>
       <td>${esc(r.especialista||'—')}</td>
       <td class="num tnum">${r.costo!=null?money(r.costo):'—'}</td>
       <td>${estadoBadge(r.estado)} ${r.urgente?'<span class="badge badge-danger" style="margin-left:4px;">Urgente</span>':''}</td>
-      <td class="row-actions">${r.estado!=='Resuelto'?`<button class="btn btn-sm" data-marcar-resuelto="${r.id}">Marcar resuelto</button>`:''}</td>
+      <td class="row-actions">${arregloAcciones(r)}</td>
     </tr>`;
   }).join('');
   return `
     <div class="page-head">
       <div><h1 class="page-title">Arreglos</h1><div class="page-sub">Reparaciones y mantenimiento reportados por inquilinos o propietarios</div></div>
-      <button class="btn btn-primary" onclick="nuevoArregloModal()">${icon('plus')}Nuevo arreglo</button>
+      <button class="btn btn-primary" onclick="arregloModal()">${icon('plus')}Nuevo arreglo</button>
     </div>
     <div style="display:flex; gap:14px; flex-wrap:wrap; align-items:center; margin-bottom:16px;">
       <div class="search-wrap" style="max-width:340px;">
@@ -1845,7 +1888,7 @@ function viewArreglos(filter, query){
       ${list.length? `<table><thead><tr><th>Arreglo</th><th>Aviso</th><th>Especialista</th><th class="num">Costo</th><th>Estado</th><th></th></tr></thead><tbody>${rows}</tbody></table>`
       : `<div class="empty-state">${icon('check')}<div class="empty-state-title">No hay arreglos en este filtro</div></div>`}
     </div>
-    <div class="page-sub" style="margin-top:10px;">El costo de los arreglos resueltos a cargo del propietario se descuenta automáticamente de su liquidación del mes.</div>`;
+    <div class="page-sub" style="margin-top:10px;">Hacé clic en un arreglo para editarlo (costo, especialista, etapa). Los arreglados a cargo del propietario se descuentan de su liquidación; al marcarlos pagados pasan al historial de la propiedad.</div>`;
 }
 
 function nuevoServicioPagadoModal(){
@@ -2067,17 +2110,12 @@ document.addEventListener('click', (e)=>{
   const deshacerPagoEl = e.target.closest('[data-deshacer-pago]');
   if(deshacerPagoEl){ deshacerPago(deshacerPagoEl.getAttribute('data-deshacer-pago')); return; }
 
-  const resueltoEl0 = e.target.closest('[data-marcar-resuelto]');
-  if(resueltoEl0){
-    const r = repairs.find(x=>x.id===resueltoEl0.getAttribute('data-marcar-resuelto'));
-    if(r){
-      const prev = {...r};
-      r.estado='Resuelto'; r.fechaResuelto=TODAY_ISO; if(r.costo==null) r.costo=0;
-      showToast('Arreglo marcado como resuelto', ()=>{ Object.assign(r, prev); route(); showToast('Cambio deshecho'); });
-      route();
-    }
-    return;
-  }
+  const etapaEl = e.target.closest('[data-arreglo-etapa]');
+  if(etapaEl){ const [id, etapa] = etapaEl.getAttribute('data-arreglo-etapa').split(':'); cambiarEtapaArreglo(id, etapa); return; }
+  const linkNav = e.target.closest('a[data-nav]');
+  if(linkNav && linkNav.closest('[data-editar-arreglo]')){ location.hash = '#'+linkNav.getAttribute('data-nav'); return; }
+  const editArr = e.target.closest('[data-editar-arreglo]');
+  if(editArr){ const r = repairs.find(x=>x.id===editArr.getAttribute('data-editar-arreglo')); if(r) arregloModal(r.propertyId, r.id); return; }
   const actEl0 = e.target.closest('[data-actualizar]');
   if(actEl0){ actualizarContratoDesdeUI(actEl0.getAttribute('data-actualizar')); return; }
 

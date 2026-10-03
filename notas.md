@@ -34,6 +34,9 @@ Funciones clave ya hechas: cobrar / deshacer pago, generar recibo, actualizar co
 
 ## Decisiones tomadas
 
+- Arreglos: etapas **Pendiente → En curso → Arreglado → Pagado**. El costo se puede cargar o cambiar en cualquier momento. Para pasar a Arreglado hace falta costo final y quién paga. Si paga el propietario, al estar Arreglado se descuenta en su liquidación. Al marcarse Pagado sale de la lista de Arreglos y queda en el historial de la propiedad (pestaña Arreglos de la ficha y ficha impresa).
+- Si las expensas/servicios no van al propietario, no se cobran honorarios sobre ellos.
+
 - Honorarios: se cobran sobre todo lo abonado. Cada contrato define su esquema: porcentaje (habitual 5%, a veces 10% o 4%) o monto fijo mensual. Se descuentan de la liquidación del propietario, una línea por contrato.
 - Método de trabajo: definir todo en el prototipo antes de construir la app real (acordado).
 
@@ -83,13 +86,15 @@ Funciones clave ya hechas: cobrar / deshacer pago, generar recibo, actualizar co
 - [x] Altas funcionando: nueva propiedad, nueva persona, registrar arreglo (desde Arreglos y desde la ficha).
 - [x] Se quitó "En venta" de Propiedades.
 - [x] Honorarios por contrato: % (5% por defecto) o monto fijo mensual; editable en la ficha y al crear el contrato.
-- [ ] Confirmar: si expensas/servicios se destildan de la liquidación, ¿igual se cobran honorarios sobre ellos?
+- [x] Honorarios sobre expensas/servicios destildados: no se cobran (confirmado).
+- [x] Arreglos editables (costo, especialista, quién paga, etapa) y con etapas Pendiente → En curso → Arreglado → Pagado.
 - [ ] Crear `PROJECT_RULES.md` antes de la Etapa 2.
 - [ ] Recorrer el prototipo pantalla por pantalla y anotar ajustes.
 - [ ] Definir cómo se guardan los datos (sin esto la app no sirve para uso real).
 
 ## Historial
 
+- **03/10/2026** – Arreglos editables con etapas y historial por propiedad.
 - **03/10/2026** – Honorarios configurables por contrato (porcentaje o monto fijo).
 - **01/10/2026** – Altas (propiedad, persona, arreglo), N° de contrato editable, tilde de liquidación, sin "En venta". Corregido: la X del panel de persona no cerraba.
 - **01/10/2026** – Recibos sin duplicado, datos de contacto reales, expensas/servicios editables al cobrar.
