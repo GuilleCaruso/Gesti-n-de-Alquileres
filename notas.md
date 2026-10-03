@@ -98,6 +98,7 @@ Funciones clave ya hechas: cobrar / deshacer pago, generar recibo, actualizar co
 
 ## Historial
 
+- **03/10/2026** – Impresión se dispara en el mismo clic (antes con demora; algunos navegadores la bloqueaban). Revisión automática de todos los botones: 262 clics en pantallas + 37 pruebas de ventanas, menú, buscador e impresiones, sin errores.
 - **03/10/2026** – Liquidaciones "pagadas al propietario" y regla de en qué liquidación se descuenta cada arreglo.
 - **03/10/2026** – Arreglos editables con etapas y historial por propiedad.
 - **03/10/2026** – Honorarios configurables por contrato (porcentaje o monto fijo).
