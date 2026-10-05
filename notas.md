@@ -76,6 +76,14 @@ Funciones clave ya hechas: cobrar / deshacer pago, generar recibo, actualizar co
 - Lo que NO hacer: HTML gigante, lógica mezclada con pantallas, duplicar datos, refactors masivos.
 - Propone un archivo `PROJECT_RULES.md` con reglas para los agentes de IA (todavía no creado).
 
+## Idea en evaluación: contabilidad / caja (05/10/2026)
+
+- Guillermo quiere llevar la contabilidad de la inmobiliaria: caja chica, caja grande y cuánto gana. **Solo visible para el usuario Administrador.**
+- Recomendación: módulo **"Caja"** dentro de la misma app, con permisos por rol, y no una app aparte (los datos ya están acá: cobros, liquidaciones, honorarios, arreglos).
+- La restricción tiene que estar en la base de datos/servidor (Etapa 2), no solo escondiendo el menú.
+- Ojo: hoy los empleados verían los honorarios en Liquidaciones y los totales en Cobranzas → definir qué se les oculta.
+- Preguntas abiertas: qué cajas existen (chica, grande, banco, MercadoPago); si los empleados cargan movimientos sin ver saldos; qué no deben ver; si se registran gastos de la oficina (sueldos, alquiler, impuestos).
+
 ## Pendientes / próximos pasos
 
 - [x] Cargar el contexto del chat anterior (parcial: la transcripción corta en la primera versión).
