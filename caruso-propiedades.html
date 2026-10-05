@@ -200,7 +200,7 @@ tbody td{padding:13px 16px; border-bottom:1px solid var(--border); vertical-alig
 tbody tr:last-child td{border-bottom:none;}
 tbody tr.clickable{cursor:pointer;}
 tbody tr.clickable:hover{background:var(--paper-50);}
-td.num, th.num{text-align:right;}
+td.num, th.num{text-align:right; white-space:nowrap;}
 .cell-title{font-weight:600;}
 .cell-sub{font-size:12px; color:var(--ink-600);}
 .row-actions{display:flex; gap:6px; justify-content:flex-end;}
@@ -338,6 +338,16 @@ td.num, th.num{text-align:right;}
 .receipt-copy{margin-left:auto; font-weight:800; font-size:10.5px; letter-spacing:2px; border:1.5px solid #1a1a1a; padding:3px 8px; border-radius:4px;}
 
 .form-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:14px;}
+.rol-select{padding:6px 10px; border-radius:99px; border:1px solid var(--border-strong); background:var(--surface); color:var(--ink-900); font-weight:600; font-size:12.5px; cursor:pointer;}
+.rol-select.empleado{border-color:var(--info-600); color:var(--info-600);}
+.cuenta-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:12px; margin-bottom:22px;}
+.cuenta-card{background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px 16px; cursor:pointer; display:flex; flex-direction:column; gap:4px; text-align:left; font:inherit; color:inherit;}
+.cuenta-card:hover{border-color:var(--saffron-500);}
+.cuenta-card.active{border-color:var(--pine-700); box-shadow:0 0 0 2px var(--pine-700) inset;}
+.cuenta-saldo{font-family:"Fraunces",serif; font-size:21px; font-weight:700;}
+.neg{color:var(--danger-600);}
+.pos{color:var(--ok-600);}
+.admin-only{border:1px dashed var(--saffron-500);}
 .field{display:flex; flex-direction:column; gap:5px;}
 .field label{font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:var(--ink-400);}
 .field input,.field select{padding:9px 12px; border:1px solid var(--border-strong); border-radius:9px; background:var(--paper-50); color:var(--ink-900);}
@@ -384,6 +394,10 @@ td.num, th.num{text-align:right;}
         <div class="search-results" id="searchResults"></div>
       </div>
       <div class="topbar-right">
+        <select class="rol-select" id="rolSelect" title="Simula qué ve cada usuario">
+          <option value="admin">Ver como: Administrador</option>
+          <option value="empleado">Ver como: Empleado</option>
+        </select>
         <span class="today-pill" id="todayPill"></span>
       </div>
     </div>
@@ -613,6 +627,54 @@ function periodoDescuento(r){
 const arregloActivo = r => r.estado!=='Pagado';
 const repairsByProperty = pid => repairs.filter(r=>r.propertyId===pid).sort((a,b)=>b.fechaAviso.localeCompare(a.fechaAviso));
 
+/* ============================== CAJA Y BANCOS ============================== */
+let ROL = 'admin'; // en la app real sale del usuario logueado; acá se simula con el selector de arriba
+const esAdmin = () => ROL==='admin';
+const usuarioActual = () => esAdmin() ? 'Guillermo (Adm.)' : 'Empleado';
+const FECHA_SALDO_INICIAL = '2026-09-01';
+const cuentas = [
+  {id:'chica', nombre:'Caja chica', tipo:'Efectivo', efectivo:true,  soloAdmin:false, saldoInicial:120000},
+  {id:'grande', nombre:'Caja grande', tipo:'Efectivo', efectivo:true, soloAdmin:true,  saldoInicial:3850000},
+  {id:'icbc', nombre:'ICBC', tipo:'Banco', efectivo:false, soloAdmin:false, saldoInicial:2140000},
+  {id:'provincia', nombre:'Banco Provincia', tipo:'Banco', efectivo:false, soloAdmin:false, saldoInicial:1320000},
+  {id:'mp', nombre:'Mercado Pago', tipo:'Billetera', efectivo:false, soloAdmin:false, saldoInicial:485000},
+  {id:'bbva', nombre:'BBVA', tipo:'Banco', efectivo:false, soloAdmin:false, saldoInicial:760000},
+];
+const CU = id => cuentas.find(c=>c.id===id);
+const movimientos = []; // {id, fecha, cuentaId, tipo:'ingreso'|'egreso', monto, concepto, origen:{tipo, ref}, usuario, transferId}
+// qué cuentas puede ver y usar cada rol: el empleado no ve la caja grande y no paga en efectivo
+const cuentasVisibles = () => cuentas.filter(c=>esAdmin() || !c.soloAdmin);
+const cuentasPara = modo => cuentasVisibles().filter(c=> modo==='ingreso' || esAdmin() || !c.efectivo);
+const saldoCuenta = id => movimientos.filter(m=>m.cuentaId===id).reduce((s,m)=>s+(m.tipo==='ingreso'?m.monto:-m.monto), CU(id).saldoInicial);
+let movSeq = 0;
+function addMov(m){
+  const mov = {id:'MV'+(++movSeq), usuario:usuarioActual(), fecha:TODAY_ISO, ...m};
+  movimientos.push(mov);
+  if(mov.tipo==='egreso' && cajaLista && saldoCuenta(mov.cuentaId)<0) setTimeout(()=>showToast(`Ojo: ${CU(mov.cuentaId).nombre} quedó con saldo negativo (${money(saldoCuenta(mov.cuentaId))})`), 2700);
+  return mov;
+}
+let cajaLista = false; // evita avisos mientras se cargan los movimientos de ejemplo
+function removeMov(id){ const i = movimientos.findIndex(m=>m.id===id); if(i>-1) return movimientos.splice(i,1)[0]; return null; }
+const movsDe = (tipo, ref) => movimientos.filter(m=>m.origen && m.origen.tipo===tipo && m.origen.ref===ref);
+function cuentaSelectHtml(id, modo, selected){
+  return `<select id="${id}">${cuentasPara(modo).map(c=>`<option value="${c.id}" ${c.id===selected?'selected':''}>${esc(c.nombre)}${c.efectivo?' (efectivo)':''} — saldo ${money(saldoCuenta(c.id))}</option>`).join('')}</select>`;
+}
+// ventana chica para elegir de qué cuenta sale/entra la plata
+function pedirCuentaModal({titulo, texto, monto, modo, onOk}){
+  showModal(`
+    <div class="section-title" style="margin-bottom:8px;">${esc(titulo)}</div>
+    <div class="page-sub" style="margin-bottom:14px;">${texto}</div>
+    <div class="form-grid" style="margin-bottom:16px;">
+      <div class="field"><label>${modo==='ingreso'?'Entra en':'Sale de'}</label>${cuentaSelectHtml('pcCuenta', modo, modo==='ingreso'?'chica':'provincia')}</div>
+      <div class="field"><label>Monto</label><input value="${money(monto)}" disabled style="text-align:right; font-weight:700;"></div>
+    </div>
+    <div style="display:flex; gap:10px; justify-content:flex-end;">
+      <button class="btn" data-modal-cancel="1">Cancelar</button>
+      <button class="btn btn-primary" id="pcOkBtn">Confirmar</button>
+    </div>`);
+  document.getElementById('pcOkBtn').onclick = ()=>{ const cid = document.getElementById('pcCuenta').value; closeModal(); onOk(cid); };
+}
+
 const serviciosPagados = [
   {id:'SV01', propertyId:'PR12', servicio:'Luz', monto:8500, fecha:'2026-09-02', obs:'Mantener conectada durante la refacción'},
   {id:'SV02', propertyId:'PR12', servicio:'Gas', monto:4200, fecha:'2026-09-02', obs:''},
@@ -724,6 +786,7 @@ const NAV = [
   {key:'deudores', label:'Deudores', icon:'deudores'},
   {key:'arreglos', label:'Arreglos', icon:'arreglos'},
   {key:'liquidaciones', label:'Liquidaciones', icon:'liquidaciones'},
+  {key:'caja', label:'Caja y bancos', icon:'bank'},
   {key:'contratos', label:'Contratos', icon:'contratos'},
   {key:'propiedades', label:'Propiedades', icon:'propiedades'},
   {key:'personas', label:'Personas', icon:'personas'},
@@ -1438,9 +1501,9 @@ function cobrarModal(pid){
       <div class="field"><label>Total del período</label><input type="text" id="cobroTotal" disabled style="${inputStyle} font-weight:700;"></div>
     </div>
     <div class="page-sub" style="margin-bottom:14px;">Expensas y servicios son opcionales: dejalos en 0 si no corresponden este mes. Siempre van en el recibo; destildá "Sumar a la liquidación" cuando esa plata no le corresponde al propietario.</div>
-    <div class="field" style="margin-bottom:16px;">
-      <label id="cobroMontoLabel">Monto cobrado ahora</label>
-      <input type="number" id="cobroMonto" style="${inputStyle}">
+    <div class="form-grid" style="margin-bottom:16px;">
+      <div class="field"><label id="cobroMontoLabel">Monto cobrado ahora</label><input type="number" id="cobroMonto" style="${inputStyle}"></div>
+      <div class="field"><label>Medio de pago — entra en</label>${cuentaSelectHtml('cobroCuenta','ingreso','chica')}</div>
     </div>
     <div style="display:flex; gap:10px; justify-content:flex-end;">
       <button class="btn" data-modal-cancel="1">Cancelar</button>
@@ -1467,7 +1530,8 @@ function cobrarModal(pid){
     if(servicios && !document.getElementById('cobroServiciosLiq').checked) p.serviciosLiq = false; else delete p.serviciosLiq;
     const nuevoPagado = pagadoYa + monto;
     const total = pagoTotal(p);
-    const deshacer = ()=>{ restaurarPago(p, prev); route(); showToast('Pago deshecho'); };
+    const mov = addMov({cuentaId:document.getElementById('cobroCuenta').value, tipo:'ingreso', monto, concepto:`Cobro ${periodoLabel(p.periodo)} — ${prop.direccion} (${nombreCompleto(t)})`, origen:{tipo:'cobro', ref:p.id}});
+    const deshacer = ()=>{ restaurarPago(p, prev); removeMov(mov.id); route(); showToast('Pago deshecho'); };
     closeModal();
     if(nuevoPagado >= total){
       p.estado='Pagado'; p.fechaPago=TODAY_ISO; delete p.pagado;
@@ -1485,7 +1549,8 @@ function deshacerPago(pid){
   const pg = payments.find(x=>x.id===pid);
   const prev = {...pg};
   pg.estado='Pendiente'; pg.fechaPago=null; delete pg.pagado;
-  showToast('Pago revertido a pendiente', ()=>{ restaurarPago(pg, prev); route(); showToast('Se restauró el pago'); });
+  const quitados = movsDe('cobro', pid).map(m=>removeMov(m.id)); // el cobro sale de la caja/banco
+  showToast('Pago revertido a pendiente', ()=>{ restaurarPago(pg, prev); quitados.forEach(m=>movimientos.push(m)); route(); showToast('Se restauró el pago'); });
   route();
 }
 
@@ -1738,9 +1803,19 @@ function arregloLiqTexto(r){
 }
 function cambiarEtapaArreglo(id, etapa){
   const r = repairs.find(x=>x.id===id); if(!r) return;
-  if(etapa==='Arreglado' && (r.costo==null || !r.pagadoPor)){
-    showToast('Antes de marcarlo arreglado, cargá el costo final y quién lo paga');
+  if(etapa==='Arreglado'){
+    // se abre la edición para confirmar costo, quién paga y de qué cuenta se le pagó al especialista
     arregloModal(r.propertyId, r.id, 'Arreglado');
+    return;
+  }
+  if(etapa==='Pagado' && r.pagadoPor==='Inquilino'){
+    pedirCuentaModal({titulo:'Cobrar arreglo al inquilino', texto:`${esc(r.descripcion)} — ${esc(PR(r.propertyId).direccion)}`, monto:r.costo||0, modo:'ingreso', onOk:(cid)=>{
+      const prev = {...r};
+      r.estado='Pagado'; r.fechaPagado=TODAY_ISO;
+      const mov = addMov({cuentaId:cid, tipo:'ingreso', monto:r.costo||0, concepto:`Arreglo cobrado al inquilino — ${r.descripcion} (${PR(r.propertyId).direccion})`, origen:{tipo:'arreglo-cobro', ref:r.id}});
+      showToast('Arreglo cobrado al inquilino — queda en el historial', ()=>{ Object.assign(r, prev); removeMov(mov.id); route(); showToast('Cambio deshecho'); });
+      route();
+    }});
     return;
   }
   const prev = {...r};
@@ -1767,6 +1842,8 @@ function arregloModal(propertyId, repairId, estadoForzado){
       <div class="field"><label>Costo (presupuesto o final)</label><input type="number" id="naCosto" min="0" placeholder="Se puede cargar después" value="${r&&r.costo!=null?r.costo:''}"></div>
       <div class="field"><label>Lo paga</label><select id="naPaga"><option value="">A definir</option>${['Propietario','Inquilino'].map(o=>`<option ${r&&r.pagadoPor===o?'selected':''}>${o}</option>`).join('')}</select></div>
       <div class="field"><label>Fecha arreglado y pagado al especialista</label><input type="date" id="naFechaArreglo" value="${r&&r.fechaResuelto?r.fechaResuelto:TODAY_ISO}"></div>
+      <div class="field"><label>Al especialista se le pagó desde</label>${cuentaSelectHtml('naCuenta','egreso', (r && movsDe('arreglo-pago', r.id)[0]) ? movsDe('arreglo-pago', r.id)[0].cuentaId : 'provincia')}<span class="cell-sub">Lo pone la inmobiliaria; se recupera en la liquidación (o cobrándoselo al inquilino).</span></div>
+      <div class="field"></div>
       <div class="field" style="grid-column:1/-1;"><label>Observaciones</label><input id="naObs" placeholder="Opcional" value="${esc(r&&r.obs||'')}"></div>
     </div>
     <label style="${checkStyle} margin-bottom:18px;"><input type="checkbox" id="naUrgente" ${r&&r.urgente?'checked':''}> Urgente</label>
@@ -1787,14 +1864,25 @@ function arregloModal(propertyId, repairId, estadoForzado){
     datos.fechaResuelto = (estado==='Arreglado' || estado==='Pagado') ? (val('naFechaArreglo') || TODAY_ISO) : null;
     datos.fechaPagado = estado==='Pagado' ? (base.fechaPagado || TODAY_ISO) : null;
     if(estado!=='Pagado') datos.periodoLiquidacion = null;
+    const cuentaPago = val('naCuenta');
     closeModal();
+    const target = r || {id:'AR'+Date.now(), documentos:[]};
+    // movimiento de caja: egreso al especialista mientras el arreglo esté Arreglado o Pagado
+    const movPrev = movsDe('arreglo-pago', target.id)[0];
+    const movPrevCopia = movPrev ? {...movPrev} : null;
+    let movNuevo = null;
+    const pagado = datos.estado==='Arreglado' || datos.estado==='Pagado';
+    if(pagado && movPrev){ movPrev.monto = datos.costo; movPrev.cuentaId = cuentaPago; movPrev.fecha = datos.fechaResuelto; }
+    else if(pagado){ movNuevo = addMov({cuentaId:cuentaPago, tipo:'egreso', monto:datos.costo, fecha:datos.fechaResuelto, concepto:`Pago a especialista — ${datos.descripcion} (${PR(datos.propertyId).direccion})`, origen:{tipo:'arreglo-pago', ref:target.id}}); }
+    else if(movPrev){ removeMov(movPrev.id); }
+    const deshacerCaja = ()=>{ if(movNuevo) removeMov(movNuevo.id); if(movPrevCopia){ const m = movimientos.find(x=>x.id===movPrevCopia.id); if(m) Object.assign(m, movPrevCopia); else movimientos.push(movPrevCopia); } };
     if(r){
       const prev = {...r};
       Object.assign(r, datos);
-      showToast('Arreglo actualizado', ()=>{ Object.assign(r, prev); route(); showToast('Cambio deshecho'); });
+      showToast('Arreglo actualizado', ()=>{ Object.assign(r, prev); deshacerCaja(); route(); showToast('Cambio deshecho'); });
     } else {
-      repairs.push({id:'AR'+Date.now(), ...datos, documentos:[]});
-      showToast('Arreglo registrado');
+      repairs.push(Object.assign(target, datos));
+      showToast('Arreglo registrado', ()=>{ repairs.splice(repairs.indexOf(target),1); deshacerCaja(); route(); showToast('Cambio deshecho'); });
     }
     route();
   };
@@ -1922,6 +2010,7 @@ function nuevoServicioPagadoModal(){
     <div class="field" style="margin-bottom:10px;"><label>Propiedad</label><select id="svPropiedad">${opts}</select></div>
     <div class="field" style="margin-bottom:10px;"><label>Servicio</label><select id="svTipo"><option>Gas</option><option>Luz</option><option>Agua</option><option>Municipal</option></select></div>
     <div class="field" style="margin-bottom:10px;"><label>Monto</label><input type="number" id="svMonto" placeholder="0"></div>
+    <div class="field" style="margin-bottom:10px;"><label>Pagado desde</label>${cuentaSelectHtml('svCuenta','egreso','provincia')}</div>
     <div class="field" style="margin-bottom:16px;"><label>Observación</label><input id="svObs" placeholder="Opcional"></div>
     <div style="display:flex; gap:10px; justify-content:flex-end;">
       <button class="btn" data-modal-cancel="1">Cancelar</button>
@@ -1930,7 +2019,9 @@ function nuevoServicioPagadoModal(){
   document.getElementById('svSaveBtn').onclick = ()=>{
     const monto = parseFloat(document.getElementById('svMonto').value)||0;
     if(monto<=0){ showToast('Cargá un monto válido'); return; }
-    serviciosPagados.push({id:'SV'+Date.now(), propertyId:document.getElementById('svPropiedad').value, servicio:document.getElementById('svTipo').value, monto, fecha:TODAY_ISO, obs:document.getElementById('svObs').value.trim()});
+    const sv = {id:'SV'+Date.now(), propertyId:document.getElementById('svPropiedad').value, servicio:document.getElementById('svTipo').value, monto, fecha:TODAY_ISO, obs:document.getElementById('svObs').value.trim()};
+    serviciosPagados.push(sv);
+    addMov({cuentaId:document.getElementById('svCuenta').value, tipo:'egreso', monto, concepto:`Servicio ${sv.servicio} — ${PR(sv.propertyId).direccion}`, origen:{tipo:'servicio', ref:sv.id}});
     closeModal();
     showToast('Servicio registrado — se va a descontar de la liquidación');
     route();
@@ -2020,7 +2111,13 @@ function arreglosProximoMes(ownerId){
   return repairs.filter(r=>r.estado==='Arreglado' && r.pagadoPor==='Propietario' && PR(r.propertyId).ownerId===ownerId && periodoDescuento(r)===nextPeriodo(PERIODO_ACTUAL));
 }
 function marcarLiquidacionPagada(ownerId){
+  const total = liquidacionOwner(ownerId, PERIODO_ACTUAL).total;
+  if(total<=0){ confirmarLiquidacionPagada(ownerId, null, total); return; }
+  pedirCuentaModal({titulo:'Pagar liquidación', texto:`${esc(nombreCompleto(P(ownerId)))} — ${periodoLabel(PERIODO_ACTUAL)}`, monto:total, modo:'egreso', onOk:(cid)=>confirmarLiquidacionPagada(ownerId, cid, total)});
+}
+function confirmarLiquidacionPagada(ownerId, cuentaId, total){
   const key = liqKey(ownerId, PERIODO_ACTUAL);
+  const mov = cuentaId ? addMov({cuentaId, tipo:'egreso', monto:total, concepto:`Liquidación ${periodoLabel(PERIODO_ACTUAL)} — ${nombreCompleto(P(ownerId))}`, origen:{tipo:'liquidacion', ref:key}}) : null;
   const incluidos = repairs.filter(r=>r.estado==='Arreglado' && r.pagadoPor==='Propietario' && PR(r.propertyId).ownerId===ownerId && periodoDescuento(r)===PERIODO_ACTUAL);
   const prevs = incluidos.map(r=>({r, prev:{...r}}));
   liquidacionesPagadas[key] = TODAY_ISO;
@@ -2028,6 +2125,7 @@ function marcarLiquidacionPagada(ownerId){
   incluidos.forEach(r=>{ r.estado='Pagado'; r.periodoLiquidacion=PERIODO_ACTUAL; r.fechaPagado=TODAY_ISO; });
   showToast(`Liquidación de ${nombreCompleto(P(ownerId))} marcada como pagada${incluidos.length?' — '+incluidos.length+' arreglo(s) cerrado(s)':''}`, ()=>{
     delete liquidacionesPagadas[key];
+    if(mov) removeMov(mov.id);
     prevs.forEach(({r,prev})=>{ Object.keys(r).forEach(k=>{ if(!(k in prev)) delete r[k]; }); Object.assign(r, prev); });
     route(); showToast('Cambio deshecho');
   });
@@ -2068,6 +2166,107 @@ function viewLiquidaciones(query){
       <input class="search-input" id="liquidacionesFilterInput" placeholder="Buscar propietario..." value="${esc(query||'')}">
     </div>
     ${liqs.length? `<div class="card">${rows}</div>` : `<div class="empty-state">${icon('check')}<div class="empty-state-title">No encontramos propietarios</div></div>`}`;
+}
+
+function viewCaja(filtro){
+  const visibles = cuentasVisibles();
+  if(filtro && !visibles.some(c=>c.id===filtro)) filtro = null;
+  const ids = visibles.map(c=>c.id);
+  let movs = movimientos.filter(m=>ids.includes(m.cuentaId) && (!filtro || m.cuentaId===filtro));
+  movs = movs.slice().sort((a,b)=> b.fecha.localeCompare(a.fecha) || (+b.id.slice(2)) - (+a.id.slice(2)));
+  const cards = visibles.map(c=>{ const sal = saldoCuenta(c.id); return `
+    <button class="cuenta-card ${filtro===c.id?'active':''} ${c.soloAdmin?'admin-only':''}" data-nav="/caja${filtro===c.id?'':'?cuenta='+c.id}">
+      <div class="cell-sub">${esc(c.tipo)}${c.soloAdmin?' · solo administrador':''}</div>
+      <div class="cell-title">${esc(c.nombre)}</div>
+      <div class="cuenta-saldo tnum ${sal<0?'neg':''}">${money(sal)}</div>
+    </button>`; }).join('');
+  let resumenAdmin = '';
+  if(esAdmin()){
+    const totalCuentas = cuentas.reduce((s,c)=>s+saldoCuenta(c.id),0);
+    const liqs = ownerIds().map(o=>liquidacionOwner(o, PERIODO_ACTUAL));
+    const honorarios = liqs.reduce((s,l)=>s+l.comision,0);
+    const aLiquidar = liqs.filter(l=>!liquidacionPagada(l.ownerId, PERIODO_ACTUAL) && l.total>0).reduce((s,l)=>s+l.total,0);
+    const adelantado = repairs.filter(r=>r.estado==='Arreglado' && r.pagadoPor && r.costo).reduce((s,r)=>s+r.costo,0);
+    resumenAdmin = `
+    <div class="card card-pad admin-only" style="margin-bottom:22px;">
+      <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:12px;"><div class="section-title">Resumen del administrador</div><span class="badge badge-warn">${icon('alert')}Los empleados no ven este recuadro</span></div>
+      <div class="stat-grid" style="margin-bottom:0;">
+        ${statTile('bank', money(totalCuentas), 'Total en cajas y bancos', 'info')}
+        ${statTile('liquidaciones', money(aLiquidar), `Pendiente de liquidar a propietarios · ${periodoLabel(PERIODO_ACTUAL)}`, 'warn')}
+        ${statTile('check', money(honorarios), `Honorarios de ${periodoLabel(PERIODO_ACTUAL)} (tu ganancia)`, 'ok')}
+        ${statTile('arreglos', money(adelantado), 'Adelantado en arreglos, a recuperar', 'violet')}
+      </div>
+      <div class="page-sub" style="margin-top:10px;">Plata propia aproximada = total en cajas y bancos − pendiente de liquidar a propietarios = <b class="tnum">${money(totalCuentas - aLiquidar)}</b>.</div>
+    </div>`;
+  }
+  const rows = movs.map(m=>`<tr>
+      <td class="tnum">${fdate(m.fecha)}</td>
+      <td>${esc(CU(m.cuentaId).nombre)}</td>
+      <td>${esc(m.concepto)}</td>
+      <td class="cell-sub">${esc(m.usuario)}</td>
+      <td class="num tnum pos">${m.tipo==='ingreso'?money(m.monto):''}</td>
+      <td class="num tnum neg">${m.tipo==='egreso'?'- '+money(m.monto):''}</td>
+    </tr>`).join('');
+  return `
+    <div class="page-head">
+      <div><h1 class="page-title">Caja y bancos</h1><div class="page-sub">Saldos al ${fdate(TODAY_ISO)} — los cobros, pagos de liquidaciones, arreglos y servicios se registran solos</div></div>
+      <button class="btn btn-primary" onclick="movimientoModal()">${icon('plus')}Registrar movimiento</button>
+    </div>
+    ${esAdmin()?'':`<div class="note-banner info" style="margin-bottom:16px;">${icon('alert')}<div>Vista de empleado: se ven los saldos de caja chica y bancos. La caja grande, el total general y los honorarios son solo del administrador. Los pagos se registran por transferencia (no en efectivo).</div></div>`}
+    ${resumenAdmin}
+    <div class="cuenta-grid">${cards}</div>
+    <div class="section-title" style="margin-bottom:8px;">Movimientos${filtro?' — '+esc(CU(filtro).nombre):''} ${filtro?`<button class="btn btn-sm btn-ghost" data-nav="/caja">Ver todas las cuentas</button>`:''}</div>
+    <div class="table-wrap">
+      ${movs.length?`<table><thead><tr><th>Fecha</th><th>Cuenta</th><th>Concepto</th><th>Cargado por</th><th class="num">Ingreso</th><th class="num">Egreso</th></tr></thead><tbody>${rows}</tbody></table>`
+      :`<div class="empty-state">${icon('bank')}<div class="empty-state-title">Sin movimientos</div></div>`}
+    </div>
+    <div class="page-sub" style="margin-top:10px;">Saldo inicial cargado al ${fdate(FECHA_SALDO_INICIAL)}. Hacé clic en una cuenta para ver solo sus movimientos.</div>`;
+}
+function movimientoModal(){
+  showModal(`
+    <div class="section-title" style="margin-bottom:14px;">Registrar movimiento</div>
+    <div class="form-grid" style="margin-bottom:12px;">
+      <div class="field"><label>Tipo</label><select id="mvTipo"><option value="ingreso">Ingreso</option><option value="egreso">Egreso / pago</option><option value="transferencia">Transferencia entre cuentas</option></select></div>
+      <div class="field"><label>Fecha</label><input type="date" id="mvFecha" value="${TODAY_ISO}"></div>
+      <div class="field"><label id="mvCuentaLabel">Cuenta</label><span id="mvCuentaWrap"></span></div>
+      <div class="field" id="mvDestinoField" style="display:none;"><label>Hacia</label>${cuentaSelectHtml('mvDestino','ingreso','grande')}</div>
+      <div class="field"><label>Monto</label><input type="number" id="mvMonto" min="0" step="100"></div>
+      <div class="field" style="grid-column:1/-1;"><label>Concepto</label><input id="mvConcepto" placeholder="Ej: Seña de alquiler, depósito de efectivo, comisión bancaria..."></div>
+    </div>
+    ${esAdmin()?'':'<div class="page-sub" style="margin-bottom:12px;">Como empleado solo podés pagar o transferir desde bancos y Mercado Pago, no desde efectivo.</div>'}
+    <div style="display:flex; gap:10px; justify-content:flex-end;">
+      <button class="btn" data-modal-cancel="1">Cancelar</button>
+      <button class="btn btn-primary" id="mvSaveBtn">Guardar</button>
+    </div>`, true);
+  const tipoSel = document.getElementById('mvTipo');
+  const pintar = ()=>{
+    const t = tipoSel.value;
+    document.getElementById('mvCuentaWrap').innerHTML = cuentaSelectHtml('mvCuenta', t==='ingreso'?'ingreso':'egreso', t==='ingreso'?'chica':'provincia');
+    document.getElementById('mvCuentaLabel').textContent = t==='ingreso' ? 'Entra en' : (t==='egreso' ? 'Sale de' : 'Desde');
+    document.getElementById('mvDestinoField').style.display = t==='transferencia' ? '' : 'none';
+  };
+  tipoSel.addEventListener('change', pintar); pintar();
+  document.getElementById('mvSaveBtn').onclick = ()=>{
+    const t = tipoSel.value, cuenta = document.getElementById('mvCuenta').value;
+    const monto = parseFloat(document.getElementById('mvMonto').value)||0;
+    const fecha = document.getElementById('mvFecha').value || TODAY_ISO;
+    const concepto = document.getElementById('mvConcepto').value.trim();
+    if(monto<=0){ showToast('Ingresá un monto válido'); return; }
+    let creados = [];
+    if(t==='transferencia'){
+      const dest = document.getElementById('mvDestino').value;
+      if(dest===cuenta){ showToast('Elegí dos cuentas distintas'); return; }
+      const tid = 'TR'+Date.now();
+      creados.push(addMov({cuentaId:cuenta, tipo:'egreso', monto, fecha, concepto:`Transferencia a ${CU(dest).nombre}${concepto?' — '+concepto:''}`, origen:{tipo:'manual'}, transferId:tid}));
+      creados.push(addMov({cuentaId:dest, tipo:'ingreso', monto, fecha, concepto:`Transferencia desde ${CU(cuenta).nombre}${concepto?' — '+concepto:''}`, origen:{tipo:'manual'}, transferId:tid}));
+    } else {
+      if(!concepto){ showToast('Escribí un concepto'); return; }
+      creados.push(addMov({cuentaId:cuenta, tipo:t, monto, fecha, concepto, origen:{tipo:'manual'}}));
+    }
+    closeModal();
+    showToast('Movimiento registrado', ()=>{ creados.forEach(m=>removeMov(m.id)); route(); showToast('Movimiento eliminado'); });
+    route();
+  };
 }
 
 function viewConfiguracion(){
@@ -2123,6 +2322,7 @@ function route(){
   else if(section==='arreglos') html = viewArreglos(params.get('filter'), params.get('q'));
   else if(section==='servicios') html = viewServicios();
   else if(section==='liquidaciones') html = viewLiquidaciones(params.get('q'));
+  else if(section==='caja') html = viewCaja(params.get('cuenta'));
   else if(section==='configuracion') html = viewConfiguracion();
   else html = viewDashboard();
 
@@ -2290,6 +2490,35 @@ function closeDrawer(){ document.getElementById('drawerOverlay').classList.remov
 document.getElementById('hamburgerBtn').addEventListener('click', ()=>document.body.classList.add('sidebar-open'));
 document.getElementById('navOverlay').addEventListener('click', ()=>document.body.classList.remove('sidebar-open'));
 document.getElementById('backBtn').addEventListener('click', ()=>history.back());
+
+// movimientos de ejemplo de septiembre (desde el saldo inicial del 1/9)
+(function seedCaja(){
+  const cuentaCobro = {CT01:'chica', CT04:'icbc', CT05:'mp', CT06:'mp', CT07:'provincia', CT09:'chica', CT10:'bbva', CT11:'bbva', CT08:'icbc', CT02:'icbc'};
+  payments.filter(p=>p.fechaPago && p.fechaPago>=FECHA_SALDO_INICIAL).forEach(p=>{
+    const c = CT(p.contractId);
+    const monto = p.estado==='Parcial' ? (p.pagado||0) : pagoTotal(p);
+    addMov({cuentaId:cuentaCobro[c.id]||'chica', tipo:'ingreso', monto, fecha:p.fechaPago, usuario:'Empleado', concepto:`Cobro ${periodoLabel(p.periodo)} — ${PR(c.propertyId).direccion} (${nombreCompleto(P(c.tenantId))})`, origen:{tipo:'cobro', ref:p.id}});
+  });
+  repairs.filter(r=>(r.estado==='Arreglado'||r.estado==='Pagado') && r.costo && r.fechaResuelto>=FECHA_SALDO_INICIAL).forEach(r=>{
+    addMov({cuentaId:'grande', tipo:'egreso', monto:r.costo, fecha:r.fechaResuelto, usuario:'Guillermo (Adm.)', concepto:`Pago a especialista — ${r.descripcion} (${PR(r.propertyId).direccion})`, origen:{tipo:'arreglo-pago', ref:r.id}});
+  });
+  serviciosPagados.filter(s=>s.fecha>=FECHA_SALDO_INICIAL).forEach(sv=>{
+    addMov({cuentaId:'provincia', tipo:'egreso', monto:sv.monto, fecha:sv.fecha, usuario:'Empleado', concepto:`Servicio ${sv.servicio} — ${PR(sv.propertyId).direccion}`, origen:{tipo:'servicio', ref:sv.id}});
+  });
+  Object.entries(liquidacionesPagadas).forEach(([key, fecha])=>{
+    const [ownerId, per] = key.split('|');
+    addMov({cuentaId:'provincia', tipo:'egreso', monto:liquidacionOwner(ownerId, per).total, fecha, usuario:'Guillermo (Adm.)', concepto:`Liquidación ${periodoLabel(per)} — ${nombreCompleto(P(ownerId))}`, origen:{tipo:'liquidacion', ref:key}});
+  });
+  addMov({cuentaId:'chica', tipo:'egreso', monto:400000, fecha:'2026-09-11', usuario:'Guillermo (Adm.)', concepto:'Transferencia a Caja grande — retiro de efectivo cobrado', origen:{tipo:'manual'}, transferId:'TR0'});
+  addMov({cuentaId:'grande', tipo:'ingreso', monto:400000, fecha:'2026-09-11', usuario:'Guillermo (Adm.)', concepto:'Transferencia desde Caja chica — retiro de efectivo cobrado', origen:{tipo:'manual'}, transferId:'TR0'});
+})();
+cajaLista = true;
+document.getElementById('rolSelect').addEventListener('change', e=>{
+  ROL = e.target.value;
+  e.target.classList.toggle('empleado', ROL==='empleado');
+  showToast(esAdmin() ? 'Viendo como Administrador' : 'Viendo como Empleado — así lo ven tus empleados');
+  route();
+});
 
 route();
 </script>

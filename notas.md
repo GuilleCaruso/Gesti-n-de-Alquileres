@@ -76,13 +76,15 @@ Funciones clave ya hechas: cobrar / deshacer pago, generar recibo, actualizar co
 - Lo que NO hacer: HTML gigante, lógica mezclada con pantallas, duplicar datos, refactors masivos.
 - Propone un archivo `PROJECT_RULES.md` con reglas para los agentes de IA (todavía no creado).
 
-## Idea en evaluación: contabilidad / caja (05/10/2026)
+## Caja y bancos (05/10/2026)
 
-- Guillermo quiere llevar la contabilidad de la inmobiliaria: caja chica, caja grande y cuánto gana. **Solo visible para el usuario Administrador.**
-- Recomendación: módulo **"Caja"** dentro de la misma app, con permisos por rol, y no una app aparte (los datos ya están acá: cobros, liquidaciones, honorarios, arreglos).
-- La restricción tiene que estar en la base de datos/servidor (Etapa 2), no solo escondiendo el menú.
-- Ojo: hoy los empleados verían los honorarios en Liquidaciones y los totales en Cobranzas → definir qué se les oculta.
-- Preguntas abiertas: qué cajas existen (chica, grande, banco, MercadoPago); si los empleados cargan movimientos sin ver saldos; qué no deben ver; si se registran gastos de la oficina (sueldos, alquiler, impuestos).
+- Módulo **"Caja y bancos"** dentro de la misma app (no app aparte), con selector "Ver como: Administrador / Empleado" para simular permisos.
+- Cuentas: Caja chica (efectivo), Caja grande (efectivo), ICBC, Banco Provincia, Mercado Pago, BBVA.
+- **Empleado:** ve saldos de caja chica y bancos; cobra en efectivo o transferencia; paga/transfiere solo desde bancos o Mercado Pago (no paga en efectivo). **No ve** caja grande, total general ni honorarios.
+- **Administrador:** ve todo + recuadro con total en cajas y bancos, pendiente de liquidar a propietarios, honorarios del mes (ganancia) y adelantado en arreglos.
+- Se registran solos: cobros (eligiendo medio de pago), pago de liquidaciones (eligiendo cuenta), pago al especialista al marcar un arreglo "Arreglado" (la inmobiliaria adelanta y lo recupera en la liquidación o cobrándoselo al inquilino), servicios pagados. Además: movimientos manuales y transferencias entre cuentas.
+- No se cargan gastos de la oficina (decisión de Guillermo).
+- En la app real la restricción va en la base de datos/servidor, no solo en la pantalla.
 
 ## Pendientes / próximos pasos
 
@@ -106,6 +108,7 @@ Funciones clave ya hechas: cobrar / deshacer pago, generar recibo, actualizar co
 
 ## Historial
 
+- **05/10/2026** – Módulo Caja y bancos con permisos por rol (simulados).
 - **03/10/2026** – Impresión se dispara en el mismo clic (antes con demora; algunos navegadores la bloqueaban). Revisión automática de todos los botones: 262 clics en pantallas + 37 pruebas de ventanas, menú, buscador e impresiones, sin errores.
 - **03/10/2026** – Liquidaciones "pagadas al propietario" y regla de en qué liquidación se descuenta cada arreglo.
 - **03/10/2026** – Arreglos editables con etapas y historial por propiedad.
