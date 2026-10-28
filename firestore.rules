@@ -1,0 +1,76 @@
+rules_version = '2';
+
+// Reglas de seguridad de Caruso Propiedades.
+// Roles en usuarios/{uid}: rol = 'admin' | 'empleado', activo = true | false.
+// El empleado no ve la caja grande (cuentas con soloAdmin = true) ni sus movimientos,
+// y no puede registrar pagos (egresos) desde cuentas de efectivo.
+// Nada con historia se borra: se anula (ver PROJECT_RULES.md, regla 12).
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function perfilPath() { return /databases/$(database)/documents/usuarios/$(request.auth.uid); }
+    function activo() { return signedIn() && exists(perfilPath()) && get(perfilPath()).data.activo == true; }
+    function esAdmin() { return activo() && get(perfilPath()).data.rol == 'admin'; }
+    function cuenta(id) { return get(/databases/$(database)/documents/cuentas/$(id)).data; }
+
+    // ---------- usuarios ----------
+    // UID de Guillermo (Authentication → Users). Solo sirve para que la primera vez que entra
+    // se cree su propio perfil de administrador; después los usuarios los da de alta él desde la app.
+    function adminInicial() { return signedIn() && request.auth.uid == 'PENDIENTE_UID_ADMIN'; }
+
+    match /usuarios/{uid} {
+      allow read: if (activo() && (request.auth.uid == uid || esAdmin())) || (adminInicial() && request.auth.uid == uid);
+      allow create, update: if esAdmin()
+        && request.resource.data.rol in ['admin', 'empleado']
+        && request.resource.data.activo is bool;
+      allow create: if adminInicial() && request.auth.uid == uid
+        && request.resource.data.rol == 'admin' && request.resource.data.activo == true;
+      allow delete: if false;
+    }
+
+    // ---------- operación diaria (todos los usuarios activos) ----------
+    match /personas/{id}    { allow read, create, update: if activo(); allow delete: if esAdmin(); }
+    match /propiedades/{id} { allow read, create, update: if activo(); allow delete: if esAdmin(); }
+    match /arreglos/{id}    { allow read, create, update: if activo(); allow delete: if esAdmin(); }
+
+    // con historia: nunca se borran
+    match /contratos/{id}        { allow read, create, update: if activo(); allow delete: if false; }
+    match /pagos/{id}            { allow read, create, update: if activo(); allow delete: if false; }
+    match /serviciosPagados/{id} { allow read, create, update: if activo(); allow delete: if false; }
+    match /deudasServicios/{id}  { allow read, create, update: if activo(); allow delete: if false; }
+    match /liquidaciones/{id}    { allow read, create, update: if activo(); allow delete: if false; }
+
+    // índices del mes (ICL/IPC): los carga cualquier usuario activo; el resto de la configuración, solo el administrador
+    match /config/indices { allow read, write: if activo(); }
+    match /config/{id}    { allow read: if activo(); allow write: if esAdmin(); }
+
+    // ---------- caja y bancos ----------
+    match /cuentas/{id} {
+      allow read: if esAdmin() || (activo() && resource.data.soloAdmin == false);
+      allow write: if esAdmin();
+    }
+
+    match /movimientos/{id} {
+      function nuevo() { return request.resource.data; }
+      // el movimiento hereda soloAdmin de su cuenta: así la regla de lectura no depende de otra lectura
+      function valido() {
+        let c = cuenta(nuevo().cuentaId);
+        return nuevo().tipo in ['ingreso', 'egreso']
+          && nuevo().monto is number && nuevo().monto > 0
+          && nuevo().soloAdmin == c.soloAdmin;
+      }
+      // empleado: nunca caja grande, y pagos solo desde bancos o Mercado Pago
+      function permitidoEmpleado() {
+        let c = cuenta(nuevo().cuentaId);
+        return c.soloAdmin == false && (nuevo().tipo == 'ingreso' || c.efectivo == false);
+      }
+      allow read: if esAdmin() || (activo() && resource.data.soloAdmin == false);
+      allow create: if activo() && valido() && (esAdmin() || permitidoEmpleado())
+        && nuevo().creadoPor == request.auth.uid;
+      allow update: if activo() && valido()
+        && (esAdmin() || (resource.data.soloAdmin == false && permitidoEmpleado()));
+      allow delete: if false;
+    }
+  }
+}

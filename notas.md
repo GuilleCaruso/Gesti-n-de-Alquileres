@@ -9,6 +9,9 @@ Bitácora de lo que vamos trabajando. Se actualiza en cada sesión.
 | `caruso-propiedades.html` | **Versión actual** de la app (la que venía del chat anterior). Un solo archivo HTML, sin dependencias externas salvo Google Fonts. |
 | `index.html` | Versión vieja (Tailwind + Firebase + jsPDF). Queda como referencia, no se sigue desarrollando por ahora. |
 | `notas.md` | Este archivo. |
+| `app/` | **App real** (Etapa 1 en curso): Vite + JavaScript + Firebase. Ver `app/README.md`. |
+| `firestore.rules` | Reglas de seguridad de la base (roles, caja grande, nada se borra). |
+| `.github/workflows/firebase.yml` | Pruebas y publicación automática en Firebase. |
 | `PROJECT_RULES.md` | Reglas que tiene que respetar cualquier persona o IA que modifique la app. |
 | `docs/recordar-app-inmobiliaria.pdf` | Informe base del proyecto (hecho con ChatGPT). Es la especificación funcional. |
 | `assets/logo-caruso.png` | Logo oficial. |
@@ -35,7 +38,7 @@ Funciones clave ya hechas: cobrar / deshacer pago, generar recibo, actualizar co
 
 ## Decisiones tomadas
 
-- App real (propuesta, a confirmar): Supabase (base de datos, usuarios, permisos, archivos, copias) + Netlify (publicación automática desde GitHub). Construcción con Claude Code en 9 etapas, cada una aprobada en un link de vista previa. Mes de prueba en paralelo con el sistema actual antes del cambio.
+- App real: **Firebase** (decidido 28/10/2026; Supabase descartado por costo). Firestore + Authentication + Hosting. Spark gratis; Blaze (~US$ 0-1/mes, alerta US$ 5) recién con datos reales, para archivos y copias de seguridad. Construcción con Claude Code en 9 etapas, cada una aprobada en un link de vista previa. Mes de prueba en paralelo con el sistema actual antes del cambio.
 
 - Arreglos: etapas **Pendiente → En curso → Arreglado → Pagado** (En curso confirmado). El costo se puede cargar o cambiar en cualquier momento.
   - **Arreglado** = terminado y ya se le pagó al especialista (se registra la fecha). Requiere costo y quién paga.
@@ -107,13 +110,18 @@ Funciones clave ya hechas: cobrar / deshacer pago, generar recibo, actualizar co
 - [x] Arreglos editables (costo, especialista, quién paga, etapa) y con etapas Pendiente → En curso → Arreglado → Pagado.
 - [x] Crear `PROJECT_RULES.md`.
 - [x] Instructivo para pasar a la app real: https://claude.ai/artifact/8BrSCNonPDZ1tgXFGoCjUw
-- [ ] Guillermo: aprobar Supabase + Netlify (~US$ 25/mes con datos reales), lista de empleados con email, dónde están hoy los datos de los 170 contratos, quién administra el dominio, crear cuenta de Supabase y pasar Project URL + clave anon.
-- [ ] Etapa 1 de la app real: base de datos, login con roles y permisos.
+- [x] Decisiones: Firebase; 3 usuarios (Guillermo admin + 2 empleados); datos se exportan de Arcomercial; dominio lo administra el hermano.
+- [x] Etapa 1 (código): ingreso, roles, gestión de usuarios, menú por rol, reglas de seguridad, lógica de negocio portada, publicación automática. Pruebas: 21 de negocio, 25 de seguridad, 12 de punta a punta.
+- [ ] Guillermo: Paso 1 del instructivo (crear proyecto Firebase, Firestore en São Paulo, login email/contraseña, su usuario, app web, secreto en GitHub) y pasar `firebaseConfig` + su User UID.
+- [ ] Claude: enchufar firebaseConfig y UID, abrir la primera propuesta para publicar la Etapa 1.
+- [ ] Guillermo: exportar Arcomercial y pasar solo títulos de columnas + 1-2 filas inventadas.
+- [ ] Antes de importar datos reales: segundo proyecto `caruso-app-pruebas` (las vistas previas comparten base con producción).
 - [ ] Recorrer el prototipo pantalla por pantalla y anotar ajustes.
 - [ ] Definir cómo se guardan los datos (sin esto la app no sirve para uso real).
 
 ## Historial
 
+- **28/10/2026** – Se elige Firebase. Etapa 1 de la app real programada y probada (falta conectar el proyecto de Guillermo).
 - **28/10/2026** – Prototipo dado por cerrado. Creado `PROJECT_RULES.md` e instructivo de puesta en marcha.
 - **05/10/2026** – Módulo Caja y bancos con permisos por rol (simulados).
 - **03/10/2026** – Impresión se dispara en el mismo clic (antes con demora; algunos navegadores la bloqueaban). Revisión automática de todos los botones: 262 clics en pantallas + 37 pruebas de ventanas, menú, buscador e impresiones, sin errores.

@@ -1,0 +1,71 @@
+# Pruebas y publicación automática en Firebase.
+# - Propuesta de cambio (pull request): corre las pruebas y publica un link de vista previa.
+# - Cambio aprobado en main: corre las pruebas y publica la app y las reglas de seguridad.
+# Necesita el secreto FIREBASE_SERVICE_ACCOUNT (instructivo, Paso 1-E). Sin él, solo corre las pruebas.
+name: Pruebas y publicación
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  pruebas-y-publicacion:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      checks: write
+    env:
+      HAY_CREDENCIAL: ${{ secrets.FIREBASE_SERVICE_ACCOUNT != '' }}
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+      - name: Pruebas de reglas de negocio
+        run: npm test
+      - name: Pruebas de seguridad (reglas de Firestore)
+        run: npm run test:rules
+      - name: Prueba de punta a punta (ingreso y usuarios)
+        run: |
+          npx playwright install --with-deps chromium
+          SHOTS=/tmp npm run test:e2e
+      - name: Compilar
+        run: npm run build
+
+      - name: Vista previa (pull request)
+        if: github.event_name == 'pull_request' && env.HAY_CREDENCIAL == 'true'
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          expires: 14d
+
+      - name: Publicar app (main)
+        if: github.event_name == 'push' && env.HAY_CREDENCIAL == 'true'
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          channelId: live
+
+      - name: Publicar reglas de seguridad (main)
+        if: github.event_name == 'push' && env.HAY_CREDENCIAL == 'true'
+        working-directory: .
+        env:
+          CREDENCIAL: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          printf '%s' "$CREDENCIAL" > "$RUNNER_TEMP/sa.json"
+          GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json" npx --prefix app firebase deploy --only firestore --non-interactive
+          rm -f "$RUNNER_TEMP/sa.json"
