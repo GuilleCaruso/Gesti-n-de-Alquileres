@@ -9,6 +9,7 @@ Bitácora de lo que vamos trabajando. Se actualiza en cada sesión.
 | `caruso-propiedades.html` | **Versión actual** de la app (la que venía del chat anterior). Un solo archivo HTML, sin dependencias externas salvo Google Fonts. |
 | `index.html` | Versión vieja (Tailwind + Firebase + jsPDF). Queda como referencia, no se sigue desarrollando por ahora. |
 | `notas.md` | Este archivo. |
+| `PROJECT_RULES.md` | Reglas que tiene que respetar cualquier persona o IA que modifique la app. |
 | `docs/recordar-app-inmobiliaria.pdf` | Informe base del proyecto (hecho con ChatGPT). Es la especificación funcional. |
 | `assets/logo-caruso.png` | Logo oficial. |
 
@@ -33,6 +34,8 @@ Funciones clave ya hechas: cobrar / deshacer pago, generar recibo, actualizar co
 - La versión que está en el repo ya tiene más cosas que esa primera versión (Arreglos, Aumentos, recibos, garantes, deudas de servicios). O sea, hubo más iteraciones que no quedaron en la transcripción.
 
 ## Decisiones tomadas
+
+- App real (propuesta, a confirmar): Supabase (base de datos, usuarios, permisos, archivos, copias) + Netlify (publicación automática desde GitHub). Construcción con Claude Code en 9 etapas, cada una aprobada en un link de vista previa. Mes de prueba en paralelo con el sistema actual antes del cambio.
 
 - Arreglos: etapas **Pendiente → En curso → Arreglado → Pagado** (En curso confirmado). El costo se puede cargar o cambiar en cualquier momento.
   - **Arreglado** = terminado y ya se le pagó al especialista (se registra la fecha). Requiere costo y quién paga.
@@ -102,12 +105,16 @@ Funciones clave ya hechas: cobrar / deshacer pago, generar recibo, actualizar co
 - [x] Honorarios por contrato: % (5% por defecto) o monto fijo mensual; editable en la ficha y al crear el contrato.
 - [x] Honorarios sobre expensas/servicios destildados: no se cobran (confirmado).
 - [x] Arreglos editables (costo, especialista, quién paga, etapa) y con etapas Pendiente → En curso → Arreglado → Pagado.
-- [ ] Crear `PROJECT_RULES.md` antes de la Etapa 2.
+- [x] Crear `PROJECT_RULES.md`.
+- [x] Instructivo para pasar a la app real: https://claude.ai/artifact/8BrSCNonPDZ1tgXFGoCjUw
+- [ ] Guillermo: aprobar Supabase + Netlify (~US$ 25/mes con datos reales), lista de empleados con email, dónde están hoy los datos de los 170 contratos, quién administra el dominio, crear cuenta de Supabase y pasar Project URL + clave anon.
+- [ ] Etapa 1 de la app real: base de datos, login con roles y permisos.
 - [ ] Recorrer el prototipo pantalla por pantalla y anotar ajustes.
 - [ ] Definir cómo se guardan los datos (sin esto la app no sirve para uso real).
 
 ## Historial
 
+- **28/10/2026** – Prototipo dado por cerrado. Creado `PROJECT_RULES.md` e instructivo de puesta en marcha.
 - **05/10/2026** – Módulo Caja y bancos con permisos por rol (simulados).
 - **03/10/2026** – Impresión se dispara en el mismo clic (antes con demora; algunos navegadores la bloqueaban). Revisión automática de todos los botones: 262 clics en pantallas + 37 pruebas de ventanas, menú, buscador e impresiones, sin errores.
 - **03/10/2026** – Liquidaciones "pagadas al propietario" y regla de en qué liquidación se descuenta cada arreglo.
