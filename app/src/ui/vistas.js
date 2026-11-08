@@ -1,38 +1,33 @@
-// Vistas de la etapa 1: Inicio, Usuarios, Configuración y "en construcción" para los módulos que vienen.
-import { esc } from '../domain/formato.js';
-import { esAdmin, SECCIONES } from '../domain/permisos.js';
+// Vistas generales: Inicio, Usuarios y Configuración.
+import { esc, money, periodoLabel } from '../domain/formato.js';
+import { cobrosDelMes, contratosActivos, estadoCobro } from '../domain/consultas.js';
+import { esAdmin } from '../domain/permisos.js';
+import { pagoTotal, pendienteActualizacion } from '../domain/negocio.js';
 import { actualizarUsuario, darAcceso, listarUsuarios } from '../services/usuarios.js';
+import { hoyIso, periodoActual } from './base.js';
 import { icon } from './icons.js';
 import { toast } from './toast.js';
 
-const PROTOTIPO = 'https://claude.ai/artifact/4Mbn7nLqpn2jaFfhnBsaBU';
-
-const ETAPAS = [
-  [1, 'Base, ingreso y usuarios'], [2, 'Propiedades y personas'], [3, 'Contratos'], [4, 'Aumentos'],
-  [5, 'Cobranzas y recibos'], [6, 'Deudores, servicios y arreglos'], [7, 'Liquidaciones'], [8, 'Caja y bancos'], [9, 'Archivos'],
-];
-export const ETAPA_ACTUAL = 1;
-
-export function vistaInicio(perfil) {
+export function vistaInicio(perfil, d) {
+  const periodo = periodoActual();
+  const hoy = hoyIso();
+  const cobros = cobrosDelMes(d.contratos, d.pagos, periodo);
+  const pagados = cobros.filter((p) => p.estado === 'Pagado').length;
+  const vencidos = cobros.filter((p) => estadoCobro(p, hoy) === 'Vencido').length;
+  const falta = cobros.reduce((s, p) => s + (p.estado === 'Pagado' ? 0 : pagoTotal(p) - (p.estado === 'Parcial' ? p.pagado || 0 : 0)), 0);
+  const aumentos = contratosActivos(d.contratos).filter((c) => pendienteActualizacion(c, hoy)).length;
+  const tile = (valor, label, nav, tono) => `<button class="stat-tile" data-nav="${nav}" style="cursor:pointer; text-align:left; font:inherit; color:inherit;"><div class="stat-value tnum" style="color:var(--${tono}-600);">${valor}</div><div class="stat-label">${label}</div></button>`;
   return `
-    <div class="page-head"><div><h1 class="page-title">Hola, ${esc(perfil.nombre)}</h1><div class="page-sub">${esAdmin(perfil) ? 'Administrador' : 'Empleado'} · Caruso Propiedades</div></div></div>
-    <div class="card card-pad">
-      <div class="section-title">Avance de la construcción</div>
-      <div class="page-sub" style="margin-bottom:8px;">La app se habilita módulo por módulo. Mientras tanto, el diseño completo se puede ver en el <a href="${PROTOTIPO}" target="_blank" rel="noopener">prototipo</a>.</div>
-      <div class="task-list">${ETAPAS.map(([n, nombre]) => `
-        <div class="task-row"><span class="task-dot" style="background:var(--${n < ETAPA_ACTUAL ? 'ok' : n === ETAPA_ACTUAL ? 'warn' : 'info'}-600)"></span>
-          <div class="task-text"><b>Etapa ${n}</b> — ${esc(nombre)}</div>
-          <span class="badge badge-${n < ETAPA_ACTUAL ? 'ok' : n === ETAPA_ACTUAL ? 'warn' : 'neutral'}">${n < ETAPA_ACTUAL ? 'Lista' : n === ETAPA_ACTUAL ? 'En prueba' : 'Pendiente'}</span></div>`).join('')}
-      </div>
-    </div>`;
-}
-
-export function vistaEnConstruccion(key) {
-  const s = SECCIONES.find((x) => x.key === key);
-  return `
-    <div class="page-head"><div><h1 class="page-title">${esc(s.label)}</h1></div></div>
-    <div class="empty-state card">${icon(s.icon)}<div class="empty-state-title">Se habilita en la etapa ${s.etapa}</div>
-      <div>Mientras tanto podés ver cómo va a funcionar en el <a href="${PROTOTIPO}" target="_blank" rel="noopener">prototipo</a>.</div></div>`;
+    <div class="page-head"><div><h1 class="page-title">Hola, ${esc(perfil.nombre)}</h1><div class="page-sub">${esAdmin(perfil) ? 'Administrador' : 'Empleado'} · ${periodoLabel(periodo)}</div></div></div>
+    ${!d.listo ? '<div class="empty-state">Cargando datos…</div>' : `
+    <div class="stat-grid">
+      ${tile(`${pagados} / ${cobros.length}`, 'Alquileres cobrados este mes', '/cobranzas', 'ok')}
+      ${tile(vencidos, 'Cobros vencidos', '/cobranzas', vencidos ? 'danger' : 'ok')}
+      ${tile(money(falta), 'Falta cobrar este mes', '/cobranzas', 'warn')}
+      ${tile(aumentos, 'Aumentos pendientes', '/aumentos', aumentos ? 'warn' : 'ok')}
+    </div>
+    ${d.contratos.length ? '' : `<div class="note-banner info">${icon('alert')}<div>Todavía no hay contratos cargados. ${esAdmin(perfil) ? 'Podés importarlos desde <b>Importar datos</b> o cargarlos a mano en <b>Contratos</b>.' : 'Pedile al administrador que importe los datos.'}</div></div>`}`}
+    <div class="page-sub" style="margin-top:18px;">Próximamente: liquidaciones a propietarios, deudores, arreglos, caja y bancos.</div>`;
 }
 
 export function vistaConfiguracion() {

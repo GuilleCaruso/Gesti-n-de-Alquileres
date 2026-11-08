@@ -102,6 +102,8 @@ describe('permisos en pantalla', () => {
   test('solo el administrador entra a Usuarios', () => {
     expect(puedeEntrar('usuarios', admin)).toBe(true);
     expect(puedeEntrar('usuarios', emp)).toBe(false);
-    expect(puedeEntrar('caja', emp)).toBe(true);
+    expect(puedeEntrar('cobranzas', emp)).toBe(true);
+    expect(puedeEntrar('importar', emp)).toBe(false);
+    expect(puedeEntrar('importar', admin)).toBe(true);
   });
 });

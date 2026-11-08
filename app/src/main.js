@@ -10,7 +10,9 @@ if (!configurado) {
   pantallaSinConfigurar(root);
 } else {
   const { escucharSesion } = await import('./services/sesion.js');
+  const { detenerDatos } = await import('./services/datos.js');
   escucharSesion((s) => {
+    if (s.estado !== 'dentro') detenerDatos();
     if (s.estado === 'fuera') pantallaIngreso(root);
     else if (s.estado === 'sinAcceso') pantallaSinAcceso(root, s.user);
     else montarShell(root, s.perfil);

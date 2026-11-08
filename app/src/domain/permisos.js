@@ -10,23 +10,19 @@ export const cuentasVisibles = (cuentas, usuario) => cuentas.filter((c) => esAdm
 export const cuentasPara = (cuentas, usuario, modo) =>
   cuentasVisibles(cuentas, usuario).filter((c) => modo === 'ingreso' || esAdmin(usuario) || !c.efectivo);
 
-// Secciones del menú. `etapa` = en qué etapa de construcción se habilita.
+// Secciones del menú (solo lo que ya está construido; el resto se suma en próximas entregas).
 export const SECCIONES = [
-  { key: 'inicio', label: 'Inicio', icon: 'dashboard', etapa: 1 },
-  { key: 'cobranzas', label: 'Cobranzas', icon: 'cobranzas', etapa: 5 },
-  { key: 'deudores', label: 'Deudores', icon: 'deudores', etapa: 6 },
-  { key: 'arreglos', label: 'Arreglos', icon: 'arreglos', etapa: 6 },
-  { key: 'liquidaciones', label: 'Liquidaciones', icon: 'liquidaciones', etapa: 7 },
-  { key: 'caja', label: 'Caja y bancos', icon: 'bank', etapa: 8 },
-  { key: 'contratos', label: 'Contratos', icon: 'contratos', etapa: 3 },
-  { key: 'propiedades', label: 'Propiedades', icon: 'propiedades', etapa: 2 },
-  { key: 'personas', label: 'Personas', icon: 'personas', etapa: 2 },
-  { key: 'servicios', label: 'Servicios', icon: 'servicios', etapa: 6 },
+  { key: 'inicio', label: 'Inicio', icon: 'dashboard' },
+  { key: 'cobranzas', label: 'Cobranzas y recibos', icon: 'cobranzas' },
+  { key: 'aumentos', label: 'Aumentos', icon: 'bolt' },
+  { key: 'contratos', label: 'Contratos', icon: 'contratos' },
+  { key: 'propiedades', label: 'Propiedades', icon: 'propiedades' },
+  { key: 'personas', label: 'Personas', icon: 'personas' },
 ];
 
 // Secciones del bloque "Sistema": Usuarios solo para el administrador.
 export const seccionesSistema = (usuario) =>
-  [{ key: 'usuarios', label: 'Usuarios', icon: 'personas', soloAdmin: true }, { key: 'configuracion', label: 'Configuración', icon: 'configuracion' }]
+  [{ key: 'importar', label: 'Importar datos', icon: 'inbox', soloAdmin: true }, { key: 'usuarios', label: 'Usuarios', icon: 'personas', soloAdmin: true }, { key: 'configuracion', label: 'Configuración', icon: 'configuracion' }]
     .filter((s) => !s.soloAdmin || esAdmin(usuario));
 
 export const puedeEntrar = (key, usuario) =>

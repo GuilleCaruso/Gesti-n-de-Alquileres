@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "test": "vitest run tests/domain",
     "test:rules": "firebase emulators:exec --only firestore --project demo-caruso \"vitest run tests/rules\"",
-    "test:e2e": "firebase emulators:exec --only auth,firestore --project demo-caruso \"node tests/e2e/flujo-usuarios.mjs\""
+    "test:e2e": "firebase emulators:exec --only auth,firestore --project demo-caruso \"node tests/e2e/flujo-usuarios.mjs && node tests/e2e/flujo-operacion.mjs\""
   },
   "dependencies": {
     "firebase": "^12.6.0"
