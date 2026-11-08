@@ -18,6 +18,9 @@ async function crearUsuario(email, password, localId) {
 
 const vite = spawn('npx', ['vite', '--port', '5180', '--strictPort', '--host', '127.0.0.1'], { env: { ...process.env, VITE_EMULADOR: '1' }, stdio: 'ignore' });
 try {
+  // cada prueba arranca con la base de prueba vacía
+  await fetch('http://127.0.0.1:9099/emulator/v1/projects/demo-caruso/accounts', { method: 'DELETE' });
+  await fetch('http://127.0.0.1:8080/emulator/v1/projects/demo-caruso/databases/(default)/documents', { method: 'DELETE' });
   for (let i = 0; i < 60; i++) { try { await fetch(BASE); break; } catch { await new Promise((r) => setTimeout(r, 500)); } }
   await crearUsuario('guillermo@test.com', 'clave-admin-1', 'PENDIENTE_UID_ADMIN');
 
@@ -48,6 +51,9 @@ try {
   await pg.waitForSelector('.page-title:has-text("Contratos")');
   await pg.waitForSelector('td:has-text("0154")');
   ok('importa y muestra los contratos activos', (await pg.locator('tbody tr').count()) === 3);
+  await ir('#/personas');
+  await ir('#/contratos');
+  ok('el contrato cuatrimestral se importa cada 4 meses', (await pg.evaluate(async () => { const m = await import('/src/services/datos.js'); return m.datos().contratos.find((c) => c.numero === '0151').frecuencia; })) === 4);
   await ir('#/personas');
   ok('no duplica a Carlos Pérez (propietario de 2 contratos)', (await pg.locator('td:has-text("Pérez, Carlos")').count()) === 1);
 
@@ -87,17 +93,10 @@ try {
   await pg.fill('#idxIcl', '7.5'); await pg.click('[data-accion="guardar-indices"]');
   await pg.waitForTimeout(500);
   const filaBelgrano = pg.locator('tr:has-text("Belgrano 1234")');
-  console.log('DEBUG filas:', (await pg.locator('tbody tr').allInnerTexts()).map((t) => t.replace(/\s+/g, ' ').slice(0, 90)));
-  console.log('DEBUG toast:', await pg.locator('#toast').innerText());
-  pg.on('console', (m) => console.log('DEBUG consola:', m.text().slice(0, 300)));
-  await pg.click('[data-accion="guardar-indices"]'); await pg.waitForTimeout(800);
-  console.log('DEBUG toast2:', await pg.locator('#toast').innerText());
-  console.log('DEBUG estado:', await pg.evaluate(async () => { const m = await import('/src/services/datos.js'); const d = m.datos(); const c = d.contratos.find((x) => x.numero === '0154'); return JSON.stringify({ ind: d.indices, tipo: c.tipoAumento, act: c.alquilerActual, prox: c.proxAct }); }));
-  console.log('DEBUG input:', await filaBelgrano.locator('input').inputValue().catch((e) => 'ERR ' + e.message.slice(0, 80)), 'icl:', await pg.inputValue('#idxIcl'));
-  ok('sugiere 610.000 + 7,5% = 655.500 (redondeado a $500)', (await filaBelgrano.locator('input').inputValue()) === '655500');
+  ok('sugiere 610.000 + 7,5% = 655.750 → 656.000 (redondeado a $500)', (await filaBelgrano.locator('input').inputValue()) === '656000');
   await filaBelgrano.locator('[data-accion="whatsapp-aumento"]').click();
   const wa = await pg.evaluate(() => window.__abiertos.at(-1));
-  ok('WhatsApp al inquilino con el monto nuevo', wa.startsWith('https://wa.me/5491122117765') && decodeURIComponent(wa).includes('655.500'));
+  ok('WhatsApp al inquilino con el monto nuevo', wa.startsWith('https://wa.me/5491122117765') && decodeURIComponent(wa).includes('656.000'));
   await filaBelgrano.locator('[data-accion="nota-aumento"]').click();
   ok('nota de aumento impresa', (await impresiones()) === 1 && (await pg.locator('#printArea').innerText()).includes('Notificación de actualización'));
   await pg.screenshot({ path: SHOTS + '/aumentos.png', fullPage: true });

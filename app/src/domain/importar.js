@@ -23,9 +23,9 @@ export const CAMPOS = [
   { k: 'fin', l: 'Fecha de fin', req: true, claves: ['fin', 'vencimiento', 'hasta', 'finalizacion'] },
   { k: 'alquiler', l: 'Alquiler actual ($)', req: true, claves: ['alquiler actual', 'importe actual', 'monto actual', 'alquiler', 'importe', 'monto', 'canon'] },
   { k: 'deposito', l: 'Depósito ($)', claves: ['deposito', 'garantia'] },
-  { k: 'tipoAumento', l: 'Tipo de aumento (ICL/IPC/%)', claves: ['indice', 'ajuste', 'actualizacion', 'aumento'] },
+  { k: 'tipoAumento', l: 'Tipo de aumento (ICL/IPC/%)', claves: ['tipo de ajuste', 'tipo de aumento', 'indice', 'ajuste', 'actualizacion', 'aumento'] },
   { k: 'frecuencia', l: 'Cada cuántos meses aumenta', claves: ['frecuencia', 'periodicidad', 'cada'] },
-  { k: 'proxAct', l: 'Próxima actualización', claves: ['proxima', 'prox'] },
+  { k: 'proxAct', l: 'Próxima actualización', claves: ['proxima actualizacion', 'proximo aumento', 'proxima', 'prox'] },
   { k: 'expensas', l: 'Expensas ($)', claves: ['expensas'] },
   { k: 'honorarios', l: 'Honorarios (%)', claves: ['honorarios', 'comision'] },
   { k: 'obs', l: 'Observaciones', claves: ['observ', 'nota', 'comentario'] },
@@ -117,8 +117,8 @@ export function normalizarTipoAumento(v) {
 
 export function normalizarFrecuencia(v) {
   const s = sinAcentos(v);
+  if (s.includes('cuatrimes')) return 4; // antes que "trimes": "cuatrimestral" contiene "trimestral"
   if (s.includes('trimes')) return 3;
-  if (s.includes('cuatrimes')) return 4;
   if (s.includes('semes')) return 6;
   if (s.includes('anual')) return 12;
   const n = parseInt(s, 10);

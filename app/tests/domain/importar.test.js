@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { adivinarMapeo, armarImportacion, normalizarFecha, normalizarMonto, normalizarTipoAumento, parseCSV, proximaDesde, separarNombre } from '../../src/domain/importar.js';
+import { adivinarMapeo, armarImportacion, normalizarFecha, normalizarFrecuencia, normalizarMonto, normalizarTipoAumento, parseCSV, proximaDesde, separarNombre } from '../../src/domain/importar.js';
 
 describe('lectura del CSV', () => {
   test('detecta punto y coma, comillas y saltos de línea', () => {
@@ -38,6 +38,12 @@ describe('montos y fechas en formato argentino', () => {
     expect(separarNombre('Juan Carlos Pérez', 'nombre-apellido')).toEqual({ nombre: 'Juan Carlos', apellido: 'Pérez' });
     expect(separarNombre('Pérez Juan', 'apellido-nombre')).toEqual({ apellido: 'Pérez', nombre: 'Juan' });
   });
+  test('frecuencia: cuatrimestral no se confunde con trimestral', () => {
+    expect(normalizarFrecuencia('Cuatrimestral')).toBe(4);
+    expect(normalizarFrecuencia('trimestral')).toBe(3);
+    expect(normalizarFrecuencia('Semestral')).toBe(6);
+    expect(normalizarFrecuencia('6')).toBe(6);
+  });
   test('próxima actualización calculada desde el inicio', () => {
     expect(proximaDesde('2025-03-01', 3, '2026-11-07')).toBe('2026-12-01');
   });
@@ -47,6 +53,13 @@ describe('mapeo de columnas', () => {
   test('adivina por el título, lo específico primero', () => {
     const m = adivinarMapeo(['Nro Contrato', 'Domicilio inmueble', 'Propietario', 'Inquilino', 'DNI Inquilino', 'Fecha inicio', 'Fecha fin', 'Alquiler actual']);
     expect(m).toMatchObject({ numero: 0, direccion: 1, propNombre: 2, inqNombre: 3, inqDni: 4, inicio: 5, fin: 6, alquiler: 7 });
+  });
+});
+
+describe('columnas que se parecen', () => {
+  test('"Próxima actualización" no se confunde con el tipo de ajuste', () => {
+    const m = adivinarMapeo(['Ajuste', 'Periodicidad', 'Proxima actualizacion']);
+    expect(m).toMatchObject({ tipoAumento: 0, frecuencia: 1, proxAct: 2 });
   });
 });
 

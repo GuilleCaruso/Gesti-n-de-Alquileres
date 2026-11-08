@@ -38,6 +38,9 @@ Funciones clave ya hechas: cobrar / deshacer pago, generar recibo, actualizar co
 
 ## Decisiones tomadas
 
+- Primera puesta en marcha (07/11/2026): solo lo que usan de Arcomercial — contratos/propiedades/personas, aumentos con aviso y recibos con cobro simple. Liquidaciones, deudores, arreglos y caja quedan para después.
+- Aumentos: rigen desde la fecha de "próxima actualización"; cada mes cobra el alquiler vigente en ese mes. Sugerido redondeado a $500 (ej.: 655.750 → 656.000), siempre editable.
+
 - App real: **Firebase** (decidido 28/10/2026; Supabase descartado por costo). Firestore + Authentication + Hosting. Spark gratis; Blaze (~US$ 0-1/mes, alerta US$ 5) recién con datos reales, para archivos y copias de seguridad. Construcción con Claude Code en 9 etapas, cada una aprobada en un link de vista previa. Mes de prueba en paralelo con el sistema actual antes del cambio.
 
 - Arreglos: etapas **Pendiente → En curso → Arreglado → Pagado** (En curso confirmado). El costo se puede cargar o cambiar en cualquier momento.
@@ -113,7 +116,8 @@ Funciones clave ya hechas: cobrar / deshacer pago, generar recibo, actualizar co
 - [x] Decisiones: Firebase; 3 usuarios (Guillermo admin + 2 empleados); datos se exportan de Arcomercial; dominio lo administra el hermano.
 - [x] Etapa 1 (código): ingreso, roles, gestión de usuarios, menú por rol, reglas de seguridad, lógica de negocio portada, publicación automática. Pruebas: 21 de negocio, 25 de seguridad, 12 de punta a punta.
 - [ ] Guillermo: Paso 1 del instructivo (crear proyecto Firebase, Firestore en São Paulo, login email/contraseña, su usuario, app web, secreto en GitHub) y pasar `firebaseConfig` + su User UID.
-- [ ] Claude: enchufar firebaseConfig y UID, abrir la primera propuesta para publicar la Etapa 1.
+- [x] **Reemplazo de Arcomercial (lo que usan: recibos y avisos de aumento)** programado y probado: personas, propiedades (ficha con pestañas), contratos (N° interno, garante, honorarios, expensas, próxima actualización), aumentos (índices, actualizar individual/masivo con deshacer, WhatsApp, nota impresa), cobros simples (expensas, servicios, parcial, medio de pago), recibo individual y recibos del mes con planilla, buscador global, importador CSV con mapeo de columnas. Pruebas: 48 de negocio, 25 de seguridad, 40 de punta a punta.
+- [ ] Claude: enchufar firebaseConfig y UID, abrir la propuesta para publicar.
 - [ ] Guillermo: exportar Arcomercial y pasar solo títulos de columnas + 1-2 filas inventadas.
 - [ ] Antes de importar datos reales: segundo proyecto `caruso-app-pruebas` (las vistas previas comparten base con producción).
 - [ ] Recorrer el prototipo pantalla por pantalla y anotar ajustes.
@@ -121,6 +125,7 @@ Funciones clave ya hechas: cobrar / deshacer pago, generar recibo, actualizar co
 
 ## Historial
 
+- **08/11/2026** – Módulos de operación diaria de la app real listos para probar. Arcomercial se renueva mientras tanto.
 - **28/10/2026** – Se elige Firebase. Etapa 1 de la app real programada y probada (falta conectar el proyecto de Guillermo).
 - **28/10/2026** – Prototipo dado por cerrado. Creado `PROJECT_RULES.md` e instructivo de puesta en marcha.
 - **05/10/2026** – Módulo Caja y bancos con permisos por rol (simulados).

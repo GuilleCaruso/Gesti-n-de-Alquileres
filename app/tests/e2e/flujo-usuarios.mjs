@@ -18,6 +18,9 @@ async function crearUsuario(email, password, localId) {
 
 const vite = spawn('npx', ['vite', '--port', '5179', '--strictPort', '--host', '127.0.0.1'], { env: { ...process.env, VITE_EMULADOR: '1' }, stdio: 'ignore' });
 try {
+  // cada prueba arranca con la base de prueba vacía
+  await fetch('http://127.0.0.1:9099/emulator/v1/projects/demo-caruso/accounts', { method: 'DELETE' });
+  await fetch('http://127.0.0.1:8080/emulator/v1/projects/demo-caruso/databases/(default)/documents', { method: 'DELETE' });
   for (let i = 0; i < 60; i++) { try { await fetch(URL); break; } catch { await new Promise((r) => setTimeout(r, 500)); } }
   await crearUsuario('guillermo@test.com', 'clave-admin-1', 'PENDIENTE_UID_ADMIN');
   const uidEmp = await crearUsuario('laura@test.com', 'clave-emp-1');
@@ -37,7 +40,7 @@ try {
   await login(pg, 'guillermo@test.com', 'clave-admin-1');
   await pg.waitForSelector('.page-title:has-text("Hola")');
   ok('el administrador entra la primera vez sin tocar la base a mano', true);
-  ok('el administrador ve "Usuarios" en el menú', await pg.locator('[data-nav="usuarios"]').count() === 1);
+  ok('el administrador ve "Usuarios" en el menú', await pg.locator('[data-nav="/usuarios"]').count() === 1);
   await pg.screenshot({ path: process.env.SHOTS + '/inicio-admin.png' });
   const admin = pg;
 
@@ -48,7 +51,7 @@ try {
   ok('empleado sin acceso ve la pantalla con su UID', (await emp.inputValue('input[readonly]')) === uidEmp);
 
   // el administrador le da acceso
-  await admin.click('[data-nav="usuarios"]');
+  await admin.click('[data-nav="/usuarios"]');
   await admin.waitForSelector('#nuUid');
   await admin.fill('#nuUid', uidEmp); await admin.fill('#nuNombre', 'Laura'); await admin.fill('#nuEmail', 'laura@test.com');
   await admin.click('#nuGuardar');
@@ -58,13 +61,11 @@ try {
 
   await emp.reload(); await emp.waitForSelector('.page-title:has-text("Hola, Laura")');
   ok('el empleado entra después de recibir acceso', true);
-  ok('el empleado NO ve "Usuarios" en el menú', await emp.locator('[data-nav="usuarios"]').count() === 0);
+  ok('el empleado NO ve "Usuarios" en el menú', await emp.locator('[data-nav="/usuarios"]').count() === 0);
   await emp.goto(URL + '#/usuarios'); await emp.waitForTimeout(400);
   ok('el empleado entrando por link a #/usuarios vuelve a Inicio', await emp.locator('.page-title:has-text("Hola")').count() === 1);
-  await emp.click('[data-nav="caja"]');
-  await emp.waitForSelector('text=Se habilita en la etapa 8');
-  ok('módulos futuros muestran en qué etapa se habilitan', true);
-  await emp.screenshot({ path: process.env.SHOTS + '/empleado-caja.png' });
+  ok('el empleado NO ve "Importar datos"', await emp.locator('[data-nav="/importar"]').count() === 0);
+  ok('el empleado ve Cobranzas y Aumentos', await emp.locator('.nav-item[data-nav="/cobranzas"]').count() === 1 && await emp.locator('.nav-item[data-nav="/aumentos"]').count() === 1);
 
   // quitar acceso
   await admin.click('[data-acceso], [data-activo]');
