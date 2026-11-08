@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { calcHonorarios, montoLiquidable, noLiquida, pagoTotal, periodoDescuento, computeNuevo, pendienteActualizacion } from '../../src/domain/negocio.js';
+import { calcHonorarios, montoLiquidable, noLiquida, pagoTotal, periodoDescuento, computeNuevo, pendienteActualizacion, faltaIndice, redondearAumento } from '../../src/domain/negocio.js';
 import { numeroALetras, nextPeriodo, periodoLabel, money, leerFecha, isoATexto } from '../../src/domain/formato.js';
 import { cuentasPara, cuentasVisibles, esAdmin, puedeEntrar } from '../../src/domain/permisos.js';
 
@@ -55,8 +55,17 @@ describe('arreglos: en qué liquidación se descuentan (PROJECT_RULES 22)', () =
 });
 
 describe('aumentos', () => {
-  test('ICL redondeado a $500', () => {
-    expect(computeNuevo({ tipoAumento: 'ICL', alquilerActual: 610000 }, { ICL: 3.4, IPC: 4.1 })).toBe(630500);
+  test('ICL redondeado a $1.000', () => {
+    expect(computeNuevo({ tipoAumento: 'ICL', alquilerActual: 610000 }, { ICL: 3.4, IPC: 4.1 })).toBe(631000);
+    expect(redondearAumento(655750)).toBe(656000);
+    expect(redondearAumento(630400)).toBe(630000);
+  });
+  test('detecta que falta el índice del mes', () => {
+    expect(faltaIndice({ tipoAumento: 'IPC' }, { ICL: 3.4, IPC: 0 })).toBe(true);
+    expect(faltaIndice({ tipoAumento: 'IPC' }, { ICL: 3.4 })).toBe(true);
+    expect(faltaIndice({ tipoAumento: 'ICL' }, { ICL: 3.4, IPC: 0 })).toBe(false);
+    expect(faltaIndice({ tipoAumento: 'Fijo', pctFijo: 8 }, { ICL: 0, IPC: 0 })).toBe(false);
+    expect(faltaIndice({ tipoAumento: 'Personalizado' }, {})).toBe(false);
   });
   test('personalizado no cambia solo', () => {
     expect(computeNuevo({ tipoAumento: 'Personalizado', alquilerActual: 470000 }, { ICL: 3.4, IPC: 4.1 })).toBe(470000);

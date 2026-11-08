@@ -45,8 +45,15 @@ export function periodoDescuento(arreglo, liquidacionPagada) {
 export const pendienteActualizacion = (contrato, hoyIso) => contrato.proxAct <= hoyIso;
 
 // Próximo alquiler sugerido según el índice, redondeado a $500.
+// Redondeo de los aumentos: a los $1.000 más cercanos (655.750 → 656.000; 630.400 → 630.000).
+export const redondearAumento = (n) => Math.round(n / 1000) * 1000;
+
+// ¿Falta el índice del mes para calcular este contrato? (ICL o IPC sin cargar)
+export const faltaIndice = (contrato, indices) =>
+  ['ICL', 'IPC'].includes(contrato.tipoAumento) && !(Number(indices?.[contrato.tipoAumento]) > 0);
+
 export function computeNuevo(contrato, indices) {
-  const r = (n) => Math.round(n / 500) * 500;
+  const r = redondearAumento;
   if (contrato.tipoAumento === 'ICL') return r(contrato.alquilerActual * (1 + indices.ICL / 100));
   if (contrato.tipoAumento === 'IPC') return r(contrato.alquilerActual * (1 + indices.IPC / 100));
   if (contrato.tipoAumento === 'Fijo') return r(contrato.alquilerActual * (1 + contrato.pctFijo / 100));

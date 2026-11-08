@@ -73,6 +73,14 @@ export function datosAumento(contrato, nuevo, indice, hoyIso) {
   };
 }
 
+// Deshacer el último aumento: vuelve el monto anterior, la fecha de actualización y saca la línea del historial.
+export function deshacerUltimoAumento(contrato) {
+  const hist = contrato.historial || [];
+  if (!hist.length) return null;
+  const ultimo = hist[hist.length - 1];
+  return { alquilerActual: ultimo.anterior, proxAct: ultimo.fecha, historial: hist.slice(0, -1) };
+}
+
 // Alquiler vigente en un mes: si un aumento rige después de ese mes, se usa el monto anterior.
 export function alquilerDelPeriodo(contrato, periodo) {
   let monto = contrato.alquilerActual;

@@ -2,14 +2,13 @@
 // aviso por WhatsApp y nota impresa para el inquilino.
 import { esc, fdate, money } from '../../domain/formato.js';
 import { contratosActivos, datosAumento, nombreCompleto } from '../../domain/consultas.js';
-import { computeNuevo, pendienteActualizacion } from '../../domain/negocio.js';
+import { computeNuevo, faltaIndice, pendienteActualizacion } from '../../domain/negocio.js';
 import { actualizar, guardarIndices } from '../../services/datos.js';
 import { aviso, confirmar, docFoot, docHead, hoyIso, imprimir, intentar, linkWhatsApp } from '../base.js';
 import { icon } from '../icons.js';
 import { metodoLabel } from './contratos.js';
 
 const diasHasta = (iso) => Math.round((new Date(iso + 'T00:00:00') - new Date(hoyIso() + 'T00:00:00')) / 86400000);
-const redondear500 = (n) => Math.round(n / 500) * 500;
 
 export function indiceLabel(c, indices, nuevo) {
   if (c.tipoAumento === 'Personalizado') return 'Acuerdo entre partes';
@@ -30,12 +29,13 @@ export function vista({ d, params }) {
     const t = P(c.tenantId);
     const dias = diasHasta(c.proxAct);
     const sugerido = computeNuevo(c, d.indices);
+    const sinIndice = faltaIndice(c, d.indices);
     const estado = dias <= 0 ? `<span class="badge badge-warn">${icon('alert')}Pendiente</span>` : dias <= 14 ? `<span class="badge badge-info">En ${dias} día${dias > 1 ? 's' : ''}</span>` : '';
     return `<tr>
       <td><div class="cell-title">${esc(PR(c.propertyId).direccion)}</div><div class="cell-sub">N° ${esc(c.numero || '—')} · ${esc(nombreCompleto(t))}</div></td>
       <td>${esc(metodoLabel(c))}<div class="cell-sub">cada ${c.frecuencia} meses</div></td>
       <td class="num tnum">${money(c.alquilerActual)}</td>
-      <td class="num"><input type="number" step="500" id="nuevo_${esc(c.id)}" value="${sugerido}" style="width:118px; padding:6px 8px; border:1px solid var(--border-strong); border-radius:7px; background:var(--paper-50); color:var(--ink-900); text-align:right;"></td>
+      <td class="num"><input type="number" step="1000" id="nuevo_${esc(c.id)}" value="${sinIndice ? '' : sugerido}" placeholder="${sinIndice ? 'Falta ' + c.tipoAumento : ''}" style="width:118px; padding:6px 8px; border:1px solid var(--border-strong); border-radius:7px; background:var(--paper-50); color:var(--ink-900); text-align:right;"></td>
       <td class="tnum">${fdate(c.proxAct)} ${estado}</td>
       <td class="row-actions">
         <button class="btn btn-sm" data-accion="whatsapp-aumento" data-id="${esc(c.id)}" title="Avisar por WhatsApp">${icon('phone')}WhatsApp</button>
@@ -50,7 +50,7 @@ export function vista({ d, params }) {
     <div class="page-head"><div><h1 class="page-title">Aumentos</h1><div class="page-sub">${pendientes.length} contrato(s) con la actualización vencida</div></div></div>
     <div class="card card-pad" style="margin-bottom:16px;">
       <div class="section-title" style="margin-bottom:6px;">Índices del mes</div>
-      <div class="page-sub" style="margin-bottom:12px;">Cargá el % del ICL y del IPC del período que corresponde. El "alquiler nuevo" se calcula solo (redondeado a $500) y siempre se puede corregir a mano antes de actualizar.</div>
+      <div class="page-sub" style="margin-bottom:12px;">Cargá el % del ICL y del IPC del período que corresponde. El "alquiler nuevo" se calcula solo (redondeado a $1.000) y siempre se puede corregir a mano antes de actualizar.</div>
       <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:flex-end;">
         <div class="field"><label for="idxIcl">ICL (%)</label><input type="number" step="0.01" id="idxIcl" value="${d.indices.ICL ?? 0}"></div>
         <div class="field"><label for="idxIpc">IPC (%)</label><input type="number" step="0.01" id="idxIpc" value="${d.indices.IPC ?? 0}"></div>
@@ -65,9 +65,10 @@ export function vista({ d, params }) {
       : `<div class="empty-state">${icon('check')}<div class="empty-state-title">No hay actualizaciones en los próximos 45 días</div></div>`}</div>`;
 }
 
+// Lo que está escrito en la fila (sugerido o corregido a mano). 0 = vacío.
 const valorNuevo = (c) => {
   const el = document.getElementById('nuevo_' + c.id);
-  return redondear500(el ? parseFloat(el.value) || c.alquilerActual : c.alquilerActual);
+  return Math.round(el ? parseFloat(el.value) || 0 : 0);
 };
 // después de actualizar, el monto escrito a mano no tiene que quedar pegado en la fila
 const olvidarEdicion = (c) => { const el = document.getElementById('nuevo_' + c.id); if (el) el.defaultValue = el.value; };
@@ -111,16 +112,25 @@ export const acciones = {
   'aplicar-aumento': ({ d, ds }) => {
     const c = d.contratos.find((x) => x.id === ds.id);
     const nuevo = valorNuevo(c);
-    if (nuevo <= 0) { aviso('Revisá el alquiler nuevo'); return; }
-    const { prev, cambios } = aplicar(d, c, nuevo);
-    olvidarEdicion(c);
-    intentar(() => actualizar('contratos', c.id, cambios), `N° ${c.numero || ''}: nuevo alquiler ${money(nuevo)} desde ${fdate(c.proxAct)}`,
-      () => intentar(() => actualizar('contratos', c.id, prev), 'Aumento deshecho'));
+    if (nuevo <= 0) {
+      aviso(faltaIndice(c, d.indices) ? `Falta cargar el ${c.tipoAumento} del mes (arriba, en "Índices del mes") o escribir el alquiler nuevo a mano.` : 'Escribí el alquiler nuevo');
+      return;
+    }
+    const igual = nuevo <= c.alquilerActual
+      ? ` Ojo: el alquiler nuevo no es mayor al actual.` : '';
+    confirmar(`¿Actualizar el contrato N° ${c.numero || ''} de ${money(c.alquilerActual)} a ${money(nuevo)} desde el ${fdate(c.proxAct)}?${igual}`, () => {
+      const { prev, cambios } = aplicar(d, c, nuevo);
+      olvidarEdicion(c);
+      intentar(() => actualizar('contratos', c.id, cambios), `N° ${c.numero || ''}: nuevo alquiler ${money(nuevo)} desde ${fdate(c.proxAct)}`,
+        () => intentar(() => actualizar('contratos', c.id, prev), 'Aumento deshecho'));
+    });
   },
   'actualizar-pendientes': ({ d }) => {
-    const due = contratosActivos(d.contratos).filter((c) => pendienteActualizacion(c, hoyIso()) && c.tipoAumento !== 'Personalizado');
-    if (!due.length) { aviso('No hay pendientes automáticos (los "Personalizado" se actualizan uno por uno)'); return; }
-    confirmar(`¿Actualizar ${due.length} contrato(s) pendiente(s) por ICL, IPC o % fijo con los índices cargados? Los "Personalizado" no se tocan. Se puede deshacer.`, () => {
+    const pend = contratosActivos(d.contratos).filter((c) => pendienteActualizacion(c, hoyIso()) && c.tipoAumento !== 'Personalizado');
+    const due = pend.filter((c) => !faltaIndice(c, d.indices));
+    const sinIndice = [...new Set(pend.filter((c) => faltaIndice(c, d.indices)).map((c) => c.tipoAumento))];
+    if (!due.length) { aviso(sinIndice.length ? `Falta cargar el ${sinIndice.join(' y el ')} del mes.` : 'No hay pendientes automáticos (los "Personalizado" se actualizan uno por uno)'); return; }
+    confirmar(`¿Actualizar ${due.length} contrato(s) pendiente(s) con los índices cargados? Los "Personalizado"${sinIndice.length ? ' y los que usan ' + sinIndice.join('/') + ' (falta el índice)' : ''} no se tocan. Se puede deshacer desde la ficha de cada contrato.`, () => {
       const lotes = due.map((c) => ({ c, ...aplicar(d, c, computeNuevo(c, d.indices)) }));
       due.forEach(olvidarEdicion);
       intentar(() => Promise.all(lotes.map(({ c, cambios }) => actualizar('contratos', c.id, cambios))), `${due.length} contrato(s) actualizado(s)`,
@@ -129,6 +139,7 @@ export const acciones = {
   },
   'whatsapp-aumento': ({ d, ds }) => {
     const c = d.contratos.find((x) => x.id === ds.id);
+    if (valorNuevo(c) <= 0) { aviso('Primero cargá el índice o escribí el alquiler nuevo'); return; }
     const t = d.personas.find((x) => x.id === c.tenantId);
     if (!t || !t.telefono) { aviso('El inquilino no tiene teléfono cargado'); return; }
     window.open(linkWhatsApp(t.telefono, mensajeWhatsApp(d, c, valorNuevo(c), c.proxAct)), '_blank', 'noopener');
@@ -136,10 +147,12 @@ export const acciones = {
   'nota-aumento': ({ d, ds }) => {
     const c = d.contratos.find((x) => x.id === ds.id);
     const nuevo = valorNuevo(c);
+    if (nuevo <= 0) { aviso('Primero cargá el índice o escribí el alquiler nuevo'); return; }
     imprimirNotaAumento(d, c, { fecha: c.proxAct, anterior: c.alquilerActual, nuevo, indice: indiceLabel(c, d.indices, nuevo) });
   },
   'notas-pendientes': ({ d }) => {
-    const due = contratosActivos(d.contratos).filter((c) => pendienteActualizacion(c, hoyIso()));
+    const due = contratosActivos(d.contratos).filter((c) => pendienteActualizacion(c, hoyIso()) && valorNuevo(c) > 0);
+    if (!due.length) { aviso('No hay notas para imprimir: falta cargar el índice o el alquiler nuevo'); return; }
     imprimir(due.map((c) => { const nuevo = valorNuevo(c); return notaAumentoHtml(d, c, { fecha: c.proxAct, anterior: c.alquilerActual, nuevo, indice: indiceLabel(c, d.indices, nuevo) }); }));
   },
 };

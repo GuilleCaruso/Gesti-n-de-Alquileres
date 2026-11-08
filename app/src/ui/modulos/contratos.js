@@ -1,6 +1,6 @@
 // Contratos: lista, alta/edición (N° interno, garante, honorarios, expensas, aumentos) y ficha.
 import { esc, fdate, money } from '../../domain/formato.js';
-import { addMonths, contratoVigente, finPorDefecto, nombreCompleto } from '../../domain/consultas.js';
+import { addMonths, contratoVigente, deshacerUltimoAumento, finPorDefecto, nombreCompleto } from '../../domain/consultas.js';
 import { HONORARIOS_DEFAULT, honorariosLabel, pendienteActualizacion } from '../../domain/negocio.js';
 import { actualizar, borrar, guardar, tieneCobros } from '../../services/datos.js';
 import { abrirModal, aviso, botonesModal, campo, cerrarModal, confirmar, hoyIso, intentar, lupa, numero, soyAdmin, tildado } from '../base.js';
@@ -77,7 +77,7 @@ export function fichaContratoHtml(d, c) {
     <div class="kv-label" style="margin-bottom:8px;">Historial de aumentos</div>
     ${hist.length ? `<div class="table-wrap"><table><thead><tr><th>Rige desde</th><th class="num">Anterior</th><th class="num">Nuevo</th><th>Índice</th><th></th></tr></thead><tbody>
       ${hist.map((h, i) => `<tr><td class="tnum">${fdate(h.fecha)}</td><td class="num tnum">${money(h.anterior)}</td><td class="num tnum">${money(h.nuevo)}</td><td>${esc(h.indice)}</td>
-        <td class="row-actions"><button class="btn btn-sm" data-accion="nota-historial" data-id="${esc(c.id)}" data-i="${hist.length - 1 - i}">${icon('printer')}Nota</button></td></tr>`).join('')}
+        <td class="row-actions"><button class="btn btn-sm" data-accion="nota-historial" data-id="${esc(c.id)}" data-i="${hist.length - 1 - i}">${icon('printer')}Nota</button>${i === 0 ? `<button class="btn btn-sm btn-ghost btn-danger" data-accion="deshacer-aumento" data-id="${esc(c.id)}">Deshacer</button>` : ''}</td></tr>`).join('')}
     </tbody></table></div>` : '<div class="page-sub">Todavía no hay aumentos registrados en este contrato.</div>'}`;
 }
 
@@ -210,6 +210,16 @@ export const acciones = {
       const { id, ...copia } = c;
       const ok = await intentar(() => borrar('contratos', c.id), 'Contrato borrado', () => intentar(() => guardar('contratos', c.id, copia), 'Contrato recuperado'));
       if (ok && pr) location.hash = `#/propiedades/${pr.id}`;
+    });
+  },
+  'deshacer-aumento': ({ d, ds }) => {
+    const c = d.contratos.find((x) => x.id === ds.id);
+    const cambios = deshacerUltimoAumento(c);
+    if (!cambios) return;
+    const ultimo = c.historial[c.historial.length - 1];
+    confirmar(`¿Deshacer el aumento del ${fdate(ultimo.fecha)} (${money(ultimo.anterior)} → ${money(ultimo.nuevo)})? El alquiler vuelve a ${money(ultimo.anterior)} y el contrato queda otra vez para actualizar desde el ${fdate(ultimo.fecha)}.`, () => {
+      const prev = { alquilerActual: c.alquilerActual, proxAct: c.proxAct, historial: c.historial };
+      intentar(() => actualizar('contratos', c.id, cambios), 'Aumento deshecho', () => intentar(() => actualizar('contratos', c.id, prev), 'Aumento restaurado'));
     });
   },
   'nota-historial': ({ d, ds }) => {

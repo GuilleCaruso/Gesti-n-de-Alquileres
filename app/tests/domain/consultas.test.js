@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { addMonths, alquilerDelPeriodo, finPorDefecto, buscar, cobrosDelMes, contratoVigente, datosAumento, estadoCobro, estadoPropiedad, saldoCobro } from '../../src/domain/consultas.js';
+import { addMonths, alquilerDelPeriodo, deshacerUltimoAumento, finPorDefecto, buscar, cobrosDelMes, contratoVigente, datosAumento, estadoCobro, estadoPropiedad, saldoCobro } from '../../src/domain/consultas.js';
 
 const personas = [
   { id: 'p1', nombre: 'Carlos', apellido: 'Pérez', dni: '18.334.221', roles: ['Propietario'] },
@@ -13,6 +13,15 @@ const contratos = [
   { id: 'c1', numero: '0149', propertyId: 'pr1', ownerId: 'p1', tenantId: 'p2', estado: 'Activo', inicio: '2025-01-15', fin: '2027-01-14', alquilerActual: 560000, expensas: { aplica: true, monto: 20000 }, frecuencia: 3, proxAct: '2026-10-15', historial: [] },
   { id: 'c0', numero: '0100', propertyId: 'pr2', ownerId: 'p1', tenantId: 'p2', estado: 'Finalizado', inicio: '2023-01-01', fin: '2025-12-31', alquilerActual: 300000, frecuencia: 6, proxAct: '2025-07-01' },
 ];
+
+describe('deshacer aumento', () => {
+  test('vuelve al monto y la fecha anteriores y saca la línea del historial', () => {
+    const c = { alquilerActual: 500000, proxAct: '2026-12-01', historial: [
+      { fecha: '2026-06-01', anterior: 400000, nuevo: 450000 }, { fecha: '2026-09-01', anterior: 450000, nuevo: 500000 }] };
+    expect(deshacerUltimoAumento(c)).toEqual({ alquilerActual: 450000, proxAct: '2026-09-01', historial: [c.historial[0]] });
+    expect(deshacerUltimoAumento({ alquilerActual: 1, historial: [] })).toBe(null);
+  });
+});
 
 describe('fechas', () => {
   test('fin de contrato por defecto: 2 años menos un día', () => {

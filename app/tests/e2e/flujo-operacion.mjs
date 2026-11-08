@@ -100,7 +100,7 @@ try {
   await pg.fill('#idxIcl', '7.5'); await pg.click('[data-accion="guardar-indices"]');
   await pg.waitForTimeout(500);
   const filaBelgrano = pg.locator('tr:has-text("Belgrano 1234")');
-  ok('sugiere 610.000 + 7,5% = 655.750 → 656.000 (redondeado a $500)', (await filaBelgrano.locator('input').inputValue()) === '656000');
+  ok('sugiere 610.000 + 7,5% = 655.750 → 656.000 (redondeado a $1.000)', (await filaBelgrano.locator('input').inputValue()) === '656000');
   await filaBelgrano.locator('[data-accion="whatsapp-aumento"]').click();
   const wa = await pg.evaluate(() => window.__abiertos.at(-1));
   ok('WhatsApp al inquilino con el monto nuevo', wa.startsWith('https://wa.me/5491122117765') && decodeURIComponent(wa).includes('656.000'));
@@ -109,12 +109,32 @@ try {
   await pg.screenshot({ path: SHOTS + '/aumentos.png', fullPage: true });
   await filaBelgrano.locator('input').fill('660000');
   await filaBelgrano.locator('[data-accion="aplicar-aumento"]').click();
+  ok('pide confirmar el aumento con los montos', (await pg.locator('.modal-box').innerText()).includes('$ 660.000'));
+  await pg.click('#confirmarBtn');
   await pg.waitForTimeout(600);
   const c154 = async () => (await pg.locator('tr:has-text("Belgrano 1234") td.num').first().innerText()).trim();
   ok('aplica el aumento con monto corregido a mano: ' + (await c154()), (await c154()) === '$ 660.000');
   await pg.click('#toastUndo');
   await pg.waitForTimeout(600);
   ok('deshacer aumento vuelve a 610.000', (await c154()) === '$ 610.000');
+  // sin IPC cargado no deja actualizar un contrato por IPC
+  await ir('#/aumentos?ver=todos');
+  const filaIpc = pg.locator('tr:has-text("Sarmiento 342")');
+  ok('contrato por IPC sin índice: el monto queda vacío', (await filaIpc.locator('input').inputValue()) === '' && (await filaIpc.locator('input').getAttribute('placeholder')) === 'Falta IPC');
+  await filaIpc.locator('[data-accion="aplicar-aumento"]').click();
+  ok('no deja actualizar sin el IPC del mes', (await pg.locator('#toast').innerText()).includes('Falta cargar el IPC') && !(await pg.locator('#modalOverlay.show').count()));
+  // deshacer un aumento días después, desde la ficha del contrato
+  await filaBelgrano.locator('[data-accion="aplicar-aumento"]').click();
+  await pg.click('#confirmarBtn');
+  await pg.waitForTimeout(600);
+  await ir('#/contratos');
+  await pg.click('tr:has-text("Belgrano 1234")');
+  await pg.click('.tab-btn:has-text("Contrato")');
+  await pg.click('[data-accion="deshacer-aumento"]');
+  await pg.click('#confirmarBtn');
+  await pg.waitForTimeout(600);
+  ok('deshacer el aumento desde la ficha: vuelve a 610.000 y sin historial', (await pg.locator('.kv-value:has-text("$ 610.000")').count()) === 1 && (await pg.locator('[data-accion="deshacer-aumento"]').count()) === 0);
+  await ir('#/aumentos');
 
   // ---------- cobranzas y recibos ----------
   await ir('#/cobranzas');
