@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { adivinarMapeo, armarImportacion, normalizarFecha, normalizarFrecuencia, normalizarMonto, normalizarTipoAumento, parseCSV, proximaDesde, separarNombre } from '../../src/domain/importar.js';
+import { adivinarMapeo, armarImportacion, normalizarFecha, normalizarFrecuencia, normalizarMonto, normalizarTipoAumento, parseCSV, proximaDesde, separarNombre, nombrePropio } from '../../src/domain/importar.js';
 
 describe('lectura del CSV', () => {
   test('detecta punto y coma, comillas y saltos de línea', () => {
@@ -93,5 +93,44 @@ describe('armar importación', () => {
   });
   test('montos, honorarios por defecto y próxima actualización', () => {
     expect(r.contratos[0].data).toMatchObject({ numero: '0154', alquilerActual: 610000, tipoAumento: 'ICL', honorarios: { tipo: 'porcentaje', valor: 5 }, proxAct: '2026-12-01' });
+  });
+});
+
+describe('planilla de Arcomercial (contratos_todos2.xlsx)', () => {
+  const encabezados = ['Carpeta', 'Indice', 'Inicio de Contrato', 'Fin de Contrato', 'Dirección', 'Inquilino', 'Celular Inq.', 'Propietario', 'Celular Prop.', 'Monto actual'];
+  const mapeo = adivinarMapeo(encabezados);
+  test('reconoce cada columna', () => {
+    expect(mapeo).toMatchObject({ numero: 0, tipoAumento: 1, inicio: 2, fin: 3, direccion: 4, inqNombre: 5, inqTel: 6, propNombre: 7, propTel: 8, alquiler: 9 });
+    expect(mapeo.frecuencia).toBeUndefined();
+  });
+  let n = 0;
+  const filas = [
+    ['472', 'IPC', '01/03/2026', '28/02/2028', 'ASCONAPE 120', 'ALBESA MARIA / LUQUE JUAN', '11 5555-1111', 'D´ANGELO VICENTE', '11 5555-2222', '696000'],
+    ['473', 'ICL (Banco Central)', '01/06/2025', '31/05/2027', 'ASCONAPE 120', 'PEREZ ANA', '', 'D´ANGELO VICENTE / GOMEZ LUIS', '', '500000'],
+    ['472', 'IPC', '01/03/2026', '28/02/2028', 'ASCONAPE 120', 'ALBESA MARIA', '', 'D´ANGELO VICENTE', '', '696000'],
+  ];
+  const r = armarImportacion({ filas, mapeo, formatoNombre: 'apellido-nombre', existentes: { personas: [], propiedades: [], contratos: [] }, generarId: (c) => `${c}-${++n}`, hoy: '2026-11-08', frecuenciaDefecto: 4 });
+  test('nombres en mayúsculas pasan a nombre propio', () => {
+    expect(nombrePropio('D´ANGELO VICENTE')).toBe('D´Angelo Vicente');
+    expect(nombrePropio('Pérez Juan')).toBe('Pérez Juan');
+    expect(r.personas.find((p) => p.data.apellido === 'Albesa').data.nombre).toBe('Maria');
+  });
+  test('"/" en inquilinos: dos inquilinos; en propietarios: el primero y el resto a observaciones', () => {
+    const c = r.contratos[0].data;
+    expect(r.personas.find((p) => p.id === c.tenantId2).data.apellido).toBe('Luque');
+    expect(r.contratos[1].data.obs).toContain('Copropietarios: Gomez Luis');
+    expect(r.personas.filter((p) => p.data.apellido === 'D´Angelo')).toHaveLength(1);
+  });
+  test('misma dirección con dos contratos vigentes: dos propiedades, con aviso', () => {
+    expect(r.contratos[0].data.propertyId).not.toBe(r.contratos[1].data.propertyId);
+    expect(r.avisos.some((a) => a.msg.includes('otra propiedad'))).toBe(true);
+  });
+  test('carpeta repetida: se importa una sola vez', () => {
+    expect(r.contratos).toHaveLength(2);
+  });
+  test('sin frecuencia: usa la elegida y marca "Revisar aumento"', () => {
+    expect(r.contratos[0].data).toMatchObject({ numero: '472', tipoAumento: 'IPC', frecuencia: 4, revisarAumento: true, proxAct: '2027-03-01' });
+    expect(r.contratos[1].data.tipoAumento).toBe('ICL');
+    expect(r.avisos[0].msg).toContain('Revisar aumento');
   });
 });

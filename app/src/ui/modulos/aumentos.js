@@ -33,7 +33,7 @@ export function vista({ d, params }) {
     const estado = dias <= 0 ? `<span class="badge badge-warn">${icon('alert')}Pendiente</span>` : dias <= 14 ? `<span class="badge badge-info">En ${dias} día${dias > 1 ? 's' : ''}</span>` : '';
     return `<tr>
       <td><div class="cell-title">${esc(PR(c.propertyId).direccion)}</div><div class="cell-sub">N° ${esc(c.numero || '—')} · ${esc(nombreCompleto(t))}</div></td>
-      <td>${esc(metodoLabel(c))}<div class="cell-sub">cada ${c.frecuencia} meses</div></td>
+      <td>${esc(metodoLabel(c))}<div class="cell-sub">cada ${c.frecuencia} meses${c.revisarAumento ? ' · <span class="badge badge-info">Revisar</span>' : ''}</div></td>
       <td class="num tnum">${money(c.alquilerActual)}</td>
       <td class="num"><input type="number" step="1000" id="nuevo_${esc(c.id)}" value="${sinIndice ? '' : sugerido}" placeholder="${sinIndice ? 'Falta ' + c.tipoAumento : ''}" style="width:118px; padding:6px 8px; border:1px solid var(--border-strong); border-radius:7px; background:var(--paper-50); color:var(--ink-900); text-align:right;"></td>
       <td class="tnum">${fdate(c.proxAct)} ${estado}</td>
@@ -98,8 +98,8 @@ export function notaAumentoHtml(d, c, h) {
 export const imprimirNotaAumento = (d, c, h) => imprimir([notaAumentoHtml(d, c, h)]);
 
 function aplicar(d, c, nuevo) {
-  const prev = { alquilerActual: c.alquilerActual, proxAct: c.proxAct, historial: c.historial || [] };
-  const cambios = datosAumento(c, nuevo, indiceLabel(c, d.indices, nuevo), hoyIso());
+  const prev = { alquilerActual: c.alquilerActual, proxAct: c.proxAct, historial: c.historial || [], revisarAumento: !!c.revisarAumento };
+  const cambios = { ...datosAumento(c, nuevo, indiceLabel(c, d.indices, nuevo), hoyIso()), revisarAumento: false };
   return { prev, cambios };
 }
 
