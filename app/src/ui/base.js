@@ -1,6 +1,7 @@
 // Piezas comunes de pantalla: ventanas emergentes, avisos con "Deshacer", impresión y links de WhatsApp.
 import { esc, fdate } from '../domain/formato.js';
 import { icon } from './icons.js';
+import { prepararCampos } from './campos.js';
 
 export const INMOBILIARIA = { nombre: 'Caruso Propiedades', localidad: 'Paso del Rey, Moreno', telefono: '11 3449-8819', email: 'info@carusopropiedades.com' };
 export const LOGO = '/logo-caruso.png';
@@ -11,6 +12,11 @@ export const hoyIso = () => {
 };
 export const periodoActual = () => hoyIso().slice(0, 7);
 
+// Usuario que está usando la app (lo fija el shell al entrar).
+let perfilActual = null;
+export const fijarPerfil = (p) => { perfilActual = p; };
+export const soyAdmin = () => !!perfilActual && perfilActual.rol === 'admin' && perfilActual.activo === true;
+
 // ---------- ventanas emergentes ----------
 export function abrirModal(html, ancho) {
   const m = document.getElementById('modalOverlay');
@@ -18,7 +24,8 @@ export function abrirModal(html, ancho) {
   box.innerHTML = html;
   box.classList.toggle('wide', !!ancho);
   m.classList.add('show');
-  const primero = box.querySelector('input:not([disabled]), select, textarea');
+  prepararCampos(box);
+  const primero = box.querySelector('input:not([disabled]):not([type=hidden]):not(.fecha-oculta), select:not([disabled]), textarea');
   if (primero) primero.focus();
   return box;
 }

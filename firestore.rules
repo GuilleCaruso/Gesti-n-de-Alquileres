@@ -5,6 +5,7 @@ rules_version = '2';
 // El empleado no ve la caja grande (cuentas con soloAdmin = true) ni sus movimientos,
 // y no puede registrar pagos (egresos) desde cuentas de efectivo.
 // Nada con historia se borra: se anula (ver PROJECT_RULES.md, regla 12).
+// El administrador puede borrar contratos cargados por error (la app no deja si tienen cobros).
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -34,8 +35,10 @@ service cloud.firestore {
     match /propiedades/{id} { allow read, create, update: if activo(); allow delete: if esAdmin(); }
     match /arreglos/{id}    { allow read, create, update: if activo(); allow delete: if esAdmin(); }
 
+    // contratos: solo el administrador borra (cargados por error); la app no deja si tienen cobros
+    match /contratos/{id}        { allow read, create, update: if activo(); allow delete: if esAdmin(); }
+
     // con historia: nunca se borran
-    match /contratos/{id}        { allow read, create, update: if activo(); allow delete: if false; }
     match /pagos/{id}            { allow read, create, update: if activo(); allow delete: if false; }
     match /serviciosPagados/{id} { allow read, create, update: if activo(); allow delete: if false; }
     match /deudasServicios/{id}  { allow read, create, update: if activo(); allow delete: if false; }

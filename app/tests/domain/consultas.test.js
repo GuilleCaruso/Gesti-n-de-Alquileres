@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { addMonths, alquilerDelPeriodo, buscar, cobrosDelMes, contratoVigente, datosAumento, estadoCobro, estadoPropiedad, saldoCobro } from '../../src/domain/consultas.js';
+import { addMonths, alquilerDelPeriodo, finPorDefecto, buscar, cobrosDelMes, contratoVigente, datosAumento, estadoCobro, estadoPropiedad, saldoCobro } from '../../src/domain/consultas.js';
 
 const personas = [
   { id: 'p1', nombre: 'Carlos', apellido: 'Pérez', dni: '18.334.221', roles: ['Propietario'] },
@@ -15,6 +15,11 @@ const contratos = [
 ];
 
 describe('fechas', () => {
+  test('fin de contrato por defecto: 2 años menos un día', () => {
+    expect(finPorDefecto('2025-09-01')).toBe('2027-08-31');
+    expect(finPorDefecto('2025-03-15')).toBe('2027-03-14');
+    expect(finPorDefecto('2026-01-01')).toBe('2027-12-31');
+  });
   test('sumar meses no desborda fin de mes', () => {
     expect(addMonths('2025-01-31', 1)).toBe('2025-02-28');
     expect(addMonths('2024-01-31', 1)).toBe('2024-02-29');

@@ -1,9 +1,10 @@
 // Contratos: lista, alta/edición (N° interno, garante, honorarios, expensas, aumentos) y ficha.
 import { esc, fdate, money } from '../../domain/formato.js';
-import { addMonths, contratoVigente, nombreCompleto } from '../../domain/consultas.js';
+import { addMonths, contratoVigente, finPorDefecto, nombreCompleto } from '../../domain/consultas.js';
 import { HONORARIOS_DEFAULT, honorariosLabel, pendienteActualizacion } from '../../domain/negocio.js';
-import { actualizar, guardar } from '../../services/datos.js';
-import { abrirModal, aviso, botonesModal, campo, cerrarModal, confirmar, hoyIso, intentar, lupa, numero, tildado } from '../base.js';
+import { actualizar, borrar, guardar, tieneCobros } from '../../services/datos.js';
+import { abrirModal, aviso, botonesModal, campo, cerrarModal, confirmar, hoyIso, intentar, lupa, numero, soyAdmin, tildado } from '../base.js';
+import { comboPersona, fecha, inputFecha, ponerFecha } from '../campos.js';
 import { icon } from '../icons.js';
 import { personaModal } from './personas.js';
 import { badgeEstado } from './propiedades.js';
@@ -58,6 +59,7 @@ export function fichaContratoHtml(d, c) {
     <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;">
       <button class="btn" data-accion="editar-contrato" data-id="${esc(c.id)}">Editar contrato</button>
       <button class="btn btn-ghost" data-accion="finalizar-contrato" data-id="${esc(c.id)}">Finalizar contrato</button>
+      ${soyAdmin() ? `<button class="btn btn-ghost btn-danger" data-accion="borrar-contrato" data-id="${esc(c.id)}">Borrar contrato</button>` : ''}
     </div>
     <div class="kv-grid">
       ${kv('N° de contrato', esc(c.numero || '—'))}${kv('Estado', badgeEstado(c.estado))}
@@ -82,13 +84,11 @@ export function fichaContratoHtml(d, c) {
 // Alta (sin id) o edición. `propiedadId` precarga la propiedad.
 export function contratoModal(d, id, propiedadId, borrador) {
   const c = id ? d.contratos.find((x) => x.id === id)
-    : { propertyId: propiedadId || '', inicio: hoyIso(), tipoAumento: 'ICL', frecuencia: 3, diaVencimiento: 10, honorarios: HONORARIOS_DEFAULT, expensas: { aplica: false } };
+    : { propertyId: propiedadId || '', inicio: hoyIso(), fin: finPorDefecto(hoyIso()), tipoAumento: 'ICL', frecuencia: 3, diaVencimiento: 10, honorarios: HONORARIOS_DEFAULT, expensas: { aplica: false } };
   const v = { ...c, ...(borrador || {}) };
   const disponibles = d.propiedades.filter((pr) => pr.estado !== 'Baja' && (!contratoVigente(d.contratos, pr.id) || pr.id === c.propertyId))
     .sort((a, b) => a.direccion.localeCompare(b.direccion));
-  const gente = d.personas.slice().sort((a, b) => (a.apellido || '').localeCompare(b.apellido || ''));
-  const opcionesPersona = (sel) => `<option value="">${'—'}</option>` + gente.map((p) => `<option value="${esc(p.id)}" ${p.id === sel ? 'selected' : ''}>${esc(p.apellido)}, ${esc(p.nombre)}${p.dni ? ' — DNI ' + esc(p.dni) : ''}</option>`).join('');
-  const selPersona = (idSel, valor, rol) => `<div style="display:flex; gap:8px;"><select id="${idSel}" style="flex:1;">${opcionesPersona(valor)}</select><button class="btn" type="button" data-nueva-persona="${idSel}" data-rol="${rol}">${icon('plus')}Nueva</button></div>`;
+  const selPersona = (idSel, valor, rol) => `<div style="display:flex; gap:8px;">${comboPersona(idSel, d.personas, valor)}<button class="btn" type="button" data-nueva-persona="${idSel}" data-rol="${rol}">${icon('plus')}Nueva</button></div>`;
   const h = v.honorarios || HONORARIOS_DEFAULT;
   const box = abrirModal(`
     <div class="section-title" style="margin-bottom:4px;">${id ? 'Editar contrato N° ' + esc(c.numero || '') : 'Nuevo contrato'}</div>
@@ -97,21 +97,21 @@ export function contratoModal(d, id, propiedadId, borrador) {
       <div class="field" style="grid-column:1/-1;"><label for="ctProp">Propiedad</label><select id="ctProp" ${id ? 'disabled' : ''}><option value="">Elegir…</option>${disponibles.map((pr) => `<option value="${esc(pr.id)}" ${pr.id === v.propertyId ? 'selected' : ''}>${esc(pr.direccion)} — ${esc(pr.localidad)}</option>`).join('')}</select></div>
       <div class="field"><label>Propietario</label><input id="ctOwner" disabled></div>
       <div class="field"><label for="ctNumero">N° de contrato</label><input id="ctNumero" value="${esc(v.numero || '')}" placeholder="Número interno"></div>
-      <div class="field"><label for="ctTenant">Inquilino</label>${selPersona('ctTenant', v.tenantId, 'Inquilino')}</div>
-      <div class="field"><label for="ctTenant2">Inquilino 2 (opcional)</label>${selPersona('ctTenant2', v.tenantId2, 'Inquilino')}</div>
-      <div class="field"><label for="ctGarante">Garante (opcional)</label>${selPersona('ctGarante', v.guarantorId, 'Garante')}</div>
+      <div class="field"><label for="ctTenantBuscar">Inquilino</label>${selPersona('ctTenant', v.tenantId, 'Inquilino')}</div>
+      <div class="field"><label for="ctTenant2Buscar">Inquilino 2 (opcional)</label>${selPersona('ctTenant2', v.tenantId2, 'Inquilino')}</div>
+      <div class="field"><label for="ctGaranteBuscar">Garante (opcional)</label>${selPersona('ctGarante', v.guarantorId, 'Garante')}</div>
       <div class="field"><label for="ctDia">Vence cada mes el día</label><input type="number" id="ctDia" min="1" max="28" value="${v.diaVencimiento || 10}"></div>
     </div>
     <div class="divider"></div>
     <div class="form-grid" style="margin-bottom:12px;">
-      <div class="field"><label for="ctInicio">Fecha de inicio</label><input type="date" id="ctInicio" value="${esc(v.inicio || '')}"></div>
-      <div class="field"><label for="ctFin">Fecha de fin</label><input type="date" id="ctFin" value="${esc(v.fin || '')}"></div>
+      <div class="field"><label for="ctInicio">Fecha de inicio</label>${inputFecha('ctInicio', v.inicio)}</div>
+      <div class="field"><label for="ctFin">Fecha de fin</label>${inputFecha('ctFin', v.fin)}<span class="cell-sub">Vacío = 2 años desde el inicio</span></div>
       <div class="field"><label for="ctAlquiler">Alquiler actual ($)</label><input type="number" id="ctAlquiler" min="0" step="500" value="${v.alquilerActual ?? ''}" ${id ? 'disabled' : ''}></div>
       <div class="field"><label for="ctDeposito">Depósito ($)</label><input type="number" id="ctDeposito" min="0" step="500" value="${v.deposito ?? ''}" placeholder="Opcional"></div>
       <div class="field"><label for="ctTipo">Tipo de aumento</label><select id="ctTipo">${TIPOS_AUMENTO.map(([k, l]) => `<option value="${k}" ${k === v.tipoAumento ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
       <div class="field"><label for="ctPct">% fijo (solo si aplica)</label><input type="number" id="ctPct" min="0" step="0.5" value="${v.pctFijo ?? ''}"></div>
       <div class="field"><label for="ctFrec">Cada cuántos meses</label><select id="ctFrec">${[3, 4, 6, 12].map((n) => `<option value="${n}" ${n === Number(v.frecuencia) ? 'selected' : ''}>Cada ${n} meses</option>`).join('')}</select></div>
-      <div class="field"><label for="ctProx">Próxima actualización</label><input type="date" id="ctProx" value="${esc(v.proxAct || '')}"><span class="cell-sub">Vacío = inicio + frecuencia</span></div>
+      <div class="field"><label for="ctProx">Próxima actualización</label>${inputFecha('ctProx', v.proxAct)}<span class="cell-sub">Vacío = inicio + frecuencia</span></div>
     </div>
     <div class="divider"></div>
     <div class="form-grid" style="margin-bottom:12px;">
@@ -130,11 +130,19 @@ export function contratoModal(d, id, propiedadId, borrador) {
   propSel.addEventListener('change', pintarOwner);
   pintarOwner();
 
+  // fin a 2 años: se completa solo mientras no lo toquen a mano
+  const finEl = box.querySelector('#ctFin');
+  let finAuto = !id && (!v.fin || v.fin === finPorDefecto(v.inicio || ''));
+  finEl.addEventListener('input', () => { finAuto = !finEl.value.trim(); });
+  const alCambiarInicio = () => { const ini = fecha('ctInicio'); if (finAuto && ini) ponerFecha('ctFin', finPorDefecto(ini)); };
+  box.querySelector('#ctInicio').addEventListener('input', alCambiarInicio);
+  box.querySelector('#ctInicio').addEventListener('change', alCambiarInicio);
+
   const leer = () => ({
     propertyId: campo('ctProp'), numero: campo('ctNumero'), tenantId: campo('ctTenant'), tenantId2: campo('ctTenant2') || null,
     guarantorId: campo('ctGarante') || null, diaVencimiento: Math.min(28, Math.max(1, numero('ctDia') || 10)),
-    inicio: campo('ctInicio'), fin: campo('ctFin'), alquilerActual: numero('ctAlquiler'), deposito: numero('ctDeposito') || null,
-    tipoAumento: campo('ctTipo'), pctFijo: numero('ctPct') || null, frecuencia: Number(campo('ctFrec')), proxAct: campo('ctProx'),
+    inicio: fecha('ctInicio'), fin: fecha('ctFin'), alquilerActual: numero('ctAlquiler'), deposito: numero('ctDeposito') || null,
+    tipoAumento: campo('ctTipo'), pctFijo: numero('ctPct') || null, frecuencia: Number(campo('ctFrec')), proxAct: fecha('ctProx'),
     expensas: { aplica: tildado('ctExpAplica'), monto: numero('ctExpMonto') }, honorarios: { tipo: campo('ctHonTipo'), valor: numero('ctHonValor') },
     obs: campo('ctObs'),
   });
@@ -158,6 +166,8 @@ export function contratoModal(d, id, propiedadId, borrador) {
     const pr = d.propiedades.find((p) => p.id === x.propertyId);
     if (!pr) { aviso('Elegí la propiedad'); return; }
     if (!x.tenantId) { aviso('Elegí el inquilino (o crealo con "Nueva")'); return; }
+    if ([x.inicio, x.fin, x.proxAct].includes(null)) { aviso('Hay una fecha mal escrita: usá dd/mm/aaaa (ej: 01/09/2025)'); return; }
+    if (x.inicio && !x.fin) x.fin = finPorDefecto(x.inicio);
     if (!x.inicio || !x.fin || x.fin <= x.inicio) { aviso('Revisá las fechas de inicio y fin'); return; }
     if (!id && x.alquilerActual <= 0) { aviso('Cargá el alquiler actual'); return; }
     if (x.tipoAumento === 'Fijo' && !x.pctFijo) { aviso('Cargá el % fijo de aumento'); return; }
@@ -188,6 +198,19 @@ export const acciones = {
     confirmar(`¿Finalizar el contrato N° ${c.numero || ''}? La propiedad queda disponible. El contrato y sus cobros quedan en el historial.`, () =>
       intentar(() => actualizar('contratos', c.id, { estado: 'Finalizado', finalizadoEl: hoyIso() }), 'Contrato finalizado',
         () => intentar(() => actualizar('contratos', c.id, { estado: 'Activo' }), 'Contrato reactivado')));
+  },
+  'borrar-contrato': async ({ d, ds }) => {
+    const c = d.contratos.find((x) => x.id === ds.id);
+    if (!soyAdmin()) return;
+    let conCobros = true;
+    if (!(await intentar(async () => { conCobros = await tieneCobros(c.id); }))) return;
+    if (conCobros) { aviso('Este contrato tiene cobros registrados: no se puede borrar. Usá "Finalizar contrato".'); return; }
+    const pr = d.propiedades.find((x) => x.id === c.propertyId);
+    confirmar(`¿Borrar el contrato N° ${c.numero || ''}${pr ? ' de ' + pr.direccion : ''}? Usalo solo si se cargó por error.`, async () => {
+      const { id, ...copia } = c;
+      const ok = await intentar(() => borrar('contratos', c.id), 'Contrato borrado', () => intentar(() => guardar('contratos', c.id, copia), 'Contrato recuperado'));
+      if (ok && pr) location.hash = `#/propiedades/${pr.id}`;
+    });
   },
   'nota-historial': ({ d, ds }) => {
     const c = d.contratos.find((x) => x.id === ds.id);

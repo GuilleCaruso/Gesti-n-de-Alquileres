@@ -18,7 +18,7 @@ Estas reglas las tiene que respetar cualquier persona o agente de IA (Claude, Cu
 9. Los deudores **se calculan** desde las cobranzas; no existe una lista paralela de deudores.
 10. Las liquidaciones **se calculan** desde lo cobrado, los honorarios del contrato, los arreglos y los servicios.
 11. Los movimientos de caja se generan desde las operaciones (cobro, pago de liquidación, pago a especialista, servicio pagado). No se cargan dos veces.
-12. Nada se borra físicamente de la base si tiene historia (contratos, cobros, movimientos): se anula o se da de baja, y queda registrado quién y cuándo.
+12. Nada se borra físicamente de la base si tiene historia (cobros, movimientos, contratos con cobros): se anula o se da de baja, y queda registrado quién y cuándo. Solo el administrador puede borrar lo cargado por error que no tiene historia: un contrato sin cobros, una propiedad sin contratos, una persona que no figura en ninguna propiedad ni contrato. Siempre con confirmación y "Deshacer".
 
 ## 3. Seguridad y permisos
 

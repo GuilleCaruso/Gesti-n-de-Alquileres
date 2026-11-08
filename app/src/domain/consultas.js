@@ -6,6 +6,13 @@ import { pagoTotal } from './negocio.js';
 export const nombreCompleto = (p) => (p ? `${p.nombre || ''} ${p.apellido || ''}`.trim() || '—' : '—');
 
 // Suma meses a una fecha ISO sin desbordar (31/01 + 1 mes = 28 o 29/02, no 3/03).
+// Fin de contrato por defecto: 2 años menos un día (01/09/2025 → 31/08/2027).
+export function finPorDefecto(inicio, meses = 24) {
+  const f = new Date(addMonths(inicio, meses) + 'T00:00:00Z');
+  f.setUTCDate(f.getUTCDate() - 1);
+  return f.toISOString().slice(0, 10);
+}
+
 export function addMonths(iso, n) {
   const [y, m, d] = iso.split('-').map(Number);
   const total = y * 12 + (m - 1) + n;

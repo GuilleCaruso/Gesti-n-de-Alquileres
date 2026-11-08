@@ -2,6 +2,24 @@
 
 export const money = (n) => '$ ' + Math.round(n || 0).toLocaleString('es-AR');
 
+// Texto de fecha escrito a mano → ISO (aaaa-mm-dd). Acepta dd/mm/aaaa, d/m/aa, ddmmaaaa y aaaa-mm-dd.
+// Devuelve '' si está vacío y null si no es una fecha válida.
+export function leerFecha(texto) {
+  const t = String(texto || '').trim();
+  if (!t) return '';
+  let y, m, d, r;
+  if ((r = t.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/))) [, y, m, d] = r;
+  else if ((r = t.match(/^(\d{1,2})[/.\-](\d{1,2})[/.\-](\d{2}|\d{4})$/))) [, d, m, y] = r;
+  else if ((r = t.match(/^(\d{2})(\d{2})(\d{4})$/))) [, d, m, y] = r;
+  else return null;
+  y = Number(y); m = Number(m); d = Number(d);
+  if (y < 100) y += 2000;
+  const f = new Date(Date.UTC(y, m - 1, d));
+  if (f.getUTCFullYear() !== y || f.getUTCMonth() !== m - 1 || f.getUTCDate() !== d) return null;
+  return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+}
+// ISO → dd/mm/aaaa (para mostrar en un campo de texto)
+export const isoATexto = (iso) => (iso ? iso.split('-').reverse().join('/') : '');
 export const fdate = (iso) => (iso ? new Date(iso + 'T00:00:00').toLocaleDateString('es-AR') : '—');
 
 const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];

@@ -4,6 +4,7 @@ import { cobrosDelMes, estadoCobro, idPago, nombreCompleto } from '../../domain/
 import { pagoTotal, pendienteActualizacion } from '../../domain/negocio.js';
 import { guardar } from '../../services/datos.js';
 import { abrirModal, aviso, botonesModal, campo, cerrarModal, docFoot, docHead, hoyIso, imprimir, INMOBILIARIA, intentar, LOGO, lupa, numero, periodoActual } from '../base.js';
+import { fecha, inputFecha } from '../campos.js';
 import { icon } from '../icons.js';
 import { badgeEstado } from './propiedades.js';
 
@@ -132,7 +133,7 @@ function cobrarModal(d, p) {
       <div class="field"><label>Total del mes</label><input id="coTotal" disabled style="text-align:right; font-weight:700;"></div>
       <div class="field"><label for="coMonto" id="coMontoLabel">Cobrado ahora</label><input type="number" id="coMonto" min="0" style="text-align:right;"></div>
       <div class="field"><label for="coMedio">Medio de pago</label><select id="coMedio"><option>Efectivo</option><option>Transferencia</option></select></div>
-      <div class="field"><label for="coFecha">Fecha de pago</label><input type="date" id="coFecha" value="${hoyIso()}"></div>
+      <div class="field"><label for="coFecha">Fecha de pago</label>${inputFecha('coFecha', hoyIso())}</div>
     </div>
     ${botonesModal('Confirmar cobro', 'coOk')}`, true);
   const total = () => p.importe + numero('coExp') + numero('coServ');
@@ -147,6 +148,8 @@ function cobrarModal(d, p) {
   box.querySelector('#coOk').onclick = async () => {
     const monto = numero('coMonto');
     if (monto <= 0) { aviso('Ingresá el monto cobrado'); return; }
+    const fechaPago = fecha('coFecha');
+    if (fechaPago === null) { aviso('La fecha de pago está mal escrita: usá dd/mm/aaaa'); return; }
     const nuevoTotal = total();
     const pagado = pagadoYa + monto;
     const completo = pagado >= nuevoTotal;
@@ -155,8 +158,8 @@ function cobrarModal(d, p) {
       contractId: p.contractId, periodo: p.periodo, importe: p.importe, vencimiento: p.vencimiento,
       expensas: numero('coExp'), servicios: numero('coServ'),
       estado: completo ? 'Pagado' : 'Parcial', pagado: completo ? nuevoTotal : pagado,
-      fechaPago: campo('coFecha') || hoyIso(), medio: campo('coMedio'),
-      cobros: [...(p.cobros || []), { fecha: campo('coFecha') || hoyIso(), monto, medio: campo('coMedio') }],
+      fechaPago: fechaPago || hoyIso(), medio: campo('coMedio'),
+      cobros: [...(p.cobros || []), { fecha: fechaPago || hoyIso(), monto, medio: campo('coMedio') }],
     };
     const id = idPago(p.contractId, p.periodo);
     const ok = await intentar(() => guardar('pagos', id, registro),

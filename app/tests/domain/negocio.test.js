@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { calcHonorarios, montoLiquidable, noLiquida, pagoTotal, periodoDescuento, computeNuevo, pendienteActualizacion } from '../../src/domain/negocio.js';
-import { numeroALetras, nextPeriodo, periodoLabel, money } from '../../src/domain/formato.js';
+import { numeroALetras, nextPeriodo, periodoLabel, money, leerFecha, isoATexto } from '../../src/domain/formato.js';
 import { cuentasPara, cuentasVisibles, esAdmin, puedeEntrar } from '../../src/domain/permisos.js';
 
 describe('honorarios (PROJECT_RULES 20)', () => {
@@ -68,6 +68,17 @@ describe('aumentos', () => {
 });
 
 describe('formatos', () => {
+  test('fechas escritas a mano en dd/mm/aaaa', () => {
+    expect(leerFecha('01/09/2025')).toBe('2025-09-01');
+    expect(leerFecha('1/9/25')).toBe('2025-09-01');
+    expect(leerFecha('01092025')).toBe('2025-09-01');
+    expect(leerFecha('2025-09-01')).toBe('2025-09-01');
+    expect(leerFecha('')).toBe('');
+    expect(leerFecha('31/02/2025')).toBe(null);
+    expect(leerFecha('09/31/2025')).toBe(null);
+    expect(leerFecha('hola')).toBe(null);
+    expect(isoATexto('2025-09-01')).toBe('01/09/2025');
+  });
   test('monto en letras del recibo', () => {
     expect(numeroALetras(632000)).toBe('seiscientos treinta y dos mil');
     expect(numeroALetras(713000)).toBe('setecientos trece mil');

@@ -78,13 +78,20 @@ try {
   await pg.click('#peGuardar');
   await pg.waitForSelector('#ctNumero');
   await pg.waitForTimeout(400);
-  await pg.fill('#ctInicio', '2025-09-01'); await pg.fill('#ctFin', '2027-08-31'); await pg.fill('#ctAlquiler', '470000');
-  await pg.selectOption('#ctTipo', 'Fijo'); await pg.fill('#ctPct', '8'); await pg.selectOption('#ctFrec', '6'); await pg.fill('#ctProx', '2026-09-01');
+  await pg.fill('#ctInicio', ''); await pg.type('#ctInicio', '01092025');
+  ok('la fecha se escribe dd/mm/aaaa con las barras solas', (await pg.inputValue('#ctInicio')) === '01/09/2025');
+  ok('el fin se completa solo a 2 años: ' + (await pg.inputValue('#ctFin')), (await pg.inputValue('#ctFin')) === '31/08/2027');
+  await pg.fill('#ctAlquiler', '470000');
+  await pg.click('#ctGaranteBuscar'); await pg.type('#ctGaranteBuscar', 'go');
+  await pg.screenshot({ path: SHOTS + '/contrato-form.png' });
+  await pg.keyboard.press('Escape'); await pg.fill('#ctGaranteBuscar', ''); await pg.click('#ctNumero');
+  await pg.selectOption('#ctTipo', 'Fijo'); await pg.fill('#ctPct', '8'); await pg.selectOption('#ctFrec', '6'); await pg.fill('#ctProx', '01/09/2026');
   await pg.check('#ctExpAplica'); await pg.fill('#ctExpMonto', '15000');
   await pg.selectOption('#ctHonTipo', 'fijo'); await pg.fill('#ctHonValor', '40000');
   await pg.click('#ctGuardar');
   await pg.waitForSelector('.kv-value:has-text("0172")');
   ok('contrato cargado a mano con inquilino nuevo, % fijo, expensas y honorarios fijos', (await pg.locator('.kv-value:has-text("monto fijo")').count()) === 1);
+  ok('ficha con fin 31/8/2027 y próxima actualización 1/9/2026', (await pg.locator('.kv-value:has-text("31/8/2027")').count()) === 1 && (await pg.locator('.kv-value:has-text("1/9/2026")').count()) === 1);
   await pg.screenshot({ path: SHOTS + '/ficha-contrato.png', fullPage: true });
   await pg.click('[data-accion="nuevo-contrato"]').catch(() => {});
 
@@ -154,6 +161,53 @@ try {
   ok('buscador global encuentra la propiedad por el inquilino', true);
   await pg.click('.tab-btn:has-text("Cobros")');
   ok('ficha muestra el historial de cobros', (await pg.locator('tbody tr').count()) >= 1);
+
+  // ---------- selector de personas con búsqueda ----------
+  await ir('#/propiedades');
+  await pg.click('[data-accion="nueva-propiedad"]');
+  await pg.click('#prOwnerBuscar');
+  const opcionesAntes = await pg.locator('.combo-lista.show .combo-op').count();
+  await pg.type('#prOwnerBuscar', 'perez');
+  ok(`buscar personas por descarte: ${opcionesAntes} → ${await pg.locator('.combo-lista.show .combo-op').count()} con "perez" (sin tilde)`, opcionesAntes > 1 && (await pg.locator('.combo-lista.show .combo-op').count()) === 1);
+  await pg.keyboard.press('Enter');
+  ok('Enter elige a Pérez, Carlos', (await pg.inputValue('#prOwnerBuscar')) === 'Pérez, Carlos' && (await pg.inputValue('#prOwner')) !== '');
+  await pg.click('[data-cerrar]');
+
+  // ---------- borrar lo cargado por error (administrador) ----------
+  await ir('#/personas');
+  await pg.click('[data-accion="nueva-persona"]');
+  await pg.fill('#peNombre', 'Error'); await pg.fill('#peApellido', 'Deprueba'); await pg.check('.peRol[value="Contacto"]');
+  await pg.click('#peGuardar');
+  await pg.waitForSelector('td:has-text("Deprueba")');
+  await pg.click('td:has-text("Deprueba")');
+  await pg.click('[data-accion="borrar-persona"]');
+  await pg.click('#confirmarBtn');
+  await pg.waitForSelector('td:has-text("Deprueba")', { state: 'detached' });
+  ok('borra una persona cargada por error', true);
+  await pg.click('td:has-text("Pérez, Carlos")');
+  await pg.click('[data-accion="borrar-persona"]');
+  ok('no deja borrar a un propietario con propiedades', (await pg.locator('#toast').innerText()).includes('No se puede borrar') && (await pg.locator('td:has-text("Pérez, Carlos")').count()) === 1);
+  await pg.keyboard.press('Escape');
+  await ir('#/contratos');
+  await pg.click('tr:has-text("Sarmiento 342")');
+  await pg.waitForSelector('.ficha-title:has-text("Sarmiento 342")');
+  await pg.click('.tab-btn:has-text("Contrato")');
+  await pg.click('[data-accion="borrar-contrato"]');
+  await pg.waitForTimeout(500);
+  ok('no deja borrar un contrato con cobros', (await pg.locator('#toast').innerText()).includes('tiene cobros'));
+  await ir('#/contratos');
+  await pg.click('tr:has-text("Güemes 120")');
+  await pg.waitForSelector('.ficha-title:has-text("Güemes 120")');
+  await pg.click('[data-accion="borrar-propiedad"]');
+  ok('no deja borrar una propiedad con contrato', (await pg.locator('#toast').innerText()).includes('Borrá primero el contrato'));
+  await pg.click('.tab-btn:has-text("Contrato")');
+  await pg.click('[data-accion="borrar-contrato"]');
+  await pg.click('#confirmarBtn');
+  await pg.waitForTimeout(600);
+  ok('borra un contrato sin cobros', !(await pg.evaluate(async () => { const m = await import('/src/services/datos.js'); return m.datos().contratos.some((c) => c.numero === '0172'); })));
+  await pg.click('#toastUndo');
+  await pg.waitForTimeout(600);
+  ok('deshacer recupera el contrato borrado', await pg.evaluate(async () => { const m = await import('/src/services/datos.js'); return m.datos().contratos.some((c) => c.numero === '0172'); }));
 
   ok('sin errores en la página: ' + JSON.stringify(errores), errores.length === 0);
   await b.close();

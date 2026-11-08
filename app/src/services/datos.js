@@ -1,6 +1,6 @@
 // Datos de la operación diaria, cargados en tiempo real desde Firestore.
 // Las pantallas leen de `datos()`; cuando algo cambia en la base (lo cargue quien lo cargue), se avisa a `alCambiar`.
-import { collection, doc, onSnapshot, query, serverTimestamp, setDoc, updateDoc, where, writeBatch } from 'firebase/firestore';
+import { collection, deleteDoc, doc, getDocs, onSnapshot, query, serverTimestamp, setDoc, updateDoc, where, writeBatch } from 'firebase/firestore';
 import { db } from './firebase.js';
 
 const estado = { personas: [], propiedades: [], contratos: [], pagos: [], indices: { ICL: 0, IPC: 0 }, listo: false };
@@ -49,6 +49,15 @@ export async function guardar(coleccion, id, data) {
 }
 
 export const actualizar = (coleccion, id, cambios) => updateDoc(doc(db, coleccion, id), { ...cambios, ...firma() });
+
+// Borrado físico: solo el administrador, y solo lo que no tiene historia (lo controla cada pantalla).
+export const borrar = (coleccion, id) => deleteDoc(doc(db, coleccion, id));
+
+// ¿El contrato tiene algún cobro registrado? Busca en toda la base, no solo en el último año cargado.
+export async function tieneCobros(contratoId) {
+  const r = await getDocs(query(collection(db, 'pagos'), where('contractId', '==', contratoId)));
+  return r.docs.some((x) => (x.data().pagado || 0) > 0 || (x.data().cobros || []).length > 0);
+}
 
 export const guardarIndices = (ICL, IPC) => setDoc(doc(db, 'config', 'indices'), { ICL, IPC, ...firma() });
 

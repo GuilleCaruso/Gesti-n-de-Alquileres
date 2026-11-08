@@ -5,7 +5,7 @@ import { buscar, contratoVigente, nombreCompleto } from '../domain/consultas.js'
 import { esAdmin, puedeEntrar, SECCIONES, seccionesSistema } from '../domain/permisos.js';
 import { alCambiar, datos, detenerDatos, iniciarDatos } from '../services/datos.js';
 import { salir } from '../services/sesion.js';
-import { cerrarModal, lupa, periodoActual } from './base.js';
+import { cerrarModal, fijarPerfil, lupa, periodoActual } from './base.js';
 import { icon } from './icons.js';
 import { montarUsuarios, vistaConfiguracion, vistaInicio, vistaUsuarios } from './vistas.js';
 import * as personas from './modulos/personas.js';
@@ -24,6 +24,7 @@ let bajaCambios = null;
 const desdeUnAnio = () => { const [y, m] = periodoActual().split('-').map(Number); return `${y - 1}-${String(m).padStart(2, '0')}`; };
 
 export function montarShell(root, perfil) {
+  fijarPerfil(perfil);
   root.innerHTML = `
     <div class="overlay" id="navOverlay"></div>
     <div class="shell">

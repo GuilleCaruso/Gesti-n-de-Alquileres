@@ -1,8 +1,8 @@
 // Personas: una sola ficha por persona, con uno o más roles (PROJECT_RULES 8).
 import { esc } from '../../domain/formato.js';
 import { contratoVigente, nombreCompleto } from '../../domain/consultas.js';
-import { guardar } from '../../services/datos.js';
-import { abrirModal, aviso, botonesModal, campo, cerrarModal, intentar, lupa } from '../base.js';
+import { borrar, guardar } from '../../services/datos.js';
+import { abrirModal, aviso, botonesModal, campo, cerrarModal, confirmar, intentar, lupa, soyAdmin } from '../base.js';
 import { icon } from '../icons.js';
 
 export const ROLES = ['Propietario', 'Inquilino', 'Garante', 'Contacto'];
@@ -51,6 +51,7 @@ export function personaModal(d, id, alGuardar, rolInicial) {
       ${ROLES.map((r) => `<label style="display:flex; gap:7px; align-items:center; font-weight:600;"><input type="checkbox" class="peRol" value="${r}" ${(p.roles || []).includes(r) ? 'checked' : ''}> ${r}</label>`).join('')}
     </div>
     ${relaciones}
+    ${id && soyAdmin() ? `<div style="margin-top:14px;"><button class="btn btn-ghost btn-danger btn-sm" type="button" data-accion="borrar-persona" data-id="${esc(id)}">Borrar persona</button></div>` : ''}
     ${botonesModal(id ? 'Guardar cambios' : 'Guardar persona', 'peGuardar')}`, true);
   box.querySelector('#peGuardar').onclick = async () => {
     const datosP = {
@@ -86,4 +87,17 @@ function relacionesHtml(d, id) {
 export const acciones = {
   'nueva-persona': ({ d }) => personaModal(d, null),
   'ver-persona': ({ d, ds }) => personaModal(d, ds.id),
+  'borrar-persona': ({ d, ds }) => {
+    const p = d.personas.find((x) => x.id === ds.id);
+    if (!soyAdmin() || !p) return;
+    const usos = [
+      ...d.propiedades.filter((pr) => pr.ownerId === p.id).map((pr) => 'propietario de ' + pr.direccion),
+      ...d.contratos.filter((c) => [c.tenantId, c.tenantId2, c.guarantorId, c.ownerId].includes(p.id)).map((c) => 'figura en el contrato N° ' + (c.numero || '—')),
+    ];
+    if (usos.length) { aviso(`No se puede borrar: ${[...new Set(usos)].join('; ')}.`); return; }
+    confirmar(`¿Borrar a ${nombreCompleto(p)}? Usalo solo si se cargó por error.`, () => {
+      const { id, ...copia } = p;
+      intentar(() => borrar('personas', p.id), 'Persona borrada', () => intentar(() => guardar('personas', p.id, copia), 'Persona recuperada'));
+    });
+  },
 };

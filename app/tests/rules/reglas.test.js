@@ -50,8 +50,19 @@ describe('acceso general', () => {
   test('alguien logueado pero sin perfil en usuarios no lee nada', async () => {
     await assertFails(getDoc(doc(como('desconocido'), 'contratos/c1')));
   });
-  test('nadie borra contratos, ni siquiera el administrador', async () => {
-    await assertFails(deleteDoc(doc(como('admin1'), 'contratos/c1')));
+  test('el empleado no borra contratos', async () => {
+    await assertFails(deleteDoc(doc(como('emp1'), 'contratos/c1')));
+  });
+  test('el administrador borra un contrato cargado por error', async () => {
+    await assertSucceeds(deleteDoc(doc(como('admin1'), 'contratos/c1')));
+  });
+  test('nadie borra cobros, ni siquiera el administrador', async () => {
+    await env.withSecurityRulesDisabled((ctx) => setDoc(doc(ctx.firestore(), 'pagos/p1'), { contractId: 'c1', pagado: 100 }));
+    await assertFails(deleteDoc(doc(como('admin1'), 'pagos/p1')));
+  });
+  test('el empleado no borra personas ni propiedades', async () => {
+    await env.withSecurityRulesDisabled((ctx) => setDoc(doc(ctx.firestore(), 'personas/x1'), { nombre: 'X' }));
+    await assertFails(deleteDoc(doc(como('emp1'), 'personas/x1')));
   });
 });
 

@@ -2,8 +2,9 @@
 import { esc, money } from '../../domain/formato.js';
 import { contratoVigente, estadoPropiedad, nombreCompleto } from '../../domain/consultas.js';
 import { pendienteActualizacion } from '../../domain/negocio.js';
-import { guardar } from '../../services/datos.js';
-import { abrirModal, aviso, botonesModal, campo, cerrarModal, hoyIso, intentar, lupa, numero, tildado } from '../base.js';
+import { borrar, guardar } from '../../services/datos.js';
+import { abrirModal, aviso, botonesModal, campo, cerrarModal, confirmar, hoyIso, intentar, lupa, numero, soyAdmin, tildado } from '../base.js';
+import { comboPersona, elegirPersona } from '../campos.js';
 import { icon } from '../icons.js';
 import { personaModal } from './personas.js';
 import { fichaContratoHtml } from './contratos.js';
@@ -85,7 +86,10 @@ export function vistaFicha({ d, id, params }) {
     <div class="ficha-head">
       <div><div class="ficha-id">PROPIEDAD</div><div class="ficha-title">${esc(pr.tipo)} — ${esc(pr.direccion)}</div>
         <div class="ficha-meta">${esc(pr.localidad)} · ${badgeEstado(estado)}</div></div>
-      <button class="btn" data-accion="editar-propiedad" data-id="${esc(pr.id)}">Editar propiedad</button>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn" data-accion="editar-propiedad" data-id="${esc(pr.id)}">Editar propiedad</button>
+        ${soyAdmin() ? `<button class="btn btn-ghost btn-danger" data-accion="borrar-propiedad" data-id="${esc(pr.id)}">Borrar</button>` : ''}
+      </div>
     </div>
     <div class="tabs">${tabs.map(([k, l]) => `<button class="tab-btn ${tab === k ? 'active' : ''}" data-param="tab" data-valor="${k}">${l}</button>`).join('')}</div>
     <div>${body}</div>`;
@@ -93,7 +97,6 @@ export function vistaFicha({ d, id, params }) {
 
 export function propiedadModal(d, id, alGuardar) {
   const pr = id ? d.propiedades.find((x) => x.id === id) : { tipo: 'Casa', localidad: 'Paso del Rey', estado: 'Disponible', ambientes: 2, dormitorios: 1, banos: 1 };
-  const propietarios = d.personas.filter((p) => (p.roles || []).includes('Propietario')).sort((a, b) => (a.apellido || '').localeCompare(b.apellido || ''));
   const alquilada = id && contratoVigente(d.contratos, id);
   const box = abrirModal(`
     <div class="section-title" style="margin-bottom:14px;">${id ? 'Editar propiedad' : 'Nueva propiedad'}</div>
@@ -102,8 +105,8 @@ export function propiedadModal(d, id, alGuardar) {
       <div class="field"><label for="prEstado">Estado</label>${alquilada ? '<input value="Alquilada (tiene contrato vigente)" disabled>' : `<select id="prEstado">${ESTADOS_MANUALES.map((t) => `<option ${t === pr.estado ? 'selected' : ''}>${t}</option>`).join('')}</select>`}</div>
       <div class="field"><label for="prDir">Dirección</label><input id="prDir" value="${esc(pr.direccion || '')}" placeholder="Ej: Belgrano 1234, 1°B"></div>
       <div class="field"><label for="prLoc">Localidad</label><input id="prLoc" value="${esc(pr.localidad || '')}"></div>
-      <div class="field" style="grid-column:1/-1;"><label for="prOwner">Propietario</label>
-        <div style="display:flex; gap:8px;"><select id="prOwner" style="flex:1;"><option value="">Elegir…</option>${propietarios.map((o) => `<option value="${esc(o.id)}" ${o.id === pr.ownerId ? 'selected' : ''}>${esc(o.apellido)}, ${esc(o.nombre)}${o.dni ? ' — DNI ' + esc(o.dni) : ''}</option>`).join('')}</select>
+      <div class="field" style="grid-column:1/-1;"><label for="prOwnerBuscar">Propietario</label>
+        <div style="display:flex; gap:8px;">${comboPersona('prOwner', d.personas, pr.ownerId)}
         <button class="btn" id="prNuevoOwner" type="button">${icon('plus')}Nuevo</button></div></div>
       <div class="field"><label for="prAmb">Ambientes</label><input type="number" id="prAmb" min="0" value="${pr.ambientes ?? ''}"></div>
       <div class="field"><label for="prDorm">Dormitorios</label><input type="number" id="prDorm" min="0" value="${pr.dormitorios ?? ''}"></div>
@@ -136,7 +139,7 @@ export function propiedadModal(d, id, alGuardar) {
   }
   function rellenar(b) {
     const set = (i, v) => { const el = document.getElementById(i); if (el) el.value = v ?? ''; };
-    set('prTipo', b.tipo); set('prDir', b.direccion); set('prLoc', b.localidad); set('prOwner', b.ownerId);
+    set('prTipo', b.tipo); set('prDir', b.direccion); set('prLoc', b.localidad); elegirPersona('prOwner', b.ownerId);
     set('prAmb', b.ambientes); set('prDorm', b.dormitorios); set('prBanos', b.banos); set('prM2', b.m2 || '');
     set('prGas', b.nroGas); set('prLuz', b.nroLuz); set('prAgua', b.nroAgua); set('prMuni', b.nroMunicipal); set('prObs', b.obs);
     if (b.estado) set('prEstado', b.estado);
@@ -147,7 +150,11 @@ export function propiedadModal(d, id, alGuardar) {
     if (!datosPr.direccion || !datosPr.localidad) { aviso('Completá dirección y localidad'); return; }
     if (!datosPr.ownerId) { aviso('Elegí el propietario (o crealo con "Nuevo")'); return; }
     let nuevoId = id;
-    const ok = await intentar(async () => { nuevoId = await guardar('propiedades', id, datosPr); }, id ? 'Propiedad actualizada' : 'Propiedad creada');
+    const owner = d.personas.find((p) => p.id === datosPr.ownerId);
+    const ok = await intentar(async () => {
+      nuevoId = await guardar('propiedades', id, datosPr);
+      if (owner && !(owner.roles || []).includes('Propietario')) await guardar('personas', owner.id, { roles: [...(owner.roles || []), 'Propietario'] });
+    }, id ? 'Propiedad actualizada' : 'Propiedad creada');
     if (ok) { cerrarModal(); if (alGuardar) alGuardar(nuevoId); else if (!id) location.hash = '#/propiedades/' + nuevoId; }
   };
 }
@@ -155,5 +162,19 @@ export function propiedadModal(d, id, alGuardar) {
 export const acciones = {
   'nueva-propiedad': ({ d }) => propiedadModal(d, null),
   'editar-propiedad': ({ d, ds }) => propiedadModal(d, ds.id),
+  'borrar-propiedad': ({ d, ds }) => {
+    const pr = d.propiedades.find((x) => x.id === ds.id);
+    if (!soyAdmin() || !pr) return;
+    const contratos = d.contratos.filter((c) => c.propertyId === pr.id);
+    if (contratos.length) {
+      aviso(`Esta propiedad tiene ${contratos.length === 1 ? 'un contrato' : contratos.length + ' contratos'} (N° ${contratos.map((c) => c.numero || '—').join(', ')}). Borrá primero el contrato, o pasala a "Baja" desde Editar.`);
+      return;
+    }
+    confirmar(`¿Borrar la propiedad ${pr.direccion}? Usalo solo si se cargó por error.`, async () => {
+      const { id, ...copia } = pr;
+      const ok = await intentar(() => borrar('propiedades', pr.id), 'Propiedad borrada', () => intentar(() => guardar('propiedades', pr.id, copia), 'Propiedad recuperada'));
+      if (ok) location.hash = '#/propiedades';
+    });
+  },
 };
 
