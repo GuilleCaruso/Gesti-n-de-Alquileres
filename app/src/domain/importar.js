@@ -162,7 +162,7 @@ export function proximaDesde(inicio, frecuencia, hoy) {
 }
 
 // Arma lo que se va a guardar. `existentes` = datos ya cargados (para no duplicar personas, propiedades ni contratos).
-export function armarImportacion({ filas, mapeo, formatoNombre, existentes, generarId, hoy, frecuenciaDefecto = 3 }) {
+export function armarImportacion({ filas, mapeo, formatoNombre, existentes, generarId, hoy, frecuenciaDefecto = 3, incluirVencidos = false }) {
   const val = (fila, k) => (mapeo[k] != null ? fila[mapeo[k]] ?? '' : '');
   const personas = []; const propiedades = []; const contratos = []; const errores = []; const avisos = [];
   const personasPorClave = new Map();
@@ -190,8 +190,27 @@ export function armarImportacion({ filas, mapeo, formatoNombre, existentes, gene
     return id;
   };
 
+  // misma carpeta en varias filas (renovaciones en Arcomercial): vale la de inicio más reciente
+  const mejorFila = new Map();
+  filas.forEach((f, i) => {
+    const num = String(val(f, 'numero')).trim();
+    const ini = normalizarFecha(val(f, 'inicio'));
+    if (!num || !ini) return;
+    const prev = mejorFila.get(num);
+    if (!prev || ini > prev.ini) mejorFila.set(num, { i, ini });
+  });
+  const ddmm = (iso) => iso.split('-').reverse().join('/');
+  let vencidosOmitidos = 0;
+
   filas.forEach((fila, i) => {
     const n = i + 2; // fila del archivo (la 1 son los títulos)
+    const num0 = String(val(fila, 'numero')).trim();
+    if (num0 && mejorFila.has(num0) && mejorFila.get(num0).i !== i) {
+      avisos.push({ fila: n, msg: `El N° ${num0} aparece más de una vez (renovación): se importa el más reciente, que empieza el ${ddmm(mejorFila.get(num0).ini)}` });
+      return;
+    }
+    const fin00 = normalizarFecha(val(fila, 'fin'));
+    if (fin00 && fin00 < hoy && !incluirVencidos) { vencidosOmitidos++; return; }
     const falta = CAMPOS.filter((c) => c.req && !String(val(fila, c.k)).trim()).map((c) => c.l);
     if (falta.length) { errores.push({ fila: n, msg: 'Falta: ' + falta.join(', ') }); return; }
     const inicio = normalizarFecha(val(fila, 'inicio'));
@@ -252,6 +271,7 @@ export function armarImportacion({ filas, mapeo, formatoNombre, existentes, gene
       },
     });
   });
+  if (vencidosOmitidos) avisos.unshift({ fila: null, msg: `${vencidosOmitidos} contrato(s) ya vencidos no se importan (tildá "Importar también los vencidos" si los querés como historial).` });
   const aRevisar = contratos.filter((c) => c.data.revisarAumento).length;
   if (aRevisar) avisos.unshift({ fila: null, msg: `${aRevisar} contrato(s) vigentes sin "cada cuántos meses" o sin "próxima actualización": se cargan cada ${Number(frecuenciaDefecto) || 3} meses desde el inicio y quedan marcados "Revisar aumento" para que los confirmen a mano.` });
   return { personas, propiedades, contratos, errores, avisos };

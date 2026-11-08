@@ -11,11 +11,12 @@ let archivo = null; // {nombre, encabezados, filas}
 let mapeo = {};
 let formatoNombre = 'apellido-nombre';
 let frecuenciaDefecto = 3;
+let incluirVencidos = false;
 
 function resultado(d) {
   if (!archivo) return null;
   let n = 0;
-  return armarImportacion({ filas: archivo.filas, mapeo, formatoNombre, existentes: d, generarId: (col) => `${col}-previa-${++n}`, hoy: hoyIso(), frecuenciaDefecto });
+  return armarImportacion({ filas: archivo.filas, mapeo, formatoNombre, existentes: d, generarId: (col) => `${col}-previa-${++n}`, hoy: hoyIso(), frecuenciaDefecto, incluirVencidos });
 }
 
 export function vista({ d }) {
@@ -38,6 +39,7 @@ export function vista({ d }) {
       <div class="page-sub" style="margin-bottom:12px;">La app propone las columnas por el título. Corregí las que estén mal. Los marcados con * son obligatorios.</div>
       <div class="field" style="max-width:340px; margin-bottom:14px;"><label for="impFormato">Los nombres sin coma vienen como</label>
         <select id="impFormato"><option value="apellido-nombre" ${formatoNombre === 'apellido-nombre' ? 'selected' : ''}>Apellido Nombre (Pérez Juan)</option><option value="nombre-apellido" ${formatoNombre === 'nombre-apellido' ? 'selected' : ''}>Nombre Apellido (Juan Pérez)</option></select></div>
+      <label style="display:flex; gap:8px; align-items:center; font-weight:600; margin-bottom:14px;"><input type="checkbox" id="impVencidos" ${incluirVencidos ? 'checked' : ''}> Importar también los contratos vencidos (como historial)</label>
       ${mapeo.frecuencia == null ? `<div class="field" style="max-width:340px; margin-bottom:14px;"><label for="impFrec">El archivo no dice cada cuántos meses aumentan. Cargarlos cada</label>
         <select id="impFrec">${[3, 4, 6, 12].map((m) => `<option value="${m}" ${Number(frecuenciaDefecto) === m ? 'selected' : ''}>${m} meses</option>`).join('')}</select>
         <span class="cell-sub">Quedan marcados "Revisar aumento" para confirmarlos uno por uno.</span></div>` : ''}
@@ -114,6 +116,8 @@ export function montar() {
   document.querySelectorAll('[data-mapeo]').forEach((sel) => {
     sel.onchange = () => { mapeo[sel.dataset.mapeo] = sel.value === '' ? undefined : Number(sel.value); window.dispatchEvent(new HashChangeEvent('hashchange')); };
   });
+  const venc = document.getElementById('impVencidos');
+  if (venc) venc.onchange = () => { incluirVencidos = venc.checked; window.dispatchEvent(new HashChangeEvent('hashchange')); };
   const frec = document.getElementById('impFrec');
   if (frec) frec.onchange = () => { frecuenciaDefecto = Number(frec.value); window.dispatchEvent(new HashChangeEvent('hashchange')); };
   const fmt = document.getElementById('impFormato');
@@ -123,7 +127,7 @@ export function montar() {
 export const acciones = {
   'importar-cancelar': () => { archivo = null; mapeo = {}; window.dispatchEvent(new HashChangeEvent('hashchange')); },
   'importar-confirmar': ({ d }) => {
-    const r = armarImportacion({ filas: archivo.filas, mapeo, formatoNombre, existentes: d, generarId: nuevoId, hoy: hoyIso(), frecuenciaDefecto });
+    const r = armarImportacion({ filas: archivo.filas, mapeo, formatoNombre, existentes: d, generarId: nuevoId, hoy: hoyIso(), frecuenciaDefecto, incluirVencidos });
     confirmar(`Se van a crear ${r.contratos.length} contratos, ${r.propiedades.length} propiedades y ${r.personas.length} personas. ${r.errores.length} filas con error quedan afuera. ¿Importar?`, async () => {
       const items = [
         ...r.personas.map((x) => ({ coleccion: 'personas', ...x })),

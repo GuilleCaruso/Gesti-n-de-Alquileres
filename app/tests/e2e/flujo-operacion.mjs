@@ -43,6 +43,9 @@ try {
   await ir('#/importar');
   await pg.setInputFiles('#impArchivo', CSV);
   await pg.waitForSelector('text=3. Vista previa');
+  ok('por defecto no importa los vencidos (3 de 4)', (await pg.locator('.stat-tile').first().innerText()).startsWith('3'));
+  await pg.check('#impVencidos');
+  await pg.waitForTimeout(300);
   const vistaPrevia = await pg.locator('.stat-tile').allInnerTexts();
   ok('vista previa: 4 contratos, 4 propiedades, 1 fila con error — ' + vistaPrevia.join(' | ').replace(/\n/g, ' '), vistaPrevia[0].startsWith('4') && vistaPrevia[1].startsWith('4') && vistaPrevia[3].startsWith('1'));
   ok('detecta la columna del inquilino', (await pg.locator('select[data-mapeo="inqNombre"] option:checked').innerText()) === 'Inquilino');

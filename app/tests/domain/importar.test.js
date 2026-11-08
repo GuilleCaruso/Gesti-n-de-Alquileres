@@ -75,7 +75,7 @@ describe('armar importación', () => {
     ['', 'Sin datos', '', '', '', '', '', '', '', '', ''],
   ];
   const existentes = { personas: [{ id: 'yaExiste', nombre: 'Martín', apellido: 'Acosta', dni: '' }], propiedades: [], contratos: [{ numero: '0999' }] };
-  const r = armarImportacion({ filas, mapeo, formatoNombre: 'nombre-apellido', existentes, generarId, hoy: '2026-11-07' });
+  const r = armarImportacion({ filas, mapeo, formatoNombre: 'nombre-apellido', existentes, generarId, hoy: '2026-11-07', incluirVencidos: true });
 
   test('no duplica al mismo propietario de dos contratos (mismo DNI con y sin puntos)', () => {
     expect(r.personas.filter((p) => p.data.apellido === 'Suárez')).toHaveLength(1);
@@ -112,7 +112,7 @@ describe('planilla de Arcomercial (contratos_todos2.xlsx)', () => {
     ['301', 'ICL', '01/01/2026', '31/12/2027', 'NUEVA 1', 'X', '', 'Y', '', '0'],
     ['302', 'ICL', '01/01/2026', '31/12/2027', 'NUEVA 2', 'X', '', 'Y', '', '1'],
   ];
-  const r = armarImportacion({ filas, mapeo, formatoNombre: 'apellido-nombre', existentes: { personas: [], propiedades: [], contratos: [] }, generarId: (c) => `${c}-${++n}`, hoy: '2026-11-08', frecuenciaDefecto: 4 });
+  const r = armarImportacion({ filas, mapeo, formatoNombre: 'apellido-nombre', existentes: { personas: [], propiedades: [], contratos: [] }, generarId: (c) => `${c}-${++n}`, hoy: '2026-11-08', frecuenciaDefecto: 4, incluirVencidos: true });
   test('nombres en mayúsculas pasan a nombre propio', () => {
     expect(nombrePropio('D´ANGELO VICENTE')).toBe('D´Angelo Vicente');
     expect(nombrePropio('Pérez Juan')).toBe('Pérez Juan');
@@ -142,5 +142,33 @@ describe('planilla de Arcomercial (contratos_todos2.xlsx)', () => {
     expect(r.contratos[0].data).toMatchObject({ numero: '472', tipoAumento: 'IPC', frecuencia: 4, revisarAumento: true, proxAct: '2027-03-01' });
     expect(r.contratos[1].data.tipoAumento).toBe('ICL');
     expect(r.avisos[0].msg).toContain('Revisar aumento');
+  });
+});
+
+describe('renovaciones y vencidos', () => {
+  const encabezados = ['Carpeta', 'Indice', 'Inicio de Contrato', 'Fin de Contrato', 'Dirección', 'Inquilino', 'Propietario', 'Monto actual'];
+  const mapeo = adivinarMapeo(encabezados);
+  const filas = [
+    ['76', 'IPC', '01/04/2024', '31/03/2026', 'BELGRANO 1', 'CAJES STELLA', 'DUEÑO UNO', '0.00'],
+    ['76', 'IPC', '01/04/2026', '31/03/2028', 'BELGRANO 1', 'CAJES STELLA', 'DUEÑO UNO', '630000'],
+    ['90', 'ICL', '01/01/2022', '31/12/2023', 'COLON 5', 'VIEJO INQ', 'DUEÑO DOS', '100000'],
+  ];
+  let n = 0;
+  const armar = (incluirVencidos) => armarImportacion({ filas, mapeo, formatoNombre: 'apellido-nombre', existentes: { personas: [], propiedades: [], contratos: [] }, generarId: (c) => `${c}-${++n}`, hoy: '2026-11-08', incluirVencidos });
+  test('misma carpeta renovada: se importa el contrato más reciente, aunque esté segundo', () => {
+    const r = armar(false);
+    expect(r.contratos).toHaveLength(1);
+    expect(r.contratos[0].data).toMatchObject({ numero: '76', inicio: '2026-04-01', alquilerActual: 630000, estado: 'Activo' });
+    expect(r.avisos.some((a) => a.fila === 2 && a.msg.includes('renovación'))).toBe(true);
+  });
+  test('por defecto los vencidos no se importan (ni sus personas ni propiedades)', () => {
+    const r = armar(false);
+    expect(r.propiedades).toHaveLength(1);
+    expect(r.personas.some((p) => p.data.apellido === 'Viejo')).toBe(false);
+    expect(r.avisos.some((a) => a.msg.includes('1 contrato(s) ya vencidos no se importan'))).toBe(true);
+  });
+  test('tildando "incluir vencidos" entran como Finalizado', () => {
+    const r = armar(true);
+    expect(r.contratos.find((c) => c.data.numero === '90').data.estado).toBe('Finalizado');
   });
 });
