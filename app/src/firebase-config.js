@@ -10,4 +10,4 @@ export const firebaseConfig = {
 };
 
 // UID de Guillermo (Authentication → Users). Debe coincidir con adminInicial() en firestore.rules.
-export const ADMIN_INICIAL_UID = 'PENDIENTE_UID_ADMIN';
+export const ADMIN_INICIAL_UID = 'XbYkLAgjmKQQJB6kOuUnzTqxdnP2';

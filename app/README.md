@@ -37,11 +37,10 @@ npm run build        # genera dist/ para Firebase Hosting
 
 Nada con historia se borra: se marca `anulado` (PROJECT_RULES, regla 12).
 
-## Pendiente de Guillermo para publicar
+## Conexión
 
-1. `src/firebase-config.js`: completar `firebaseConfig` y `ADMIN_INICIAL_UID`.
-2. `../firestore.rules`: reemplazar `PENDIENTE_UID_ADMIN` por el mismo UID.
-3. `../.firebaserc`: poner el ID real del proyecto.
-4. Secreto `FIREBASE_SERVICE_ACCOUNT` en GitHub.
+- Proyecto de Firebase: `caruso-propiedades` (`src/firebase-config.js`, `../.firebaserc`).
+- Administrador inicial: el UID de `ADMIN_INICIAL_UID` y `adminInicial()` en `../firestore.rules` (deben coincidir).
+- Publicación: secreto `FIREBASE_SERVICE_ACCOUNT` en GitHub (`.github/workflows/firebase.yml`).
 
 Importante: los links de vista previa usan la misma base de datos que la app publicada. Antes de importar datos reales hay que crear un segundo proyecto de Firebase para pruebas.

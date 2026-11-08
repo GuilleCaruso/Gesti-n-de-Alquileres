@@ -63,7 +63,7 @@ describe('usuarios y roles', () => {
     await assertFails(getDoc(doc(como('emp1'), 'usuarios/admin1')));
   });
   test('la primera vez, el administrador inicial crea su propio perfil', async () => {
-    await assertSucceeds(setDoc(doc(como('PENDIENTE_UID_ADMIN'), 'usuarios/PENDIENTE_UID_ADMIN'), { nombre: 'Guillermo', rol: 'admin', activo: true }));
+    await assertSucceeds(setDoc(doc(como('XbYkLAgjmKQQJB6kOuUnzTqxdnP2'), 'usuarios/XbYkLAgjmKQQJB6kOuUnzTqxdnP2'), { nombre: 'Guillermo', rol: 'admin', activo: true }));
   });
   test('cualquier otro usuario nuevo NO puede darse acceso solo', async () => {
     await assertFails(setDoc(doc(como('nuevo1'), 'usuarios/nuevo1'), { nombre: 'Intruso', rol: 'admin', activo: true }));

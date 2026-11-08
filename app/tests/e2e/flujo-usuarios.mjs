@@ -22,7 +22,7 @@ try {
   await fetch('http://127.0.0.1:9099/emulator/v1/projects/demo-caruso/accounts', { method: 'DELETE' });
   await fetch('http://127.0.0.1:8080/emulator/v1/projects/demo-caruso/databases/(default)/documents', { method: 'DELETE' });
   for (let i = 0; i < 60; i++) { try { await fetch(URL); break; } catch { await new Promise((r) => setTimeout(r, 500)); } }
-  await crearUsuario('guillermo@test.com', 'clave-admin-1', 'PENDIENTE_UID_ADMIN');
+  await crearUsuario('guillermo@test.com', 'clave-admin-1', 'XbYkLAgjmKQQJB6kOuUnzTqxdnP2');
   const uidEmp = await crearUsuario('laura@test.com', 'clave-emp-1');
 
   const b = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
