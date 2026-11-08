@@ -108,6 +108,9 @@ describe('planilla de Arcomercial (contratos_todos2.xlsx)', () => {
     ['472', 'IPC', '01/03/2026', '28/02/2028', 'ASCONAPE 120', 'ALBESA MARIA / LUQUE JUAN', '11 5555-1111', 'D´ANGELO VICENTE', '11 5555-2222', '696000'],
     ['473', 'ICL (Banco Central)', '01/06/2025', '31/05/2027', 'ASCONAPE 120', 'PEREZ ANA', '', 'D´ANGELO VICENTE / GOMEZ LUIS', '', '500000'],
     ['472', 'IPC', '01/03/2026', '28/02/2028', 'ASCONAPE 120', 'ALBESA MARIA', '', 'D´ANGELO VICENTE', '', '696000'],
+    ['300', 'ICL', '01/01/2022', '31/12/2023', 'VIEJA 1', 'X', '', 'Y', '', '0'],
+    ['301', 'ICL', '01/01/2026', '31/12/2027', 'NUEVA 1', 'X', '', 'Y', '', '0'],
+    ['302', 'ICL', '01/01/2026', '31/12/2027', 'NUEVA 2', 'X', '', 'Y', '', '1'],
   ];
   const r = armarImportacion({ filas, mapeo, formatoNombre: 'apellido-nombre', existentes: { personas: [], propiedades: [], contratos: [] }, generarId: (c) => `${c}-${++n}`, hoy: '2026-11-08', frecuenciaDefecto: 4 });
   test('nombres en mayúsculas pasan a nombre propio', () => {
@@ -126,7 +129,14 @@ describe('planilla de Arcomercial (contratos_todos2.xlsx)', () => {
     expect(r.avisos.some((a) => a.msg.includes('otra propiedad'))).toBe(true);
   });
   test('carpeta repetida: se importa una sola vez', () => {
-    expect(r.contratos).toHaveLength(2);
+    expect(r.contratos.filter((c) => c.data.numero === '472')).toHaveLength(1);
+  });
+  test('monto en cero: el terminado entra como historial, el vigente va a errores mostrando lo que dice', () => {
+    expect(r.contratos.find((c) => c.data.numero === '300').data.estado).toBe('Finalizado');
+    expect(r.errores).toEqual([{ fila: 6, msg: expect.stringContaining('N° 301 con alquiler en cero o no reconocido (dice "0")') }]);
+  });
+  test('monto sospechoso ($1): entra con aviso', () => {
+    expect(r.avisos.some((a) => a.fila === 7 && a.msg.includes('revisá el monto'))).toBe(true);
   });
   test('sin frecuencia: usa la elegida y marca "Revisar aumento"', () => {
     expect(r.contratos[0].data).toMatchObject({ numero: '472', tipoAumento: 'IPC', frecuencia: 4, revisarAumento: true, proxAct: '2027-03-01' });

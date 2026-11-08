@@ -199,7 +199,10 @@ export function armarImportacion({ filas, mapeo, formatoNombre, existentes, gene
     const alquiler = normalizarMonto(val(fila, 'alquiler'));
     if (!inicio || !fin) { errores.push({ fila: n, msg: 'Fecha de inicio o fin con formato no reconocido' }); return; }
     if (fin <= inicio) { errores.push({ fila: n, msg: 'La fecha de fin es anterior al inicio' }); return; }
-    if (alquiler <= 0) { errores.push({ fila: n, msg: 'Alquiler en cero o no reconocido' }); return; }
+    const montoTxt = String(val(fila, 'alquiler')).trim();
+    // un contrato ya terminado entra igual (es historial); uno vigente necesita el monto
+    if (alquiler <= 0 && fin >= hoy) { errores.push({ fila: n, msg: `Contrato vigente${String(val(fila, 'numero')).trim() ? ' N° ' + String(val(fila, 'numero')).trim() : ''} con alquiler en cero o no reconocido (dice "${montoTxt || 'vacío'}")` }); return; }
+    if (alquiler > 0 && alquiler < 10000 && fin >= hoy) avisos.push({ fila: n, msg: `Alquiler de ${montoTxt}: revisá el monto después de importar` });
     const numero = String(val(fila, 'numero')).trim();
     if (numero && numeros.has(numero)) { avisos.push({ fila: n, msg: enArchivo.has(numero) ? `El N° ${numero} está repetido en el archivo: se importa solo la primera fila` : `El contrato N° ${numero} ya estaba cargado: se omite` }); return; }
 
