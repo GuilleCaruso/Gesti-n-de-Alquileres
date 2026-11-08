@@ -124,6 +124,7 @@ Funciones clave ya hechas: cobrar / deshacer pago, generar recibo, actualizar co
 - [ ] Definir cómo se guardan los datos (sin esto la app no sirve para uso real).
 
 ## Historial
+- **08/11/2026** – Primera vista previa publicada. Se dieron a la cuenta de servicio los roles Administrador de Firebase, Consumidor de Service Usage y Visualizador de claves de API. Las reglas de seguridad ahora se suben también en cada PR (la vista previa comparte la base con la app definitiva; sin reglas la base rechaza todo).
 
 - **08/11/2026** – Módulos de operación diaria de la app real listos para probar. Arcomercial se renueva mientras tanto.
 - **28/10/2026** – Se elige Firebase. Etapa 1 de la app real programada y probada (falta conectar el proyecto de Guillermo).

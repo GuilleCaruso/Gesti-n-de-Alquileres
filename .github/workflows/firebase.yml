@@ -1,5 +1,5 @@
 # Pruebas y publicación automática en Firebase.
-# - Propuesta de cambio (pull request): corre las pruebas y publica un link de vista previa.
+# - Propuesta de cambio (pull request): corre las pruebas, publica un link de vista previa y las reglas de seguridad.
 # - Cambio aprobado en main: corre las pruebas y publica la app y las reglas de seguridad.
 # Necesita el secreto FIREBASE_SERVICE_ACCOUNT (instructivo, Paso 1-E). Sin él, solo corre las pruebas.
 name: Pruebas y publicación
@@ -60,12 +60,12 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           channelId: live
 
-      - name: Publicar reglas de seguridad (main)
-        if: github.event_name == 'push' && env.HAY_CREDENCIAL == 'true'
-        working-directory: .
+      # La vista previa usa la misma base que la app definitiva: sin las reglas, la base rechaza todo.
+      - name: Publicar reglas de seguridad
+        if: env.HAY_CREDENCIAL == 'true'
         env:
           CREDENCIAL: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
         run: |
           printf '%s' "$CREDENCIAL" > "$RUNNER_TEMP/sa.json"
-          GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json" npx --prefix app firebase deploy --only firestore --non-interactive
-          rm -f "$RUNNER_TEMP/sa.json"
+          trap 'rm -f "$RUNNER_TEMP/sa.json"' EXIT
+          GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json" npx firebase deploy --only firestore --project caruso-propiedades --non-interactive
