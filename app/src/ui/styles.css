@@ -317,8 +317,9 @@ td.num, th.num{text-align:right; white-space:nowrap;}
 .receipt-side{
   writing-mode:vertical-rl; transform:rotate(180deg); border-right:2px solid #1a1a1a;
   padding:14px 8px; font-weight:800; letter-spacing:3px; font-size:14px; white-space:nowrap;
-  display:flex; align-items:center; justify-content:center; flex:none;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; flex:none;
 }
+.receipt-nofactura{font-size:8.5px; font-weight:700; letter-spacing:1.5px;}
 .receipt-body{flex:1; padding:14px 18px;}
 .receipt-row{display:flex; align-items:baseline; gap:8px; border-bottom:1px solid #1a1a1a; padding:7px 0; font-size:13px;}
 .receipt-row .rl{font-weight:700; white-space:nowrap; flex:none;}

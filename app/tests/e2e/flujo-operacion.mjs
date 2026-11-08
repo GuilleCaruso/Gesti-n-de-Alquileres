@@ -103,7 +103,7 @@ try {
   ok('sugiere 610.000 + 7,5% = 655.750 → 656.000 (redondeado a $1.000)', (await filaBelgrano.locator('input').inputValue()) === '656000');
   await filaBelgrano.locator('[data-accion="whatsapp-aumento"]').click();
   const wa = await pg.evaluate(() => window.__abiertos.at(-1));
-  ok('WhatsApp al inquilino con el monto nuevo', wa.startsWith('https://wa.me/5491122117765') && decodeURIComponent(wa).includes('656.000'));
+  ok('WhatsApp al inquilino con el monto nuevo y sin el monto anterior', wa.startsWith('https://wa.me/5491122117765') && decodeURIComponent(wa).includes('656.000') && !decodeURIComponent(wa).includes('antes'));
   await filaBelgrano.locator('[data-accion="nota-aumento"]').click();
   ok('nota de aumento impresa', (await impresiones()) === 1 && (await pg.locator('#printArea').innerText()).includes('Notificación de actualización'));
   await pg.screenshot({ path: SHOTS + '/aumentos.png', fullPage: true });
@@ -148,6 +148,7 @@ try {
   await pg.click('#coOk');
   await pg.waitForSelector('.receipt-box');
   ok('recibo con monto en letras', (await pg.locator('.modal-box').innerText()).includes('Cuatrocientos noventa y tres mil pesos'));
+  ok('el recibo aclara que no es factura', (await pg.locator('.modal-box').innerText()).includes('NO VÁLIDO COMO FACTURA'));
   await pg.screenshot({ path: SHOTS + '/recibo.png' });
   await pg.click('#imprimirRecibo');
   ok('imprime el recibo', (await impresiones()) === 2);

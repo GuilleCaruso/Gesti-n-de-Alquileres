@@ -89,7 +89,7 @@ export function reciboHtml(d, p, montoFijo, aCuenta) {
   const letras = numeroALetras(monto);
   return `
     <div class="receipt-print"><div class="receipt-box">
-      <div class="receipt-side">RECIBO DE ALQUILER</div>
+      <div class="receipt-side"><div>RECIBO DE ALQUILER</div><div class="receipt-nofactura">DOCUMENTO NO VÁLIDO COMO FACTURA</div></div>
       <div class="receipt-body">
         <div class="receipt-head"><img src="${LOGO}" alt=""><div class="receipt-org"><b>${esc(INMOBILIARIA.nombre)}</b><div>${esc(INMOBILIARIA.localidad)} · ${esc(INMOBILIARIA.telefono)}</div></div></div>
         <div class="receipt-row"><span class="rl">Contrato N°</span><span class="rv">${esc(c.numero || '—')}</span><span class="rl" style="margin-left:14px;">Fecha</span><span class="rv">${fdate(p.fechaPago || hoyIso())}</span></div>

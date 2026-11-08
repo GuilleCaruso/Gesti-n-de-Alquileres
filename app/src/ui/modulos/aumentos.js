@@ -76,7 +76,7 @@ const olvidarEdicion = (c) => { const el = document.getElementById('nuevo_' + c.
 function mensajeWhatsApp(d, c, nuevo, fecha) {
   const t = d.personas.find((x) => x.id === c.tenantId) || {};
   const pr = d.propiedades.find((x) => x.id === c.propertyId) || {};
-  return `Hola ${t.nombre || ''}! Te escribimos de Caruso Propiedades para avisarte que, según tu contrato, a partir del ${fdate(fecha)} el alquiler de ${pr.direccion} pasa a ser de ${money(nuevo)} (antes ${money(c.alquilerActual)}). Cualquier consulta, quedamos a disposición.`;
+  return `Hola ${t.nombre || ''}! Te escribimos de Caruso Propiedades para avisarte que, según tu contrato, a partir del ${fdate(fecha)} el alquiler de ${pr.direccion} pasa a ser de ${money(nuevo)}. Cualquier consulta, quedamos a disposición.`;
 }
 
 // Nota impresa: `h` = {fecha, anterior, nuevo, indice}
