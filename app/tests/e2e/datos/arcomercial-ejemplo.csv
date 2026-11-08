@@ -1,0 +1,6 @@
+Nro Contrato;Domicilio inmueble;Localidad;Tipo;Propietario;DNI Propietario;Tel Propietario;Inquilino;DNI Inquilino;Celular Inquilino;Garante;Fecha inicio;Fecha fin;Alquiler actual;Ajuste;Periodicidad;Proxima actualizacion;Expensas
+0154;Belgrano 1234;Paso del Rey;Casa;Suárez, Elena;22.556.990;11 5522-8834;Fernández, Juan;34.221.887;11 2211-7765;Castro, Fernando;01/03/2025;28/02/2027;$ 610.000,00;ICL;Trimestral;01/09/2026;22.000
+0151;Sarmiento 342;Paso del Rey;Duplex;Pérez, Carlos;18.334.221;11 4455-2201;Acosta, Martín;27.665.310;11 6677-2234;;01/02/2025;31/01/2027;560.000;IPC;cuatrimestral;01/02/2027;
+0149;Sarmiento 340;Paso del Rey;Duplex;Pérez, Carlos;18334221;11 4455-2201;Molina, Sofía;36.774.221;11 2233-9981;;15/01/2025;14/01/2027;560.000;10% semestral;6;15/01/2027;
+0099;Colón 690;Moreno;Duplex;Díaz, Roberto;16.887.320;;Benítez, Hugo;;;;01/04/2022;31/03/2024;300.000;ICL;3;;
+;Fila rota;;;;;;;;;;;;;;;;
