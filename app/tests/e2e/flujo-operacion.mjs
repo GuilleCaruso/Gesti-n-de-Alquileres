@@ -263,6 +263,28 @@ try {
   await pg.waitForTimeout(600);
   ok('al guardar el contrato se quita la marca', (await pg.locator('.note-banner').count()) === 0);
 
+  // ---------- contrato en dólares ----------
+  await ir('#/contratos');
+  await pg.click('tr:has-text("473")');
+  await pg.click('.tab-btn:has-text("Contrato")');
+  await pg.click('[data-accion="editar-contrato"]');
+  await pg.selectOption('#ctMoneda', 'USD');
+  await pg.fill('#ctAlquiler', '1200');
+  await pg.click('#ctGuardar');
+  await pg.waitForTimeout(600);
+  ok('contrato pasado a dólares y monto corregido desde Editar', (await pg.locator('.kv-value:has-text("US$ 1.200")').count()) === 1);
+  await ir('#/cobranzas');
+  const filaUsd = pg.locator('tr:has-text("Muñiz 45")');
+  ok('cobranzas muestra el alquiler en dólares', (await filaUsd.locator('td.num').innerText()).includes('US$ 1.200'));
+  ok('el administrador ve los totales separados por moneda', (await pg.locator('.stat-grid').innerText()).includes('+ US$'));
+  await filaUsd.locator('[data-accion="cobrar"]').click();
+  await pg.click('#coOk');
+  await pg.waitForSelector('.receipt-box');
+  const reciboUsd = await pg.locator('.modal-box').innerText();
+  ok('recibo en dólares: "US$" y "dólares estadounidenses"', reciboUsd.includes('US$') && reciboUsd.includes('Mil doscientos dólares estadounidenses'));
+  await pg.screenshot({ path: SHOTS + '/recibo-usd.png' });
+  await pg.click('[data-cerrar]');
+
   ok('sin errores en la página: ' + JSON.stringify(errores), errores.length === 0);
   await b.close();
 } finally {

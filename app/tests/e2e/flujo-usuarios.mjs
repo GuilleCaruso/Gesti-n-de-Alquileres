@@ -66,6 +66,10 @@ try {
   ok('el empleado entrando por link a #/usuarios vuelve a Inicio', await emp.locator('.page-title:has-text("Hola")').count() === 1);
   ok('el empleado NO ve "Importar datos"', await emp.locator('[data-nav="/importar"]').count() === 0);
   ok('el empleado ve Cobranzas y Aumentos', await emp.locator('.nav-item[data-nav="/cobranzas"]').count() === 1 && await emp.locator('.nav-item[data-nav="/aumentos"]').count() === 1);
+  await emp.goto(URL + '#/'); await emp.waitForSelector('.stat-tile');
+  ok('Inicio del empleado: cuántos faltan cobrar, sin plata', (await emp.locator('.stat-grid').innerText()).includes('Alquileres por cobrar') && !(await emp.locator('.stat-grid').innerText()).includes('$'));
+  await emp.goto(URL + '#/cobranzas'); await emp.waitForSelector('.stat-tile');
+  ok('Cobranzas del empleado: cantidades, sin totales en plata', !(await emp.locator('.stat-grid').innerText()).includes('$'));
 
   // quitar acceso
   await admin.click('[data-acceso], [data-activo]');

@@ -1,5 +1,5 @@
 // Vistas generales: Inicio, Usuarios y Configuración.
-import { esc, money, periodoLabel } from '../domain/formato.js';
+import { esc, periodoLabel, totalMonedas } from '../domain/formato.js';
 import { cobrosDelMes, contratosActivos, estadoCobro } from '../domain/consultas.js';
 import { esAdmin } from '../domain/permisos.js';
 import { pagoTotal, pendienteActualizacion } from '../domain/negocio.js';
@@ -14,7 +14,7 @@ export function vistaInicio(perfil, d) {
   const cobros = cobrosDelMes(d.contratos, d.pagos, periodo);
   const pagados = cobros.filter((p) => p.estado === 'Pagado').length;
   const vencidos = cobros.filter((p) => estadoCobro(p, hoy) === 'Vencido').length;
-  const falta = cobros.reduce((s, p) => s + (p.estado === 'Pagado' ? 0 : pagoTotal(p) - (p.estado === 'Parcial' ? p.pagado || 0 : 0)), 0);
+  const falta = totalMonedas(cobros.map((p) => [p.estado === 'Pagado' ? 0 : pagoTotal(p) - (p.estado === 'Parcial' ? p.pagado || 0 : 0), p.moneda]));
   const aumentos = contratosActivos(d.contratos).filter((c) => pendienteActualizacion(c, hoy)).length;
   const tile = (valor, label, nav, tono) => `<button class="stat-tile" data-nav="${nav}" style="cursor:pointer; text-align:left; font:inherit; color:inherit;"><div class="stat-value tnum" style="color:var(--${tono}-600);">${valor}</div><div class="stat-label">${label}</div></button>`;
   return `
@@ -23,7 +23,7 @@ export function vistaInicio(perfil, d) {
     <div class="stat-grid">
       ${tile(`${pagados} / ${cobros.length}`, 'Alquileres cobrados este mes', '/cobranzas', 'ok')}
       ${tile(vencidos, 'Cobros vencidos', '/cobranzas', vencidos ? 'danger' : 'ok')}
-      ${tile(money(falta), 'Falta cobrar este mes', '/cobranzas', 'warn')}
+      ${esAdmin(perfil) ? tile(falta, 'Falta cobrar este mes', '/cobranzas', 'warn') : tile(cobros.length - pagados, 'Alquileres por cobrar este mes', '/cobranzas', 'warn')}
       ${tile(aumentos, 'Aumentos pendientes', '/aumentos', aumentos ? 'warn' : 'ok')}
     </div>
     ${d.contratos.length ? '' : `<div class="note-banner info">${icon('alert')}<div>Todavía no hay contratos cargados. ${esAdmin(perfil) ? 'Podés importarlos desde <b>Importar datos</b> o cargarlos a mano en <b>Contratos</b>.' : 'Pedile al administrador que importe los datos.'}</div></div>`}`}
