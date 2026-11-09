@@ -33,7 +33,7 @@ export function vista({ d, params }) {
       <td><div class="cell-title">${esc(pr.direccion)}</div><div class="cell-sub">${esc(pr.tipo)} · ${esc(pr.localidad)}</div></td>
       <td>${esc(nombreCompleto(P(pr.ownerId)))}</td>
       <td>${c ? esc(nombreCompleto(P(c.tenantId))) : '<span class="cell-sub">—</span>'}</td>
-      <td class="num tnum">${c ? money(c.alquilerActual) : '—'}</td>
+      <td class="num tnum">${c ? money(c.alquilerActual, c.moneda) : '—'}</td>
       <td>${badgeEstado(estado)} ${c && pendienteActualizacion(c, hoyIso()) ? `<span class="badge badge-warn">${icon('alert')}Actualizar</span>` : ''}</td>
     </tr>`).join('');
   const pills = [['todas', 'Todas'], ['alquiladas', 'Alquiladas'], ['disponibles', 'Disponibles']]

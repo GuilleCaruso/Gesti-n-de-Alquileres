@@ -1,6 +1,14 @@
 // Formatos de pantalla e impresión (pesos, fechas, períodos).
 
-export const money = (n) => '$ ' + Math.round(n || 0).toLocaleString('es-AR');
+// Moneda de un contrato: 'ARS' (pesos, por defecto) o 'USD' (dólares).
+export const money = (n, moneda) => (moneda === 'USD' ? 'US$ ' : '$ ') + Math.round(n || 0).toLocaleString('es-AR');
+export const nombreMoneda = (moneda) => (moneda === 'USD' ? 'dólares estadounidenses' : 'pesos');
+// Total de varios importes que pueden estar en pesos y en dólares: "$ 1.000 + US$ 200".
+export function totalMonedas(items) {
+  const t = { ARS: 0, USD: 0 };
+  items.forEach(([n, moneda]) => { t[moneda === 'USD' ? 'USD' : 'ARS'] += n || 0; });
+  return [t.ARS || !t.USD ? money(t.ARS) : null, t.USD ? money(t.USD, 'USD') : null].filter(Boolean).join(' + ');
+}
 
 // Texto de fecha escrito a mano → ISO (aaaa-mm-dd). Acepta dd/mm/aaaa, d/m/aa, ddmmaaaa y aaaa-mm-dd.
 // Devuelve '' si está vacío y null si no es una fecha válida.

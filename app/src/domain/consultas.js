@@ -41,7 +41,7 @@ export function cobroDelMes(contrato, periodo, pagos) {
   if (existente) return existente;
   const exp = contrato.expensas && contrato.expensas.aplica ? contrato.expensas.monto || 0 : 0;
   return {
-    id: idPago(contrato.id, periodo), contractId: contrato.id, periodo,
+    id: idPago(contrato.id, periodo), contractId: contrato.id, periodo, moneda: contrato.moneda || 'ARS',
     importe: alquilerDelPeriodo(contrato, periodo), expensas: exp, servicios: 0,
     estado: 'Pendiente', vencimiento: `${periodo}-${String(contrato.diaVencimiento || 10).padStart(2, '0')}`, nuevo: true,
   };
@@ -52,7 +52,8 @@ export function cobrosDelMes(contratos, pagos, periodo) {
   const activos = contratosActivos(contratos).filter((c) => cubrePeriodo(c, periodo));
   const lista = activos.map((c) => cobroDelMes(c, periodo, pagos));
   pagos.filter((p) => p.periodo === periodo && !activos.some((c) => c.id === p.contractId)).forEach((p) => lista.push(p));
-  return lista;
+  // los cobros guardados antes de que existiera la moneda toman la del contrato
+  return lista.map((p) => (p.moneda ? p : { ...p, moneda: contratos.find((c) => c.id === p.contractId)?.moneda || 'ARS' }));
 }
 
 // Estado para mostrar: un pendiente con vencimiento pasado es "Vencido".

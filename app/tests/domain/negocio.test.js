@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { calcHonorarios, montoLiquidable, noLiquida, pagoTotal, periodoDescuento, computeNuevo, pendienteActualizacion, faltaIndice, redondearAumento } from '../../src/domain/negocio.js';
-import { numeroALetras, nextPeriodo, periodoLabel, money, leerFecha, isoATexto } from '../../src/domain/formato.js';
+import { numeroALetras, nextPeriodo, periodoLabel, money, totalMonedas, nombreMoneda, leerFecha, isoATexto } from '../../src/domain/formato.js';
 import { cuentasPara, cuentasVisibles, esAdmin, puedeEntrar } from '../../src/domain/permisos.js';
 
 describe('honorarios (PROJECT_RULES 20)', () => {
@@ -60,6 +60,10 @@ describe('aumentos', () => {
     expect(redondearAumento(655750)).toBe(656000);
     expect(redondearAumento(630400)).toBe(630000);
   });
+  test('contrato en dólares: redondeo a US$ 10', () => {
+    expect(computeNuevo({ tipoAumento: 'Fijo', pctFijo: 3, alquilerActual: 1200, moneda: 'USD' }, {})).toBe(1240);
+    expect(redondearAumento(1236, 'USD')).toBe(1240);
+  });
   test('detecta que falta el índice del mes', () => {
     expect(faltaIndice({ tipoAumento: 'IPC' }, { ICL: 3.4, IPC: 0 })).toBe(true);
     expect(faltaIndice({ tipoAumento: 'IPC' }, { ICL: 3.4 })).toBe(true);
@@ -77,6 +81,14 @@ describe('aumentos', () => {
 });
 
 describe('formatos', () => {
+  test('pesos y dólares', () => {
+    expect(money(1200, 'USD')).toBe('US$ 1.200');
+    expect(money(1200)).toBe('$ 1.200');
+    expect(totalMonedas([[1000, 'ARS'], [200, 'USD'], [500]])).toBe('$ 1.500 + US$ 200');
+    expect(totalMonedas([[200, 'USD']])).toBe('US$ 200');
+    expect(totalMonedas([])).toBe('$ 0');
+    expect(nombreMoneda('USD')).toBe('dólares estadounidenses');
+  });
   test('fechas escritas a mano en dd/mm/aaaa', () => {
     expect(leerFecha('01/09/2025')).toBe('2025-09-01');
     expect(leerFecha('1/9/25')).toBe('2025-09-01');

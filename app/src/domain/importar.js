@@ -262,6 +262,7 @@ export function armarImportacion({ filas, mapeo, formatoNombre, existentes, gene
       id: generarId('contratos'),
       data: {
         numero, propertyId, ownerId, tenantId, tenantId2, guarantorId, inicio, fin, revisarAumento,
+        moneda: /u\$s|us\$|usd|u\$d|dolar|dólar/i.test(montoTxt) ? 'USD' : 'ARS',
         alquilerInicial: alquiler, alquilerActual: alquiler, deposito: normalizarMonto(val(fila, 'deposito')) || null,
         ...normalizarTipoAumento(val(fila, 'tipoAumento')), frecuencia,
         proxAct: prox || proximaDesde(inicio, frecuencia, hoy),

@@ -34,8 +34,8 @@ export function vista({ d, params }) {
     return `<tr>
       <td><div class="cell-title">${esc(PR(c.propertyId).direccion)}</div><div class="cell-sub">N° ${esc(c.numero || '—')} · ${esc(nombreCompleto(t))}</div></td>
       <td>${esc(metodoLabel(c))}<div class="cell-sub">cada ${c.frecuencia} meses${c.revisarAumento ? ' · <span class="badge badge-info">Revisar</span>' : ''}</div></td>
-      <td class="num tnum">${money(c.alquilerActual)}</td>
-      <td class="num"><input type="number" step="1000" id="nuevo_${esc(c.id)}" value="${sinIndice ? '' : sugerido}" placeholder="${sinIndice ? 'Falta ' + c.tipoAumento : ''}" style="width:118px; padding:6px 8px; border:1px solid var(--border-strong); border-radius:7px; background:var(--paper-50); color:var(--ink-900); text-align:right;"></td>
+      <td class="num tnum">${money(c.alquilerActual, c.moneda)}</td>
+      <td class="num">${c.moneda === 'USD' ? '<span class="cell-sub">US$</span> ' : ''}<input type="number" step="${c.moneda === 'USD' ? 10 : 1000}" id="nuevo_${esc(c.id)}" value="${sinIndice ? '' : sugerido}" placeholder="${sinIndice ? 'Falta ' + c.tipoAumento : ''}" style="width:118px; padding:6px 8px; border:1px solid var(--border-strong); border-radius:7px; background:var(--paper-50); color:var(--ink-900); text-align:right;"></td>
       <td class="tnum">${fdate(c.proxAct)} ${estado}</td>
       <td class="row-actions">
         <button class="btn btn-sm" data-accion="whatsapp-aumento" data-id="${esc(c.id)}" title="Avisar por WhatsApp">${icon('phone')}WhatsApp</button>
@@ -50,7 +50,7 @@ export function vista({ d, params }) {
     <div class="page-head"><div><h1 class="page-title">Aumentos</h1><div class="page-sub">${pendientes.length} contrato(s) con la actualización vencida</div></div></div>
     <div class="card card-pad" style="margin-bottom:16px;">
       <div class="section-title" style="margin-bottom:6px;">Índices del mes</div>
-      <div class="page-sub" style="margin-bottom:12px;">Cargá el % del ICL y del IPC del período que corresponde. El "alquiler nuevo" se calcula solo (redondeado a $1.000) y siempre se puede corregir a mano antes de actualizar.</div>
+      <div class="page-sub" style="margin-bottom:12px;">Cargá el % del ICL y del IPC del período que corresponde. El "alquiler nuevo" se calcula solo (redondeado a $1.000; en dólares, a US$ 10) y siempre se puede corregir a mano antes de actualizar.</div>
       <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:flex-end;">
         <div class="field"><label for="idxIcl">ICL (%)</label><input type="number" step="0.01" id="idxIcl" value="${d.indices.ICL ?? 0}"></div>
         <div class="field"><label for="idxIpc">IPC (%)</label><input type="number" step="0.01" id="idxIpc" value="${d.indices.IPC ?? 0}"></div>
@@ -76,7 +76,7 @@ const olvidarEdicion = (c) => { const el = document.getElementById('nuevo_' + c.
 function mensajeWhatsApp(d, c, nuevo, fecha) {
   const t = d.personas.find((x) => x.id === c.tenantId) || {};
   const pr = d.propiedades.find((x) => x.id === c.propertyId) || {};
-  return `Hola ${t.nombre || ''}! Te escribimos de Caruso Propiedades para avisarte que, según tu contrato, a partir del ${fdate(fecha)} el alquiler de ${pr.direccion} pasa a ser de ${money(nuevo)}. Cualquier consulta, quedamos a disposición.`;
+  return `Hola ${t.nombre || ''}! Te escribimos de Caruso Propiedades para avisarte que, según tu contrato, a partir del ${fdate(fecha)} el alquiler de ${pr.direccion} pasa a ser de ${money(nuevo, c.moneda)}. Cualquier consulta, quedamos a disposición.`;
 }
 
 // Nota impresa: `h` = {fecha, anterior, nuevo, indice}
@@ -90,7 +90,7 @@ export function notaAumentoHtml(d, c, h) {
     <p>Por medio de la presente le notificamos que, conforme a lo pactado en el contrato de locación N° ${esc(c.numero || '—')},
     el alquiler del inmueble se actualiza a partir del <b>${fdate(h.fecha)}</b> (${esc(h.indice)}).</p>
     <table style="margin:14px 0;"><thead><tr><th>Alquiler anterior</th><th>Nuevo alquiler</th><th>Rige desde</th></tr></thead>
-      <tbody><tr><td class="num">${money(h.anterior)}</td><td class="num"><b>${money(h.nuevo)}</b></td><td>${fdate(h.fecha)}</td></tr></tbody></table>
+      <tbody><tr><td class="num">${money(h.anterior, c.moneda)}</td><td class="num"><b>${money(h.nuevo, c.moneda)}</b></td><td>${fdate(h.fecha)}</td></tr></tbody></table>
     <p>Quedamos a disposición por cualquier consulta. Saludos cordiales.</p>
     <div class="doc-sign"><div>Caruso Propiedades</div><div>Recibí copia — firma y aclaración del inquilino</div></div>
     ${docFoot()}`;
@@ -118,10 +118,10 @@ export const acciones = {
     }
     const igual = nuevo <= c.alquilerActual
       ? ` Ojo: el alquiler nuevo no es mayor al actual.` : '';
-    confirmar(`¿Actualizar el contrato N° ${c.numero || ''} de ${money(c.alquilerActual)} a ${money(nuevo)} desde el ${fdate(c.proxAct)}?${igual}`, () => {
+    confirmar(`¿Actualizar el contrato N° ${c.numero || ''} de ${money(c.alquilerActual, c.moneda)} a ${money(nuevo, c.moneda)} desde el ${fdate(c.proxAct)}?${igual}`, () => {
       const { prev, cambios } = aplicar(d, c, nuevo);
       olvidarEdicion(c);
-      intentar(() => actualizar('contratos', c.id, cambios), `N° ${c.numero || ''}: nuevo alquiler ${money(nuevo)} desde ${fdate(c.proxAct)}`,
+      intentar(() => actualizar('contratos', c.id, cambios), `N° ${c.numero || ''}: nuevo alquiler ${money(nuevo, c.moneda)} desde ${fdate(c.proxAct)}`,
         () => intentar(() => actualizar('contratos', c.id, prev), 'Aumento deshecho'));
     });
   },
