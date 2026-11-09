@@ -7,6 +7,7 @@ import { chromium } from 'playwright';
 const AUTH = 'http://127.0.0.1:9099/identitytoolkit.googleapis.com/v1';
 const BASE = 'http://127.0.0.1:5180/';
 const CSV = fileURLToPath(new URL('./datos/arcomercial-ejemplo.csv', import.meta.url));
+const XLSX = fileURLToPath(new URL('./datos/arcomercial-ejemplo.xlsx', import.meta.url));
 const SHOTS = process.env.SHOTS || '/tmp';
 const ok = (n, c) => { console.log((c ? 'OK    ' : 'FALLA ') + n); if (!c) process.exitCode = 1; };
 
@@ -42,6 +43,9 @@ try {
   await ir('#/importar');
   await pg.setInputFiles('#impArchivo', CSV);
   await pg.waitForSelector('text=3. Vista previa');
+  ok('por defecto no importa los vencidos (3 de 4)', (await pg.locator('.stat-tile').first().innerText()).startsWith('3'));
+  await pg.check('#impVencidos');
+  await pg.waitForTimeout(300);
   const vistaPrevia = await pg.locator('.stat-tile').allInnerTexts();
   ok('vista previa: 4 contratos, 4 propiedades, 1 fila con error — ' + vistaPrevia.join(' | ').replace(/\n/g, ' '), vistaPrevia[0].startsWith('4') && vistaPrevia[1].startsWith('4') && vistaPrevia[3].startsWith('1'));
   ok('detecta la columna del inquilino', (await pg.locator('select[data-mapeo="inqNombre"] option:checked').innerText()) === 'Inquilino');
@@ -229,6 +233,35 @@ try {
   await pg.click('#toastUndo');
   await pg.waitForTimeout(600);
   ok('deshacer recupera el contrato borrado', await pg.evaluate(async () => { const m = await import('/src/services/datos.js'); return m.datos().contratos.some((c) => c.numero === '0172'); }));
+
+  // ---------- importar el Excel de Arcomercial tal cual ----------
+  await ir('#/importar');
+  await pg.setInputFiles('#impArchivo', XLSX);
+  await pg.waitForSelector('text=3. Vista previa');
+  const tiles = await pg.locator('.stat-tile').allInnerTexts();
+  ok('lee el .xlsx directo: 2 contratos, 0 errores — ' + tiles.join(' | ').replace(/\n/g, ' '), tiles[0].startsWith('2') && tiles[3].startsWith('0'));
+  const previa = await pg.locator('#view').innerText();
+  ok('tildes y Ñ intactas, mayúsculas a nombre propio, "/" = dos inquilinos', previa.includes('Albesa, María y Luque, Juan') && previa.includes('Peña, Ana'));
+  ok('fechas del Excel bien leídas', previa.includes('1/3/2026') && previa.includes('28/2/2028'));
+  ok('avisa que faltan las frecuencias y deja elegirla', previa.includes('Revisar aumento') && (await pg.locator('#impFrec').count()) === 1);
+  await pg.selectOption('#impFrec', '4');
+  await pg.waitForTimeout(300);
+  await pg.screenshot({ path: SHOTS + '/importar-xlsx.png', fullPage: true });
+  await pg.click('[data-accion="importar-confirmar"]');
+  await pg.click('#confirmarBtn');
+  await pg.waitForSelector('.page-title:has-text("Contratos")');
+  await pg.waitForSelector('td:has-text("472")');
+  await pg.click('[data-valor="revisar"]');
+  await pg.waitForTimeout(300);
+  ok('filtro "Revisar aumento" con los 2 importados: ' + (await pg.locator('#view tbody tr').allInnerTexts()).join(' / ').replace(/\s+/g, ' '), (await pg.locator('#view tbody tr').count()) === 2);
+  await pg.click('tr:has-text("472")');
+  await pg.click('.tab-btn:has-text("Contrato")');
+  ok('la ficha explica qué revisar', (await pg.locator('.note-banner').innerText()).includes('Revisar aumento'));
+  await pg.click('[data-accion="editar-contrato"]');
+  ok('se importó cada 4 meses', (await pg.inputValue('#ctFrec')) === '4');
+  await pg.click('#ctGuardar');
+  await pg.waitForTimeout(600);
+  ok('al guardar el contrato se quita la marca', (await pg.locator('.note-banner').count()) === 0);
 
   ok('sin errores en la página: ' + JSON.stringify(errores), errores.length === 0);
   await b.close();

@@ -23,6 +23,8 @@ export function vista({ d, params }) {
   if (filtro === 'activos') lista = lista.filter((c) => c.estado === 'Activo');
   if (filtro === 'pendiente') lista = lista.filter((c) => c.estado === 'Activo' && pendienteActualizacion(c, hoy));
   if (filtro === 'finalizados') lista = lista.filter((c) => c.estado !== 'Activo');
+  if (filtro === 'revisar') lista = lista.filter((c) => c.estado === 'Activo' && c.revisarAumento);
+  const aRevisar = d.contratos.filter((c) => c.estado === 'Activo' && c.revisarAumento).length;
   if (q) lista = lista.filter((c) => [c.numero, PR(c.propertyId).direccion, PR(c.propertyId).localidad, nombreCompleto(P(c.tenantId)), nombreCompleto(P(c.ownerId))].join(' ').toLowerCase().includes(q));
   lista.sort((a, b) => String(a.numero || '').localeCompare(String(b.numero || ''), undefined, { numeric: true }));
   const filas = lista.map((c) => `
@@ -32,9 +34,9 @@ export function vista({ d, params }) {
       <td>${esc(nombreCompleto(P(c.tenantId)))}</td>
       <td class="num tnum">${money(c.alquilerActual)}</td>
       <td class="tnum">${fdate(c.fin)}</td>
-      <td>${c.estado !== 'Activo' ? badgeEstado(c.estado) : pendienteActualizacion(c, hoy) ? `<span class="badge badge-warn">${icon('alert')}Actualizar</span>` : `<span class="cell-sub">Próx. ${fdate(c.proxAct)}</span>`}</td>
+      <td>${c.estado === 'Activo' && c.revisarAumento ? `<span class="badge badge-info">Revisar aumento</span> ` : ''}${c.estado !== 'Activo' ? badgeEstado(c.estado) : pendienteActualizacion(c, hoy) ? `<span class="badge badge-warn">${icon('alert')}Actualizar</span>` : `<span class="cell-sub">Próx. ${fdate(c.proxAct)}</span>`}</td>
     </tr>`).join('');
-  const pills = [['activos', 'Activos'], ['pendiente', 'Actualización pendiente'], ['finalizados', 'Finalizados']]
+  const pills = [['activos', 'Activos'], ['pendiente', 'Actualización pendiente'], ...(aRevisar ? [['revisar', `Revisar aumento (${aRevisar})`]] : []), ['finalizados', 'Finalizados']]
     .map(([k, l]) => `<button class="pill ${filtro === k ? 'active' : ''}" data-param="filtro" data-valor="${k}">${l}</button>`).join('');
   return `
     <div class="page-head">
@@ -61,6 +63,7 @@ export function fichaContratoHtml(d, c) {
       <button class="btn btn-ghost" data-accion="finalizar-contrato" data-id="${esc(c.id)}">Finalizar contrato</button>
       ${soyAdmin() ? `<button class="btn btn-ghost btn-danger" data-accion="borrar-contrato" data-id="${esc(c.id)}">Borrar contrato</button>` : ''}
     </div>
+    ${c.revisarAumento && c.estado === 'Activo' ? `<div class="note-banner info" style="margin-bottom:14px;">${icon('alert')}<div><b>Revisar aumento:</b> este contrato vino de Arcomercial sin "cada cuántos meses" o sin la fecha del próximo aumento. Confirmá la frecuencia y la próxima actualización con <b>Editar contrato</b> y guardá.</div></div>` : ''}
     <div class="kv-grid">
       ${kv('N° de contrato', esc(c.numero || '—'))}${kv('Estado', badgeEstado(c.estado))}
       ${kv('Inquilino', persona(c.tenantId))}${kv('Inquilino 2', persona(c.tenantId2))}
@@ -144,7 +147,7 @@ export function contratoModal(d, id, propiedadId, borrador) {
     inicio: fecha('ctInicio'), fin: fecha('ctFin'), alquilerActual: numero('ctAlquiler'), deposito: numero('ctDeposito') || null,
     tipoAumento: campo('ctTipo'), pctFijo: numero('ctPct') || null, frecuencia: Number(campo('ctFrec')), proxAct: fecha('ctProx'),
     expensas: { aplica: tildado('ctExpAplica'), monto: numero('ctExpMonto') }, honorarios: { tipo: campo('ctHonTipo'), valor: numero('ctHonValor') },
-    obs: campo('ctObs'),
+    obs: campo('ctObs'), revisarAumento: false,
   });
 
   // persona nueva sin perder lo cargado
