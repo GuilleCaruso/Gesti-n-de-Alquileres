@@ -4,7 +4,7 @@ import { cobrosDelMes, contratosActivos, estadoCobro } from '../domain/consultas
 import { esAdmin } from '../domain/permisos.js';
 import { pagoTotal, pendienteActualizacion } from '../domain/negocio.js';
 import { actualizarUsuario, darAcceso, listarUsuarios } from '../services/usuarios.js';
-import { hoyIso, periodoActual } from './base.js';
+import { fijarModoWhatsApp, hoyIso, modoWhatsApp, periodoActual } from './base.js';
 import { icon } from './icons.js';
 import { toast } from './toast.js';
 
@@ -39,7 +39,21 @@ export function vistaConfiguracion() {
       <div class="field"><label>Teléfono</label><input value="11 3449-8819" disabled></div>
       <div class="field"><label>Email</label><input value="info@carusopropiedades.com" disabled></div>
       <div class="field"><label>Honorarios por defecto</label><input value="5% (se define en cada contrato)" disabled></div>
-    </div></div>`;
+    </div></div>
+    <div class="card card-pad" style="margin-top:16px;">
+      <div class="section-title" style="margin-bottom:4px;">WhatsApp en esta computadora</div>
+      <div class="page-sub" style="margin-bottom:12px;">Dónde se abren los avisos de aumento. Se guarda en esta computadora: cada PC puede tener el suyo.</div>
+      <div class="field" style="max-width:420px;"><label for="cfgWhatsapp">Abrir en</label>
+        <select id="cfgWhatsapp">
+          <option value="web" ${modoWhatsApp() === 'web' ? 'selected' : ''}>WhatsApp Web (en Chrome)</option>
+          <option value="app" ${modoWhatsApp() === 'app' ? 'selected' : ''}>WhatsApp de escritorio (la aplicación)</option>
+        </select></div>
+    </div>`;
+}
+
+export function montarConfiguracion() {
+  const sel = document.getElementById('cfgWhatsapp');
+  if (sel) sel.onchange = () => { fijarModoWhatsApp(sel.value); toast('Listo: WhatsApp se abre en ' + (sel.value === 'app' ? 'la aplicación de escritorio' : 'WhatsApp Web')); };
 }
 
 export function vistaUsuarios() {

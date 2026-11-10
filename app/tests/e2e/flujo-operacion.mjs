@@ -107,7 +107,7 @@ try {
   ok('sugiere 610.000 + 7,5% = 655.750 → 656.000 (redondeado a $1.000)', (await filaBelgrano.locator('input').inputValue()) === '656000');
   await filaBelgrano.locator('[data-accion="whatsapp-aumento"]').click();
   const wa = await pg.evaluate(() => window.__abiertos.at(-1));
-  ok('WhatsApp al inquilino con el monto nuevo y sin el monto anterior', wa.startsWith('https://wa.me/5491122117765') && decodeURIComponent(wa).includes('656.000') && !decodeURIComponent(wa).includes('antes'));
+  ok('WhatsApp al inquilino con el monto nuevo y sin el monto anterior', wa.startsWith('https://web.whatsapp.com/send?phone=5491122117765') && decodeURIComponent(wa).includes('656.000') && !decodeURIComponent(wa).includes('antes'));
   await filaBelgrano.locator('[data-accion="nota-aumento"]').click();
   ok('nota de aumento impresa', (await impresiones()) === 1 && (await pg.locator('#printArea').innerText()).includes('Notificación de actualización'));
   await pg.screenshot({ path: SHOTS + '/aumentos.png', fullPage: true });
@@ -284,6 +284,38 @@ try {
   ok('recibo en dólares: "US$" y "dólares estadounidenses"', reciboUsd.includes('US$') && reciboUsd.includes('Mil doscientos dólares estadounidenses'));
   await pg.screenshot({ path: SHOTS + '/recibo-usd.png' });
   await pg.click('[data-cerrar]');
+
+  // ---------- columnas de cobranzas ----------
+  ok('cobranzas muestra N° y propietario', (await pg.locator('#view thead').innerText()).includes('PROPIETARIO') || (await pg.locator('#view thead').innerText()).includes('Propietario'));
+
+  // ---------- actualizar contratos con una planilla corta ----------
+  await ir('#/importar');
+  await pg.click('[data-modo="actualizar"]');
+  const [descarga] = await Promise.all([pg.waitForEvent('download'), pg.click('[data-accion="importar-planilla"]')]);
+  const planilla = await (await import('node:fs/promises')).readFile(await descarga.path(), 'utf8');
+  ok('descarga la planilla de contratos para completar', planilla.includes('N° carpeta;Dirección;Inquilino;Monto actual') && planilla.includes('472;'));
+  const csvAct = 'N°carpeta/contrato;Monto actual;Última actualización;Tipo de aumento: IPC,ICL, %, Personalizado\n472;700.000;01/09/2026;IPC\n9999;1000;;\n';
+  await pg.setInputFiles('#actArchivo', { name: 'actualizar.csv', mimeType: 'text/csv', buffer: Buffer.from(csvAct) });
+  await pg.waitForSelector('text=3. Vista previa de los cambios');
+  const prevAct = await pg.locator('#view').innerText();
+  ok('vista previa: 1 cambio, 1 error (N° inexistente), con antes → después', prevAct.includes('$ 700.000') && prevAct.includes('No hay ningún contrato cargado con el N° 9999') && (await pg.locator('.stat-tile').first().innerText()).startsWith('1'));
+  await pg.screenshot({ path: SHOTS + '/actualizar.png', fullPage: true });
+  await pg.click('[data-accion="importar-aplicar"]');
+  await pg.click('#confirmarBtn');
+  await pg.waitForTimeout(800);
+  const c472 = await pg.evaluate(async () => { const m = await import('/src/services/datos.js'); return m.datos().contratos.find((c) => c.numero === '472'); });
+  ok('aplica: monto, IPC y próximo aumento = última + 4 meses', c472.alquilerActual === 700000 && c472.tipoAumento === 'IPC' && c472.proxAct === '2027-01-01');
+  await pg.click('#toastUndo');
+  await pg.waitForTimeout(800);
+  const c472b = await pg.evaluate(async () => { const m = await import('/src/services/datos.js'); return m.datos().contratos.find((c) => c.numero === '472'); });
+  ok('deshacer vuelve a los datos anteriores', c472b.alquilerActual === 696000 && c472b.proxAct === '2027-03-01');
+
+  // ---------- WhatsApp: web o aplicación, por computadora ----------
+  await ir('#/configuracion');
+  await pg.selectOption('#cfgWhatsapp', 'app');
+  await ir('#/aumentos?ver=todos');
+  await pg.locator('tr:has-text("Belgrano 1234") [data-accion="whatsapp-aumento"]').click();
+  ok('con "aplicación" abre WhatsApp de escritorio', (await pg.evaluate(() => window.__abiertos.at(-1))).startsWith('whatsapp://send?phone=5491122117765'));
 
   ok('sin errores en la página: ' + JSON.stringify(errores), errores.length === 0);
   await b.close();

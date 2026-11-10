@@ -64,6 +64,15 @@ export const guardarIndices = (ICL, IPC) => setDoc(doc(db, 'config', 'indices'),
 // Id nuevo sin escribir todavía (para armar lotes que se referencian entre sí).
 export const nuevoId = (coleccion) => doc(collection(db, coleccion)).id;
 
+// Cambios en lote sobre documentos existentes: [{coleccion, id, cambios}], de a 400 por tanda.
+export async function actualizarLote(items) {
+  for (let i = 0; i < items.length; i += 400) {
+    const lote = writeBatch(db);
+    items.slice(i, i + 400).forEach(({ coleccion, id, cambios }) => lote.update(doc(db, coleccion, id), { ...cambios, ...firma() }));
+    await lote.commit();
+  }
+}
+
 // Escritura en lote (importación): [{coleccion, id, data}], de a 400 por tanda.
 export async function guardarLote(items) {
   for (let i = 0; i < items.length; i += 400) {

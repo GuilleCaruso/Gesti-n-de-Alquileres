@@ -24,7 +24,7 @@ export function vista({ d, params }) {
   const falta = totalMonedas(cobros.map((p) => [pagoTotal(p) - cobradoDe(p), p.moneda]));
   const nPagados = cobros.filter((p) => p.estado === 'Pagado').length;
   const nVencidos = cobros.filter((p) => estadoCobro(p, hoy) === 'Vencido').length;
-  if (q) cobros = cobros.filter((p) => { const c = C(p.contractId); return [c?.numero, PR(c?.propertyId).direccion, PR(c?.propertyId).localidad, nombreCompleto(P(c?.tenantId))].join(' ').toLowerCase().includes(q); });
+  if (q) cobros = cobros.filter((p) => { const c = C(p.contractId); return [c?.numero, PR(c?.propertyId).direccion, PR(c?.propertyId).localidad, nombreCompleto(P(c?.tenantId)), nombreCompleto(P(c?.ownerId))].join(' ').toLowerCase().includes(q); });
   cobros.sort((a, b) => PR(C(a.contractId)?.propertyId).direccion.localeCompare(PR(C(b.contractId)?.propertyId).direccion));
   const filas = cobros.map((p) => {
     const c = C(p.contractId); const pr = PR(c?.propertyId); const est = estadoCobro(p, hoy);
@@ -32,8 +32,10 @@ export function vista({ d, params }) {
     const detalle = [p.expensas ? 'exp ' + $(p.expensas) : null, p.servicios ? 'serv ' + $(p.servicios) : null].filter(Boolean).join(' + ');
     const avisoAct = c && c.estado === 'Activo' && pendienteActualizacion(c, hoy) && p.estado !== 'Pagado' ? `<div class="cell-sub" style="color:var(--warn-600);">${icon('alert')} actualización pendiente</div>` : '';
     return `<tr>
-      <td><div class="cell-title">${esc(pr.direccion)}</div><div class="cell-sub">N° ${esc(c?.numero || '—')} · ${esc(pr.localidad)}</div></td>
+      <td class="cell-title tnum">${esc(c?.numero || '—')}</td>
+      <td><div class="cell-title">${esc(pr.direccion)}</div><div class="cell-sub">${esc(pr.localidad)}</div></td>
       <td>${esc(nombreCompleto(P(c?.tenantId)))}</td>
+      <td>${esc(nombreCompleto(P(c?.ownerId)))}</td>
       <td class="num tnum">${$(pagoTotal(p))}${detalle ? `<div class="cell-sub">alquiler ${$(p.importe)} + ${detalle}</div>` : ''}${p.estado === 'Parcial' ? `<div class="cell-sub">pagó ${$(p.pagado)}</div>` : ''}${avisoAct}</td>
       <td>${badgeEstado(est)}</td>
       <td class="tnum">${fdate(p.fechaPago)}${p.medio ? `<div class="cell-sub">${esc(p.medio)}</div>` : ''}</td>
@@ -60,9 +62,9 @@ export function vista({ d, params }) {
       <div class="stat-tile"><div class="stat-value tnum">${cobros.length - nPagados}</div><div class="stat-label">Falta cobrar</div></div>
       <div class="stat-tile"><div class="stat-value tnum">${nVencidos}</div><div class="stat-label">Vencidos</div></div>`}
     </div>
-    <div class="search-wrap" style="max-width:340px; margin-bottom:16px;">${lupa}<input class="search-input" data-filtro="q" id="filtroCobranzas" placeholder="Buscar propiedad, inquilino o N°..." value="${esc(params.get('q') || '')}"></div>
+    <div class="search-wrap" style="max-width:340px; margin-bottom:16px;">${lupa}<input class="search-input" data-filtro="q" id="filtroCobranzas" placeholder="Buscar N°, propiedad, inquilino o propietario..." value="${esc(params.get('q') || '')}"></div>
     <div class="table-wrap">${cobros.length
-      ? `<table><thead><tr><th>Propiedad</th><th>Inquilino</th><th class="num">Importe</th><th>Estado</th><th>Pago</th><th></th></tr></thead><tbody>${filas}</tbody></table>`
+      ? `<table><thead><tr><th>N°</th><th>Propiedad</th><th>Inquilino</th><th>Propietario</th><th class="num">Importe</th><th>Estado</th><th>Pago</th><th></th></tr></thead><tbody>${filas}</tbody></table>`
       : `<div class="empty-state">${icon('cobranzas')}<div class="empty-state-title">No hay alquileres para cobrar en ${periodoLabel(periodo)}</div><div>Se arman solos a partir de los contratos activos.</div></div>`}</div>`;
 }
 

@@ -95,12 +95,26 @@ export function docHead(titulo, sub) {
 export const docFoot = () => `<div class="doc-foot">Impreso el ${fdate(hoyIso())} · ${esc(INMOBILIARIA.nombre)}</div>`;
 
 // ---------- WhatsApp ----------
-export function linkWhatsApp(telefono, mensaje) {
+// Dónde se abre WhatsApp en ESTA computadora: 'web' (WhatsApp Web en Chrome) o 'app' (WhatsApp de escritorio).
+// Cada PC puede tener un número distinto en cada uno, por eso se guarda en el navegador y no en la base.
+const CLAVE_WA = 'caruso.whatsapp';
+export const modoWhatsApp = () => { try { return localStorage.getItem(CLAVE_WA) === 'app' ? 'app' : 'web'; } catch { return 'web'; } };
+export const fijarModoWhatsApp = (m) => { try { localStorage.setItem(CLAVE_WA, m === 'app' ? 'app' : 'web'); } catch { /* sin almacenamiento: queda en web */ } };
+
+export function linkWhatsApp(telefono, mensaje, modo = modoWhatsApp()) {
   let d = String(telefono || '').replace(/\D/g, '');
   if (d.startsWith('54')) d = d.slice(2);
   if (d.startsWith('0')) d = d.slice(1);
   if (d.startsWith('9')) d = d.slice(1);
-  return `https://wa.me/549${d}?text=${encodeURIComponent(mensaje)}`;
+  const q = `phone=549${d}&text=${encodeURIComponent(mensaje)}`;
+  return modo === 'app' ? `whatsapp://send?${q}` : `https://web.whatsapp.com/send?${q}`;
+}
+
+// WhatsApp Web se abre siempre en la misma pestaña (no una nueva por cada aviso).
+export function abrirWhatsApp(telefono, mensaje) {
+  const url = linkWhatsApp(telefono, mensaje);
+  if (modoWhatsApp() === 'app') window.open(url, '_self');
+  else window.open(url, 'caruso-whatsapp');
 }
 
 export const lupa = '<svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>';

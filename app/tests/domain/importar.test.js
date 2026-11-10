@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { adivinarMapeo, armarImportacion, normalizarFecha, normalizarFrecuencia, normalizarMonto, normalizarTipoAumento, parseCSV, proximaDesde, separarNombre, nombrePropio } from '../../src/domain/importar.js';
+import { adivinarMapeo, armarImportacion, normalizarFecha, normalizarFrecuencia, normalizarMonto, normalizarTipoAumento, parseCSV, proximaDesde, separarNombre, nombrePropio, armarActualizacion, CAMPOS_ACT, planillaContratos } from '../../src/domain/importar.js';
 
 describe('lectura del CSV', () => {
   test('detecta punto y coma, comillas y saltos de línea', () => {
@@ -170,5 +170,47 @@ describe('renovaciones y vencidos', () => {
   test('tildando "incluir vencidos" entran como Finalizado', () => {
     const r = armar(true);
     expect(r.contratos.find((c) => c.data.numero === '90').data.estado).toBe('Finalizado');
+  });
+});
+
+describe('actualizar contratos ya cargados (planilla de 4 columnas)', () => {
+  const encabezados = ['N°carpeta/contrato', 'Monto actual', 'Última actualización', 'Tipo de aumento: IPC,ICL, %, Personalizado'];
+  const mapeo = adivinarMapeo(encabezados, CAMPOS_ACT);
+  const contratos = [
+    { id: 'a', numero: '76', estado: 'Activo', alquilerActual: 1, tipoAumento: 'ICL', frecuencia: 3, proxAct: '2027-01-01', revisarAumento: true },
+    { id: 'viejo', numero: '76', estado: 'Finalizado', alquilerActual: 0, tipoAumento: 'ICL', frecuencia: 3, proxAct: '2024-01-01' },
+    { id: 'b', numero: '85', estado: 'Activo', alquilerActual: 500000, tipoAumento: 'Fijo', pctFijo: 8, frecuencia: 6, proxAct: '2027-01-01' },
+    { id: 'c', numero: '90', estado: 'Activo', alquilerActual: 300000, tipoAumento: 'IPC', frecuencia: 3, proxAct: '2026-12-01' },
+  ];
+  const filas = [
+    ['76', '630.000', '01/09/2026', 'IPC'],
+    ['85', '', '01/08/2026', '%'],
+    ['90', '300000', '', 'IPC'],
+    ['999', '1000', '', ''],
+    ['91', '', '', '%'],
+  ];
+  const r = armarActualizacion({ filas, mapeo, contratos: [...contratos, { id: 'd', numero: '91', estado: 'Activo', tipoAumento: 'ICL', frecuencia: 3, alquilerActual: 5 }], hoy: '2026-11-10' });
+  test('reconoce las 4 columnas por el título', () => {
+    expect(mapeo).toMatchObject({ numero: 0, alquiler: 1, ultimaAct: 2, tipoAumento: 3 });
+  });
+  test('corrige monto, tipo y calcula el próximo aumento desde el último (vigente, no el viejo con la misma carpeta)', () => {
+    const c = r.cambios.find((x) => x.id === 'a');
+    expect(c.nuevo).toEqual({ alquilerActual: 630000, tipoAumento: 'IPC', proxAct: '2026-12-01', revisarAumento: false });
+    expect(c.antes.alquilerActual).toBe(1);
+  });
+  test('"%" solo mantiene el porcentaje que ya tenía y usa su frecuencia', () => {
+    expect(r.cambios.find((x) => x.id === 'b').nuevo).toEqual({ proxAct: '2027-02-01' });
+  });
+  test('fila sin cambios no genera nada', () => {
+    expect(r.cambios.find((x) => x.id === 'c')).toBeUndefined();
+  });
+  test('N° inexistente y % sin número van a errores', () => {
+    expect(r.errores.map((e) => e.fila)).toEqual([5, 6]);
+  });
+  test('planilla para completar: CSV con BOM y separador ;', () => {
+    const csv = planillaContratos(contratos, [], []);
+    expect(csv.startsWith('\uFEFFN° carpeta;')).toBe(true);
+    expect(csv).toContain('85;;;500000;Pesos;;8%;6');
+    expect(csv).not.toContain('2024');
   });
 });
