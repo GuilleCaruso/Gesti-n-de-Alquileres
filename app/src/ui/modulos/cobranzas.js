@@ -87,7 +87,17 @@ function cobroPorId(d, id, periodo) {
 }
 
 // ---------- recibo ----------
-export function reciboHtml(d, p, montoFijo, aCuenta) {
+// Recibo de un cobro. Sin `opc`, es el último cobro registrado (o el mes entero si no hay cobros).
+// `opc.monto` = lo que certifica este recibo; `opc.previo` = lo pagado antes en el mismo mes.
+function datosRecibo(p, opc) {
+  if (opc) return { monto: opc.monto, previo: opc.previo || 0 };
+  const cobros = p.cobros || [];
+  if (!cobros.length) return { monto: pagoTotal(p), previo: 0 };
+  const ultimo = cobros[cobros.length - 1];
+  return { monto: ultimo.monto, previo: cobros.slice(0, -1).reduce((s, x) => s + (x.monto || 0), 0), fecha: ultimo.fecha };
+}
+
+export function reciboHtml(d, p, opc) {
   const c = d.contratos.find((x) => x.id === p.contractId);
   const pr = d.propiedades.find((x) => x.id === c.propertyId) || {};
   const P = (id) => d.personas.find((x) => x.id === id);
@@ -95,23 +105,33 @@ export function reciboHtml(d, p, montoFijo, aCuenta) {
   const [y, m] = p.periodo.split('-').map(Number);
   const desde = new Date(y, m - 1, 1).toLocaleDateString('es-AR');
   const hasta = new Date(y, m, 0).toLocaleDateString('es-AR');
-  const monto = montoFijo != null ? montoFijo : p.estado === 'Parcial' ? p.pagado || 0 : pagoTotal(p);
+  const { monto, previo, fecha: fechaCobro } = datosRecibo(p, opc);
+  const total = pagoTotal(p);
+  const saldo = Math.max(0, total - previo - monto);
+  const parcial = saldo > 0 || previo > 0;
+  const $ = (n) => money(n, p.moneda);
   const letras = numeroALetras(monto);
+  const nota = saldo > 0 ? ' (pago a cuenta)' : previo > 0 ? ' (cancela el saldo del mes)' : '';
+  // en un pago parcial lo importante es cuánto pagó, cuánto debía y cuánto le queda
+  const desglose = parcial ? `
+          <div><span class="kv-label">Total del mes</span><div class="tnum">${$(total)}</div><div class="receipt-mini">alquiler ${$(p.importe)}${p.expensas ? ' + exp ' + $(p.expensas) : ''}${p.servicios ? ' + serv ' + $(p.servicios) : ''}</div></div>
+          <div class="receipt-destacado"><span class="kv-label">Pagó ahora</span><div class="tnum">${$(monto)}</div>${previo ? `<div class="receipt-mini">antes ya había pagado ${$(previo)}</div>` : ''}</div>
+          <div><span class="kv-label">${saldo > 0 ? 'Saldo pendiente' : 'Saldo'}</span><div class="tnum">${saldo > 0 ? $(saldo) : 'Cancelado'}</div></div>` : `
+          <div><span class="kv-label">Alquiler</span><div class="tnum">${$(p.importe)}</div></div>
+          <div><span class="kv-label">Expensas</span><div class="tnum">${p.expensas ? $(p.expensas) : '—'}</div></div>
+          <div><span class="kv-label">Servicios</span><div class="tnum">${p.servicios ? $(p.servicios) : '—'}</div></div>`;
   return `
     <div class="receipt-print"><div class="receipt-box">
       <div class="receipt-side"><div>RECIBO DE ALQUILER</div><div class="receipt-nofactura">DOCUMENTO NO VÁLIDO COMO FACTURA</div></div>
       <div class="receipt-body">
         <div class="receipt-head"><img src="${LOGO}" alt=""><div class="receipt-org"><b>${esc(INMOBILIARIA.nombre)}</b><div>${esc(INMOBILIARIA.localidad)} · ${esc(INMOBILIARIA.telefono)}</div></div></div>
-        <div class="receipt-row"><span class="rl">Contrato N°</span><span class="rv">${esc(c.numero || '—')}</span><span class="rl" style="margin-left:14px;">Fecha</span><span class="rv">${fdate(p.fechaPago || hoyIso())}</span></div>
+        <div class="receipt-row"><span class="rl">Contrato N°</span><span class="rv">${esc(c.numero || '—')}</span><span class="rl" style="margin-left:14px;">Fecha</span><span class="rv">${fdate(fechaCobro || p.fechaPago || hoyIso())}</span></div>
         <div class="receipt-row"><span class="rl">Recibido de</span><span class="rv">${esc(recibidoDe)}</span></div>
-        <div class="receipt-row"><span class="rl">La suma de ${p.moneda === 'USD' ? 'US$' : '$'}</span><span class="rv tnum">${Math.round(monto).toLocaleString('es-AR')}${aCuenta ? ' (pago a cuenta)' : ''}</span></div>
+        <div class="receipt-row"><span class="rl">La suma de ${p.moneda === 'USD' ? 'US$' : '$'}</span><span class="rv tnum">${Math.round(monto).toLocaleString('es-AR')}${nota}</span></div>
         <div class="receipt-row"><span class="rl" style="white-space:normal;">${esc(letras.charAt(0).toUpperCase() + letras.slice(1))} ${nombreMoneda(p.moneda)}</span></div>
         <div class="receipt-row"><span class="rl">Por alquiler de</span><span class="rv">${esc(pr.direccion)}, ${esc(pr.localidad)}</span></div>
         <div class="receipt-row"><span class="rl">Correspondiente a</span><span class="rv">${periodoLabel(p.periodo)} (del ${desde} al ${hasta})</span></div>
-        <div class="receipt-breakdown">
-          <div><span class="kv-label">Alquiler</span><div class="tnum">${money(p.importe, p.moneda)}</div></div>
-          <div><span class="kv-label">Expensas</span><div class="tnum">${p.expensas ? money(p.expensas, p.moneda) : '—'}</div></div>
-          <div><span class="kv-label">Servicios</span><div class="tnum">${p.servicios ? money(p.servicios, p.moneda) : '—'}</div></div>
+        <div class="receipt-breakdown">${desglose}
         </div>
         <div class="receipt-sign">Firma _______________________________</div>
       </div>
@@ -119,13 +139,13 @@ export function reciboHtml(d, p, montoFijo, aCuenta) {
 }
 const CORTE = '<div class="receipt-cut"><span>✂ cortar aquí</span></div>';
 
-function verRecibo(d, p) {
-  const box = abrirModal(reciboHtml(d, p, null, p.estado === 'Parcial') + `
+function verRecibo(d, p, opc) {
+  const box = abrirModal(reciboHtml(d, p, opc) + `
     <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:18px;">
       <button class="btn" data-cerrar>Cerrar</button>
       <button class="btn btn-primary" id="imprimirRecibo">${icon('printer')}Imprimir</button>
     </div>`, true);
-  box.querySelector('#imprimirRecibo').onclick = () => imprimir([reciboHtml(d, p, null, p.estado === 'Parcial')]);
+  box.querySelector('#imprimirRecibo').onclick = () => imprimir([reciboHtml(d, p, opc)]);
 }
 
 function cobrarModal(d, p) {
@@ -137,7 +157,7 @@ function cobrarModal(d, p) {
     <div class="section-title" style="margin-bottom:6px;">Registrar cobro</div>
     <div class="page-sub" style="margin-bottom:14px;">${esc(pr.direccion)} — ${esc(nombreCompleto(t))} — ${periodoLabel(p.periodo)}</div>
     <div class="form-grid" style="margin-bottom:12px;">
-      <div class="field"><label>Alquiler${p.moneda === 'USD' ? ' (dólares)' : ''}</label><input value="${money(p.importe, p.moneda)}" disabled style="text-align:right;"></div>
+      <div class="field"><label for="coAlq">Alquiler${p.moneda === 'USD' ? ' (dólares)' : ''}</label><input type="number" id="coAlq" min="0" step="any" value="${p.importe}" style="text-align:right;"><span class="cell-sub" id="coAlqNota"></span></div>
       <div class="field"><label for="coExp">Expensas</label><input type="number" id="coExp" min="0" step="100" value="${p.expensas || 0}" style="text-align:right;"></div>
       <div class="field"><label for="coServ">Servicios</label><input type="number" id="coServ" min="0" step="100" value="${p.servicios || 0}" style="text-align:right;"></div>
       <div class="field"><label>Total del mes</label><input id="coTotal" disabled style="text-align:right; font-weight:700;"></div>
@@ -146,26 +166,34 @@ function cobrarModal(d, p) {
       <div class="field"><label for="coFecha">Fecha de pago</label>${inputFecha('coFecha', hoyIso())}</div>
     </div>
     ${botonesModal('Confirmar cobro', 'coOk')}`, true);
-  const total = () => p.importe + numero('coExp') + numero('coServ');
+  const importe = () => numero('coAlq');
+  const total = () => importe() + numero('coExp') + numero('coServ');
   const refrescar = () => {
     const saldo = Math.max(0, total() - pagadoYa);
     box.querySelector('#coTotal').value = money(total(), p.moneda);
     box.querySelector('#coMontoLabel').textContent = `Cobrado ahora (falta ${money(saldo, p.moneda)}${pagadoYa ? ', ya pagó ' + money(pagadoYa, p.moneda) : ''})`;
     box.querySelector('#coMonto').value = saldo;
+    box.querySelector('#coAlqNota').textContent = importe() !== p.importe ? `Solo para este mes (el contrato dice ${money(p.importe, p.moneda)}). Si el contrato está mal, corregilo en el contrato o en Aumentos.` : '';
   };
-  ['coExp', 'coServ'].forEach((i) => box.querySelector('#' + i).addEventListener('input', refrescar));
+  ['coAlq', 'coExp', 'coServ'].forEach((i) => box.querySelector('#' + i).addEventListener('input', refrescar));
   refrescar();
   box.querySelector('#coOk').onclick = async () => {
     const monto = numero('coMonto');
     if (monto <= 0) { aviso('Ingresá el monto cobrado'); return; }
+    if (importe() <= 0) { aviso('Revisá el alquiler del mes'); return; }
+    const saldoAntes = total() - pagadoYa;
+    if (monto > saldoAntes + 0.5) {
+      aviso(`Estás cobrando ${money(monto - saldoAntes, p.moneda)} más que lo que debe. Si el alquiler de este mes es mayor, cambialo en "Alquiler"; si es otro concepto, sumalo en "Servicios".`);
+      return;
+    }
     const fechaPago = fecha('coFecha');
     if (fechaPago === null) { aviso('La fecha de pago está mal escrita: usá dd/mm/aaaa'); return; }
     const nuevoTotal = total();
     const pagado = pagadoYa + monto;
     const completo = pagado >= nuevoTotal;
-    const prev = p.nuevo ? null : { estado: p.estado, pagado: p.pagado || 0, fechaPago: p.fechaPago || null, medio: p.medio || null, expensas: p.expensas || 0, servicios: p.servicios || 0, cobros: p.cobros || [] };
+    const prev = p.nuevo ? null : { estado: p.estado, pagado: p.pagado || 0, fechaPago: p.fechaPago || null, medio: p.medio || null, expensas: p.expensas || 0, servicios: p.servicios || 0, cobros: p.cobros || [], importe: p.importe };
     const registro = {
-      contractId: p.contractId, periodo: p.periodo, importe: p.importe, vencimiento: p.vencimiento, moneda: p.moneda || 'ARS',
+      contractId: p.contractId, periodo: p.periodo, importe: importe(), vencimiento: p.vencimiento, moneda: p.moneda || 'ARS',
       expensas: numero('coExp'), servicios: numero('coServ'),
       estado: completo ? 'Pagado' : 'Parcial', pagado: completo ? nuevoTotal : pagado,
       fechaPago: fechaPago || hoyIso(), medio: campo('coMedio'),
@@ -178,7 +206,7 @@ function cobrarModal(d, p) {
     if (ok) {
       cerrarModal();
       const guardado = { ...p, ...registro, id };
-      verRecibo(d, completo ? guardado : { ...guardado, estado: 'Parcial', pagado: monto });
+      verRecibo(d, guardado, { monto, previo: pagadoYa });
     }
   };
 }
@@ -209,7 +237,8 @@ function recibosDelMesModal(d, periodo) {
     const paginas = [];
     if (box.querySelector('#rcPlanilla').checked) paginas.push(planillaHtml(d, lista, pend, periodo));
     for (let i = 0; i < lista.length; i += 2) {
-      paginas.push(reciboHtml(d, lista[i], pagoTotal(lista[i])) + (lista[i + 1] ? CORTE + reciboHtml(d, lista[i + 1], pagoTotal(lista[i + 1])) : ''));
+      const entero = (p) => reciboHtml(d, p, { monto: pagoTotal(p), previo: 0 });
+      paginas.push(entero(lista[i]) + (lista[i + 1] ? CORTE + entero(lista[i + 1]) : ''));
     }
     cerrarModal();
     imprimir(paginas);
