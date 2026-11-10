@@ -4,7 +4,7 @@ import { esc, fdate, money } from '../../domain/formato.js';
 import { contratosActivos, datosAumento, nombreCompleto } from '../../domain/consultas.js';
 import { computeNuevo, faltaIndice, pendienteActualizacion } from '../../domain/negocio.js';
 import { actualizar, guardarIndices } from '../../services/datos.js';
-import { aviso, confirmar, docFoot, docHead, hoyIso, imprimir, intentar, linkWhatsApp } from '../base.js';
+import { aviso, confirmar, docFoot, docHead, hoyIso, imprimir, intentar, abrirWhatsApp } from '../base.js';
 import { icon } from '../icons.js';
 import { metodoLabel } from './contratos.js';
 
@@ -142,7 +142,7 @@ export const acciones = {
     if (valorNuevo(c) <= 0) { aviso('Primero cargá el índice o escribí el alquiler nuevo'); return; }
     const t = d.personas.find((x) => x.id === c.tenantId);
     if (!t || !t.telefono) { aviso('El inquilino no tiene teléfono cargado'); return; }
-    window.open(linkWhatsApp(t.telefono, mensajeWhatsApp(d, c, valorNuevo(c), c.proxAct)), '_blank', 'noopener');
+    abrirWhatsApp(t.telefono, mensajeWhatsApp(d, c, valorNuevo(c), c.proxAct));
   },
   'nota-aumento': ({ d, ds }) => {
     const c = d.contratos.find((x) => x.id === ds.id);

@@ -328,6 +328,9 @@ td.num, th.num{text-align:right; white-space:nowrap;}
 .receipt-breakdown > div{flex:1; text-align:center; border:1px solid #1a1a1a; border-radius:6px; padding:8px;}
 .receipt-breakdown .kv-label{color:#444;}
 .receipt-breakdown .tnum{font-weight:700; font-size:14px; margin-top:2px;}
+.receipt-breakdown .receipt-destacado{border-width:2px;}
+.receipt-breakdown .receipt-destacado .tnum{font-size:17px;}
+.receipt-mini{font-size:10.5px; color:#444; margin-top:2px;}
 .receipt-sign{text-align:right; margin-top:24px; font-size:13px;}
 .receipt-head{display:flex; align-items:center; gap:12px; padding-bottom:8px; border-bottom:2px solid #1a1a1a;}
 .receipt-head img{height:44px; width:auto; border-radius:4px; flex:none;}

@@ -59,12 +59,12 @@ export function parseCSV(texto) {
 }
 
 // Propone qué columna corresponde a cada campo, por el título.
-export function adivinarMapeo(encabezados) {
+export function adivinarMapeo(encabezados, campos = CAMPOS) {
   const usadas = new Set();
   const mapeo = {};
   const norm = encabezados.map(sinAcentos);
   // primero las claves más largas (más específicas): "dni inquilino" antes que "inquilino"
-  const pares = CAMPOS.flatMap((c) => c.claves.map((clave) => ({ k: c.k, clave: sinAcentos(clave) }))).sort((a, b) => b.clave.length - a.clave.length);
+  const pares = campos.flatMap((c) => c.claves.map((clave) => ({ k: c.k, clave: sinAcentos(clave) }))).sort((a, b) => b.clave.length - a.clave.length);
   // 1° pasada: título idéntico ("Carpeta", "Contrato"); 2° pasada: título que contiene la palabra
   for (const exacto of [true, false]) {
     for (const { k, clave } of pares) {
@@ -114,7 +114,7 @@ export function normalizarTipoAumento(v) {
   if (s.includes('icl')) return { tipoAumento: 'ICL' };
   if (s.includes('ipc')) return { tipoAumento: 'IPC' };
   const pct = s.match(/(\d+(?:[.,]\d+)?)\s*%/);
-  if (pct || s.includes('fijo')) return { tipoAumento: 'Fijo', pctFijo: pct ? parseFloat(pct[1].replace(',', '.')) : null };
+  if (pct || s.includes('fijo') || s.includes('%') || s.includes('porcentaje')) return { tipoAumento: 'Fijo', pctFijo: pct ? parseFloat(pct[1].replace(',', '.')) : null };
   return { tipoAumento: s ? 'Personalizado' : 'ICL' };
 }
 
@@ -276,4 +276,98 @@ export function armarImportacion({ filas, mapeo, formatoNombre, existentes, gene
   const aRevisar = contratos.filter((c) => c.data.revisarAumento).length;
   if (aRevisar) avisos.unshift({ fila: null, msg: `${aRevisar} contrato(s) vigentes sin "cada cuántos meses" o sin "próxima actualización": se cargan cada ${Number(frecuenciaDefecto) || 3} meses desde el inicio y quedan marcados "Revisar aumento" para que los confirmen a mano.` });
   return { personas, propiedades, contratos, errores, avisos };
+}
+
+// ---------- actualizar contratos ya cargados ----------
+// Planilla corta: N° de carpeta + lo que se quiera corregir (monto, último aumento, tipo, frecuencia).
+export const CAMPOS_ACT = [
+  { k: 'numero', l: 'N° de carpeta / contrato', req: true, claves: ['carpeta', 'contrato', 'nro', 'numero', 'n°'] },
+  { k: 'alquiler', l: 'Monto actual', claves: ['monto actual', 'alquiler actual', 'monto', 'alquiler', 'importe'] },
+  { k: 'ultimaAct', l: 'Última actualización (fecha)', claves: ['ultima actualizacion', 'ultimo aumento', 'ultima act', 'ultima', 'ultimo'] },
+  { k: 'tipoAumento', l: 'Tipo de aumento (ICL/IPC/8%/Personalizado)', claves: ['tipo de aumento', 'tipo de ajuste', 'indice', 'ajuste', 'tipo'] },
+  { k: 'frecuencia', l: 'Cada cuántos meses', claves: ['cada cuantos meses', 'cada', 'frecuencia', 'periodicidad', 'meses'] },
+  { k: 'moneda', l: 'Moneda (pesos / dólares)', claves: ['moneda', 'divisa'] },
+];
+
+const TIPOS_TEXTO = { ICL: 'ICL', IPC: 'IPC', Fijo: '% fijo', Personalizado: 'Personalizado' };
+const etiquetaAumento = (c) => (c.tipoAumento === 'Fijo' ? `${c.pctFijo ?? '?'}% fijo` : TIPOS_TEXTO[c.tipoAumento] || c.tipoAumento || '—') + ` · cada ${c.frecuencia || 3}m`;
+
+// Devuelve los cambios a aplicar a contratos existentes, sin tocar la base.
+export function armarActualizacion({ filas, mapeo, contratos, hoy }) {
+  const val = (fila, k) => (mapeo[k] != null ? String(fila[mapeo[k]] ?? '').trim() : '');
+  const cambios = []; const errores = []; const avisos = [];
+  const vistos = new Set();
+  filas.forEach((fila, i) => {
+    const n = i + 2;
+    const numero = val(fila, 'numero');
+    if (!numero) { if (fila.some((x) => String(x || '').trim())) errores.push({ fila: n, msg: 'Falta el N° de carpeta' }); return; }
+    const delNumero = contratos.filter((c) => String(c.numero || '') === numero);
+    const c = delNumero.find((x) => x.estado === 'Activo') || delNumero[0];
+    if (!c) { errores.push({ fila: n, msg: `No hay ningún contrato cargado con el N° ${numero}` }); return; }
+    if (vistos.has(c.id)) { avisos.push({ fila: n, msg: `El N° ${numero} está repetido en la planilla: vale la primera fila` }); return; }
+    vistos.add(c.id);
+    const nuevo = {};
+    const montoTxt = val(fila, 'alquiler');
+    if (montoTxt) {
+      const m = normalizarMonto(montoTxt);
+      if (m <= 0) { errores.push({ fila: n, msg: `N° ${numero}: monto no reconocido ("${montoTxt}")` }); return; }
+      if (m !== c.alquilerActual) nuevo.alquilerActual = m;
+    }
+    const monTxt = sinAcentos(val(fila, 'moneda'));
+    if (monTxt) {
+      const mon = /dol|usd|u\$s|us\$/.test(monTxt) ? 'USD' : 'ARS';
+      if (mon !== (c.moneda || 'ARS')) nuevo.moneda = mon;
+    }
+    const tipoTxt = val(fila, 'tipoAumento');
+    if (tipoTxt) {
+      const t = normalizarTipoAumento(tipoTxt);
+      if (t.tipoAumento === 'Fijo' && !t.pctFijo) {
+        if (c.tipoAumento === 'Fijo' && c.pctFijo) t.pctFijo = c.pctFijo;
+        else { errores.push({ fila: n, msg: `N° ${numero}: falta el porcentaje (escribí por ejemplo "8%")` }); return; }
+      }
+      if (t.tipoAumento !== c.tipoAumento) nuevo.tipoAumento = t.tipoAumento;
+      if (t.tipoAumento === 'Fijo' && t.pctFijo !== c.pctFijo) nuevo.pctFijo = t.pctFijo;
+    }
+    const frecTxt = val(fila, 'frecuencia');
+    const frecuencia = frecTxt ? normalizarFrecuencia(frecTxt) : c.frecuencia || 3;
+    if (frecTxt && frecuencia !== c.frecuencia) nuevo.frecuencia = frecuencia;
+    const ultTxt = val(fila, 'ultimaAct');
+    if (ultTxt) {
+      const ult = normalizarFecha(ultTxt);
+      if (!ult) { errores.push({ fila: n, msg: `N° ${numero}: fecha de última actualización no reconocida ("${ultTxt}")` }); return; }
+      const prox = addMonths(ult, frecuencia);
+      if (prox !== c.proxAct) nuevo.proxAct = prox;
+      if (prox <= hoy) avisos.push({ fila: n, msg: `N° ${numero}: el próximo aumento (${prox.split('-').reverse().join('/')}) ya venció, va a aparecer como pendiente en Aumentos` });
+    } else if (nuevo.frecuencia && c.proxAct) {
+      avisos.push({ fila: n, msg: `N° ${numero}: cambió la frecuencia pero sin "última actualización" la fecha del próximo aumento no se recalcula` });
+    }
+    // con la fecha del último aumento confirmada, el contrato deja de estar "a revisar"
+    if (ultTxt && c.revisarAumento) nuevo.revisarAumento = false;
+    if (!Object.keys(nuevo).length) return;
+    const despues = { ...c, ...nuevo };
+    const antes = {};
+    Object.keys(nuevo).forEach((k) => { antes[k] = c[k] ?? null; });
+    cambios.push({ id: c.id, numero, nuevo, antes, resumen: {
+      alquiler: [c.alquilerActual, despues.alquilerActual], moneda: [c.moneda || 'ARS', despues.moneda || 'ARS'],
+      aumento: [etiquetaAumento(c), etiquetaAumento(despues)], proxAct: [c.proxAct, despues.proxAct],
+    } });
+  });
+  return { cambios, errores, avisos };
+}
+
+// Planilla para completar: los contratos activos con las columnas que entiende "actualizar".
+export function planillaContratos(contratos, propiedades, personas) {
+  const PR = (id) => propiedades.find((x) => x.id === id) || {};
+  const P = (id) => personas.find((x) => x.id === id);
+  const fila = (cols) => cols.map((v) => { const t = String(v ?? ''); return /[;"\n]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t; }).join(';');
+  const tipo = (c) => (c.tipoAumento === 'Fijo' ? `${c.pctFijo ?? ''}%` : c.tipoAumento || '');
+  const lineas = [fila(['N° carpeta', 'Dirección', 'Inquilino', 'Monto actual', 'Moneda', 'Última actualización', 'Tipo de aumento', 'Cada cuántos meses'])];
+  contratos.filter((c) => c.estado === 'Activo')
+    .sort((a, b) => String(a.numero || '').localeCompare(String(b.numero || ''), undefined, { numeric: true }))
+    .forEach((c) => {
+      const t = P(c.tenantId);
+      lineas.push(fila([c.numero || '', PR(c.propertyId).direccion || '', t ? `${t.apellido}, ${t.nombre}` : '', c.alquilerActual || '',
+        c.moneda === 'USD' ? 'Dólares' : 'Pesos', '', tipo(c), c.frecuencia || 3]));
+    });
+  return '\uFEFF' + lineas.join('\r\n');
 }

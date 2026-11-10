@@ -7,7 +7,7 @@ import { alCambiar, datos, detenerDatos, iniciarDatos } from '../services/datos.
 import { salir } from '../services/sesion.js';
 import { cerrarModal, fijarPerfil, lupa, periodoActual } from './base.js';
 import { icon } from './icons.js';
-import { montarUsuarios, vistaConfiguracion, vistaInicio, vistaUsuarios } from './vistas.js';
+import { montarConfiguracion, montarUsuarios, vistaConfiguracion, vistaInicio, vistaUsuarios } from './vistas.js';
 import * as personas from './modulos/personas.js';
 import * as propiedades from './modulos/propiedades.js';
 import * as contratos from './modulos/contratos.js';
@@ -68,7 +68,7 @@ export function montarShell(root, perfil) {
     const editados = [...view.querySelectorAll('input[id]:not([data-filtro])')].filter((i) => i.type !== 'file' && i.value !== i.defaultValue).map((i) => [i.id, i.value]);
     if (seccion === 'inicio') view.innerHTML = vistaInicio(perfil, d);
     else if (seccion === 'usuarios') { view.innerHTML = vistaUsuarios(); montarUsuarios(perfil, () => render()); }
-    else if (seccion === 'configuracion') view.innerHTML = vistaConfiguracion();
+    else if (seccion === 'configuracion') { view.innerHTML = vistaConfiguracion(); montarConfiguracion(); }
     else if (seccion === 'propiedades' && id) view.innerHTML = propiedades.vistaFicha(ctx);
     else view.innerHTML = MODULOS[seccion].vista(ctx);
     if (MODULOS[seccion] && MODULOS[seccion].montar) MODULOS[seccion].montar(ctx);
