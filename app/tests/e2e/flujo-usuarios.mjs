@@ -69,6 +69,9 @@ try {
   await emp.goto(URL + '#/'); await emp.waitForSelector('.stat-tile');
   ok('Inicio del empleado: cuántos faltan cobrar, sin plata', (await emp.locator('.stat-grid').innerText()).includes('Alquileres por cobrar') && !(await emp.locator('.stat-grid').innerText()).includes('$'));
   await emp.goto(URL + '#/cobranzas'); await emp.waitForSelector('.stat-tile');
+  await emp.goto(URL + '#/deudores'); await emp.waitForSelector('.stat-tile');
+  ok('Deudores del empleado: sin la deuda total', !(await emp.locator('.stat-grid').innerText()).includes('Deuda total'));
+  await emp.goto(URL + '#/cobranzas'); await emp.waitForSelector('.stat-tile');
   ok('Cobranzas del empleado: cantidades, sin totales en plata', !(await emp.locator('.stat-grid').innerText()).includes('$'));
 
   // quitar acceso

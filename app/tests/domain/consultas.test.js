@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { contratosPorVencer, contratoVencido, diasParaVencer, addMonths, alquilerDelPeriodo, deshacerUltimoAumento, finPorDefecto, buscar, cobrosDelMes, contratoVigente, datosAumento, estadoCobro, estadoPropiedad, saldoCobro } from '../../src/domain/consultas.js';
+import { deudas, deudaDesde, contratosPorVencer, contratoVencido, diasParaVencer, addMonths, alquilerDelPeriodo, deshacerUltimoAumento, finPorDefecto, buscar, cobrosDelMes, contratoVigente, datosAumento, estadoCobro, estadoPropiedad, saldoCobro } from '../../src/domain/consultas.js';
 
 const personas = [
   { id: 'p1', nombre: 'Carlos', apellido: 'Pérez', dni: '18.334.221', roles: ['Propietario'] },
@@ -125,5 +125,47 @@ describe('contratos vencidos y por vencer', () => {
   });
   test('los meses entre el vencimiento y hoy también se pueden cobrar', () => {
     expect(cobrosDelMes(contratos, [], '2026-10', hoy).some((p) => p.contractId === 'v' && p.contratoVencido)).toBe(true);
+  });
+});
+
+describe('deudores', () => {
+  const hoy = '2026-11-11';
+  const base = { estado: 'Activo', inicio: '2025-03-01', fin: '2027-02-28', alquilerActual: 100000, diaVencimiento: 10, historial: [] };
+  test('por defecto controla desde el mes en que se cargó el contrato (no inventa deuda vieja)', () => {
+    const cargadoEnNov = { ...base, id: 'a', creadoEn: { toDate: () => new Date(2026, 10, 9) } };
+    expect(deudaDesde(cargadoEnNov, hoy)).toBe('2026-11');
+    expect(deudaDesde({ ...base, id: 'b', inicio: '2026-12-01' }, hoy)).toBe('2026-12');
+    expect(deudaDesde({ ...base, deudaDesde: '2026-09' }, hoy)).toBe('2026-09');
+  });
+  test('meses anteriores impagos + el mes actual si ya venció', () => {
+    const c = { ...base, id: 'a', deudaDesde: '2026-09' };
+    const pagos = [{ id: 'a_2026-10', contractId: 'a', periodo: '2026-10', estado: 'Pagado', importe: 100000, pagado: 100000 }];
+    const [x] = deudas([c], pagos, hoy);
+    expect(x.items.map((i) => i.periodo)).toEqual(['2026-09', '2026-11']);
+    expect(x.saldo).toBe(200000);
+  });
+  test('el mes actual no cuenta antes del día de vencimiento', () => {
+    expect(deudas([{ ...base, id: 'a', deudaDesde: '2026-11' }], [], '2026-11-08')).toEqual([]);
+  });
+  test('pago parcial: debe solo el saldo', () => {
+    const c = { ...base, id: 'a', deudaDesde: '2026-10' };
+    const pagos = [{ id: 'a_2026-10', contractId: 'a', periodo: '2026-10', estado: 'Parcial', importe: 100000, pagado: 40000 }];
+    const [x] = deudas([c], pagos, '2026-11-05');
+    expect(x.items).toEqual([{ id: 'a_2026-10', periodo: '2026-10', total: 100000, pagado: 40000, saldo: 60000, parcial: true }]);
+  });
+  test('usa el alquiler que regía en cada mes (antes del aumento)', () => {
+    const c = { ...base, id: 'a', deudaDesde: '2026-10', alquilerActual: 120000, historial: [{ fecha: '2026-11-01', anterior: 100000, nuevo: 120000 }] };
+    expect(deudas([c], [], hoy)[0].items.map((i) => i.saldo)).toEqual([100000, 120000]);
+  });
+  test('contrato vencido sin renovar sigue generando deuda; el finalizado solo lo que quedó a medio pagar', () => {
+    const vencido = { ...base, id: 'v', fin: '2026-09-30', deudaDesde: '2026-09' };
+    expect(deudas([vencido], [], hoy)[0].items.map((i) => i.periodo)).toEqual(['2026-09', '2026-10', '2026-11']);
+    const fin = { ...base, id: 'f', estado: 'Finalizado', deudaDesde: '2026-09' };
+    expect(deudas([fin], [], hoy)).toEqual([]);
+    expect(deudas([fin], [{ id: 'f_2026-09', contractId: 'f', periodo: '2026-09', estado: 'Parcial', importe: 100000, pagado: 10000 }], hoy)[0].saldo).toBe(90000);
+  });
+  test('ordena primero al que debe más meses', () => {
+    const r = deudas([{ ...base, id: 'uno', deudaDesde: '2026-10' }, { ...base, id: 'tres', deudaDesde: '2026-08' }], [], '2026-11-05');
+    expect(r.map((x) => x.contrato.id)).toEqual(['tres', 'uno']);
   });
 });

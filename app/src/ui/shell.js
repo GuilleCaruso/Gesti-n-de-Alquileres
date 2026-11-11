@@ -15,8 +15,9 @@ import * as contratos from './modulos/contratos.js';
 import * as aumentos from './modulos/aumentos.js';
 import * as cobranzas from './modulos/cobranzas.js';
 import * as importar from './modulos/importar.js';
+import * as deudores from './modulos/deudores.js';
 
-const MODULOS = { personas, propiedades, contratos, aumentos, cobranzas, importar };
+const MODULOS = { personas, propiedades, contratos, aumentos, cobranzas, importar, deudores };
 const ACCIONES = Object.assign({}, ...Object.values(MODULOS).map((m) => m.acciones || {}));
 
 // un año de cobros para atrás alcanza para el día a día

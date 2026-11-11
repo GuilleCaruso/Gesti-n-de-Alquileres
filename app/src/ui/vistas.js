@@ -1,6 +1,6 @@
 // Vistas generales: Inicio, Usuarios y Configuración.
 import { esc, periodoLabel, totalMonedas } from '../domain/formato.js';
-import { cobrosDelMes, contratosActivos, contratosPorVencer, contratoVencido, estadoCobro } from '../domain/consultas.js';
+import { deudas, cobrosDelMes, contratosActivos, contratosPorVencer, contratoVencido } from '../domain/consultas.js';
 import { copiaCompleta, diasSinCopia, hojasCopia } from '../domain/copia.js';
 import { leerTodo } from '../services/datos.js';
 import { esAdmin } from '../domain/permisos.js';
@@ -17,8 +17,8 @@ export function vistaInicio(perfil, d) {
   const porVencer = contratosPorVencer(d.contratos, hoy);
   const yaVencidos = porVencer.filter((c) => contratoVencido(c, hoy)).length;
   const sinCopia = diasSinCopia(ultimaCopia(), hoy);
+  const conDeuda = deudas(d.contratos, d.pagos, hoy).length;
   const pagados = cobros.filter((p) => p.estado === 'Pagado').length;
-  const vencidos = cobros.filter((p) => estadoCobro(p, hoy) === 'Vencido').length;
   const falta = totalMonedas(cobros.map((p) => [p.estado === 'Pagado' ? 0 : pagoTotal(p) - (p.estado === 'Parcial' ? p.pagado || 0 : 0), p.moneda]));
   const aumentos = contratosActivos(d.contratos).filter((c) => pendienteActualizacion(c, hoy)).length;
   const tile = (valor, label, nav, tono) => `<button class="stat-tile" data-nav="${nav}" style="cursor:pointer; text-align:left; font:inherit; color:inherit;"><div class="stat-value tnum" style="color:var(--${tono}-600);">${valor}</div><div class="stat-label">${label}</div></button>`;
@@ -27,14 +27,14 @@ export function vistaInicio(perfil, d) {
     ${!d.listo ? '<div class="empty-state">Cargando datos…</div>' : `
     <div class="stat-grid">
       ${tile(`${pagados} / ${cobros.length}`, 'Alquileres cobrados este mes', '/cobranzas', 'ok')}
-      ${tile(vencidos, 'Cobros vencidos', '/cobranzas', vencidos ? 'danger' : 'ok')}
+      ${tile(conDeuda, 'Inquilinos con deuda', '/deudores', conDeuda ? 'danger' : 'ok')}
       ${esAdmin(perfil) ? tile(falta, 'Falta cobrar este mes', '/cobranzas', 'warn') : tile(cobros.length - pagados, 'Alquileres por cobrar este mes', '/cobranzas', 'warn')}
       ${tile(aumentos, 'Aumentos pendientes', '/aumentos', aumentos ? 'warn' : 'ok')}
     </div>
     ${porVencer.length ? `<div class="note-banner ${yaVencidos ? '' : 'info'}" style="margin-bottom:12px;">${icon('alert')}<div>${yaVencidos ? `<b>${yaVencidos} contrato(s) vencido(s)</b> sin renovar ni finalizar` : ''}${yaVencidos && porVencer.length > yaVencidos ? ' y ' : ''}${porVencer.length > yaVencidos ? `<b>${porVencer.length - yaVencidos}</b> que vence(n) en los próximos 60 días` : ''}. <a data-nav="/contratos?filtro=porvencer" style="text-decoration:underline; cursor:pointer;">Ver la lista</a></div></div>` : ''}
     ${esAdmin(perfil) && d.contratos.length && (sinCopia === null || sinCopia >= 7) ? `<div class="note-banner info" style="margin-bottom:12px;">${icon('alert')}<div>${sinCopia === null ? 'Todavía no hiciste ninguna copia de seguridad en esta computadora.' : `Hace ${sinCopia} días que no hacés una copia de seguridad.`} <a data-nav="/configuracion" style="text-decoration:underline; cursor:pointer;">Hacerla ahora</a> (un minuto).</div></div>` : ''}
     ${d.contratos.length ? '' : `<div class="note-banner info">${icon('alert')}<div>Todavía no hay contratos cargados. ${esAdmin(perfil) ? 'Podés importarlos desde <b>Importar datos</b> o cargarlos a mano en <b>Contratos</b>.' : 'Pedile al administrador que importe los datos.'}</div></div>`}`}
-    <div class="page-sub" style="margin-top:18px;">Próximamente: liquidaciones a propietarios, deudores, arreglos, caja y bancos.</div>`;
+    <div class="page-sub" style="margin-top:18px;">Próximamente: liquidaciones a propietarios, arreglos, caja y bancos.</div>`;
 }
 
 // La fecha de la última copia se recuerda en esta computadora.

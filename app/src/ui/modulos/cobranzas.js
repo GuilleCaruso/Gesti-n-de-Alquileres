@@ -1,6 +1,6 @@
 // Cobranzas del mes: se calculan desde los contratos activos; al cobrar se guarda el pago y se imprime el recibo.
 import { esc, fdate, money, nextPeriodo, nombreMoneda, numeroALetras, periodoLabel, totalMonedas } from '../../domain/formato.js';
-import { cobrosDelMes, estadoCobro, idPago, nombreCompleto } from '../../domain/consultas.js';
+import { deudas, cobrosDelMes, estadoCobro, idPago, nombreCompleto } from '../../domain/consultas.js';
 import { pagoTotal, pendienteActualizacion } from '../../domain/negocio.js';
 import { guardar } from '../../services/datos.js';
 import { abrirModal, aviso, botonesModal, campo, cerrarModal, docFoot, docHead, hoyIso, imprimir, INMOBILIARIA, intentar, LOGO, lupa, numero, periodoActual, soyAdmin } from '../base.js';
@@ -26,6 +26,7 @@ export function vista({ d, params }) {
   const nVencidos = cobros.filter((p) => estadoCobro(p, hoy) === 'Vencido').length;
   if (q) cobros = cobros.filter((p) => { const c = C(p.contractId); return [c?.numero, PR(c?.propertyId).direccion, PR(c?.propertyId).localidad, nombreCompleto(P(c?.tenantId)), nombreCompleto(P(c?.ownerId))].join(' ').toLowerCase().includes(q); });
   cobros.sort((a, b) => PR(C(a.contractId)?.propertyId).direccion.localeCompare(PR(C(b.contractId)?.propertyId).direccion));
+  const debe = new Map(deudas(d.contratos, d.pagos, hoy).map((x) => [x.contrato.id, x.items.filter((i) => i.periodo < periodo).length]));
   const filas = cobros.map((p) => {
     const c = C(p.contractId); const pr = PR(c?.propertyId); const est = estadoCobro(p, hoy);
     const $ = (n) => money(n, p.moneda);
@@ -36,7 +37,7 @@ export function vista({ d, params }) {
       <td><div class="cell-title">${esc(pr.direccion)}</div><div class="cell-sub">${esc(pr.localidad)}</div></td>
       <td>${esc(nombreCompleto(P(c?.tenantId)))}</td>
       <td>${esc(nombreCompleto(P(c?.ownerId)))}</td>
-      <td class="num tnum">${$(pagoTotal(p))}${detalle ? `<div class="cell-sub">alquiler ${$(p.importe)} + ${detalle}</div>` : ''}${p.estado === 'Parcial' ? `<div class="cell-sub">pagó ${$(p.pagado)}</div>` : ''}${avisoAct}${p.contratoVencido ? `<div class="cell-sub" style="color:var(--danger-600);">${icon('alert')} contrato vencido el ${fdate(c.fin)}</div>` : ''}</td>
+      <td class="num tnum">${$(pagoTotal(p))}${detalle ? `<div class="cell-sub">alquiler ${$(p.importe)} + ${detalle}</div>` : ''}${p.estado === 'Parcial' ? `<div class="cell-sub">pagó ${$(p.pagado)}</div>` : ''}${avisoAct}${p.contratoVencido ? `<div class="cell-sub" style="color:var(--danger-600);">${icon('alert')} contrato vencido el ${fdate(c.fin)}</div>` : ''}${debe.get(p.contractId) ? `<div class="cell-sub" style="color:var(--danger-600);"><a data-nav="/deudores?q=${encodeURIComponent(c?.numero || '')}" style="cursor:pointer; text-decoration:underline; color:inherit;">debe ${debe.get(p.contractId)} ${debe.get(p.contractId) === 1 ? 'mes anterior' : 'meses anteriores'}</a></div>` : ''}</td>
       <td>${badgeEstado(est)}</td>
       <td class="tnum">${fdate(p.fechaPago)}${p.medio ? `<div class="cell-sub">${esc(p.medio)}</div>` : ''}</td>
       <td class="row-actions">${p.estado === 'Pagado'

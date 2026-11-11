@@ -14,6 +14,7 @@ export const cuentasPara = (cuentas, usuario, modo) =>
 export const SECCIONES = [
   { key: 'inicio', label: 'Inicio', icon: 'dashboard' },
   { key: 'cobranzas', label: 'Cobranzas y recibos', icon: 'cobranzas' },
+  { key: 'deudores', label: 'Deudores', icon: 'deudores' },
   { key: 'aumentos', label: 'Aumentos', icon: 'bolt' },
   { key: 'contratos', label: 'Contratos', icon: 'contratos' },
   { key: 'propiedades', label: 'Propiedades', icon: 'propiedades' },
