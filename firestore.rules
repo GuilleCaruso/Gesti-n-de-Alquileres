@@ -18,7 +18,8 @@ service cloud.firestore {
     // ---------- usuarios ----------
     // UID de Guillermo (Authentication → Users). Solo sirve para que la primera vez que entra
     // se cree su propio perfil de administrador; después los usuarios los da de alta él desde la app.
-    function adminInicial() { return signedIn() && request.auth.uid == 'XbYkLAgjmKQQJB6kOuUnzTqxdnP2'; }
+    // El segundo UID es el de Guillermo en el proyecto de pruebas (caruso-pruebas): las mismas reglas van a los dos.
+    function adminInicial() { return signedIn() && request.auth.uid in ['XbYkLAgjmKQQJB6kOuUnzTqxdnP2', 'Gu6P2gWnzSNIHBT1GMiMxa1x8zX2']; }
 
     match /usuarios/{uid} {
       allow read: if (activo() && (request.auth.uid == uid || esAdmin())) || (adminInicial() && request.auth.uid == uid);

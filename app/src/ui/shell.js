@@ -5,6 +5,7 @@ import { buscar, contratoVigente, nombreCompleto } from '../domain/consultas.js'
 import { esAdmin, puedeEntrar, SECCIONES, seccionesSistema } from '../domain/permisos.js';
 import { alCambiar, datos, detenerDatos, iniciarDatos } from '../services/datos.js';
 import { salir } from '../services/sesion.js';
+import { esPruebas } from '../firebase-config.js';
 import { cerrarModal, fijarPerfil, lupa, periodoActual } from './base.js';
 import { icon } from './icons.js';
 import { montarConfiguracion, montarUsuarios, vistaConfiguracion, vistaInicio, vistaUsuarios } from './vistas.js';
@@ -31,7 +32,7 @@ export function montarShell(root, perfil) {
       <aside class="sidebar" id="sidebar">
         <div class="brand"><img class="brand-logo" src="/logo-caruso.png" alt="Caruso Propiedades" style="display:block; width:100%; max-width:170px; border-radius:8px;"></div>
         <nav class="nav" id="navList"></nav>
-        <div class="sidebar-foot"><div class="proto-tag"><span class="proto-dot"></span>${esc(perfil.nombre)} · ${esAdmin(perfil) ? 'Administrador' : 'Empleado'}</div></div>
+        <div class="sidebar-foot">${esPruebas ? '<div class="proto-tag" id="avisoPruebas" style="margin-bottom:8px; color:#f3a33b; font-weight:700;">PRUEBAS · datos de mentira</div>' : ''}<div class="proto-tag"><span class="proto-dot"></span>${esc(perfil.nombre)} · ${esAdmin(perfil) ? 'Administrador' : 'Empleado'}</div></div>
       </aside>
       <div class="main">
         <div class="topbar">
