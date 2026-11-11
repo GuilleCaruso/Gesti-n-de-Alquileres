@@ -27,6 +27,7 @@ const desdeUnAnio = () => { const [y, m] = periodoActual().split('-').map(Number
 
 export function montarShell(root, perfil) {
   fijarPerfil(perfil);
+  if (esPruebas) document.title = 'PRUEBAS · Gestión de alquileres';
   root.innerHTML = `
     <div class="overlay" id="navOverlay"></div>
     <div class="shell">
