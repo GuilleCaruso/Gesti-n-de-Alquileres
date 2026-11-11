@@ -169,3 +169,16 @@ describe('deudores', () => {
     expect(r.map((x) => x.contrato.id)).toEqual(['tres', 'uno']);
   });
 });
+
+describe('expensas y servicios fijos del contrato', () => {
+  test('el cobro del mes arranca con las expensas y los servicios que tiene el contrato', () => {
+    const c = { id: 'a', estado: 'Activo', inicio: '2026-01-01', fin: '2027-12-31', alquilerActual: 100, historial: [], expensas: { aplica: true, monto: 30 }, serviciosMes: 20 };
+    const [p] = cobrosDelMes([c], [], '2026-12', '2026-11-11');
+    expect([p.importe, p.expensas, p.servicios]).toEqual([100, 30, 20]);
+  });
+  test('un cobro ya guardado no cambia aunque cambie el contrato', () => {
+    const c = { id: 'a', estado: 'Activo', inicio: '2026-01-01', fin: '2027-12-31', alquilerActual: 100, historial: [], serviciosMes: 20 };
+    const [p] = cobrosDelMes([c], [{ id: 'a_2026-11', contractId: 'a', periodo: '2026-11', estado: 'Pagado', importe: 100, servicios: 5, moneda: 'ARS' }], '2026-11', '2026-11-11');
+    expect(p.servicios).toBe(5);
+  });
+});

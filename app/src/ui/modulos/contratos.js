@@ -77,7 +77,7 @@ export function fichaContratoHtml(d, c) {
       ${kv('Alquiler actual', money(c.alquilerActual, c.moneda) + (c.moneda === 'USD' ? ' <span class="badge badge-info">Dólares</span>' : ''))}${kv('Depósito', c.deposito ? money(c.deposito, c.moneda) : '—')}
       ${kv('Actualización', `${esc(metodoLabel(c))} · cada ${c.frecuencia} meses`)}
       ${kv('Próxima actualización', fdate(c.proxAct) + (pendienteActualizacion(c, hoyIso()) ? ` <span class="badge badge-warn">${icon('alert')}Pendiente</span>` : ''))}
-      ${kv('Expensas', c.expensas && c.expensas.aplica ? money(c.expensas.monto || 0, c.moneda) : 'No')}${kv('Honorarios', esc(honorariosLabel(c.honorarios)))}
+      ${kv('Expensas', c.expensas && c.expensas.aplica ? money(c.expensas.monto || 0, c.moneda) : 'No')}${kv('Servicios por mes', c.serviciosMes ? money(c.serviciosMes, c.moneda) : 'No')}${kv('Honorarios', esc(honorariosLabel(c.honorarios)))}
       ${kv('Vence cada mes el día', esc(c.diaVencimiento || 10))}
     </div>
     ${c.obs ? `<div class="divider"></div><div class="kv-label">Observaciones</div><div style="margin-top:4px;">${esc(c.obs)}</div>` : ''}
@@ -131,6 +131,7 @@ export function contratoModal(d, id, propiedadId, borrador) {
     <div class="divider"></div>
     <div class="form-grid" style="margin-bottom:12px;">
       <div class="field"><label style="display:flex; gap:8px; align-items:center;"><input type="checkbox" id="ctExpAplica" ${v.expensas && v.expensas.aplica ? 'checked' : ''}> Paga expensas</label><input type="number" id="ctExpMonto" min="0" step="100" value="${(v.expensas && v.expensas.monto) || ''}" placeholder="Monto de expensas"></div>
+      <div class="field"><label for="ctServ">Servicios por mes (opcional)</label><input type="number" id="ctServ" min="0" step="100" value="${v.serviciosMes || ''}" placeholder="Monto fijo que se suma cada mes"></div>
       <div class="field"><label for="ctHonTipo">Honorarios</label><div style="display:flex; gap:8px;"><select id="ctHonTipo"><option value="porcentaje" ${h.tipo === 'porcentaje' ? 'selected' : ''}>Porcentaje</option><option value="fijo" ${h.tipo === 'fijo' ? 'selected' : ''}>Monto fijo</option></select><input type="number" id="ctHonValor" min="0" step="0.5" value="${h.valor}" style="flex:1;"></div></div>
       <div class="field" style="grid-column:1/-1;"><label for="ctObs">Observaciones</label><input id="ctObs" value="${esc(v.obs || '')}" placeholder="Opcional"></div>
     </div>
@@ -158,7 +159,7 @@ export function contratoModal(d, id, propiedadId, borrador) {
     guarantorId: campo('ctGarante') || null, diaVencimiento: Math.min(28, Math.max(1, numero('ctDia') || 10)),
     inicio: fecha('ctInicio'), fin: fecha('ctFin'), alquilerActual: numero('ctAlquiler'), deposito: numero('ctDeposito') || null,
     tipoAumento: campo('ctTipo'), pctFijo: numero('ctPct') || null, frecuencia: Number(campo('ctFrec')), proxAct: fecha('ctProx'),
-    expensas: { aplica: tildado('ctExpAplica'), monto: numero('ctExpMonto') }, honorarios: { tipo: campo('ctHonTipo'), valor: numero('ctHonValor') },
+    expensas: { aplica: tildado('ctExpAplica'), monto: numero('ctExpMonto') }, serviciosMes: numero('ctServ'), honorarios: { tipo: campo('ctHonTipo'), valor: numero('ctHonValor') },
     obs: campo('ctObs'), revisarAumento: false, moneda: campo('ctMoneda') || 'ARS',
   });
 

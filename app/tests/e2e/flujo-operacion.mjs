@@ -148,6 +148,7 @@ try {
   await filaGuemes.locator('[data-accion="cobrar"]').click();
   await pg.fill('#coServ', '8000');
   ok('el total se recalcula al sumar servicios', (await pg.inputValue('#coTotal')) === '$ 493.000');
+  ok('al cambiar servicios ofrece usarlos los próximos meses (tildado)', (await pg.locator('#coRecordarFila').isVisible()) && (await pg.isChecked('#coRecordar')));
   await pg.selectOption('#coMedio', 'Transferencia');
   await pg.click('#coOk');
   await pg.waitForSelector('.receipt-box');
@@ -159,6 +160,11 @@ try {
   await pg.click('[data-cerrar]');
   await pg.waitForSelector('tr:has-text("Güemes 120") .badge:has-text("Pagado")');
   ok('queda Pagado con medio de pago', (await pg.locator('tr:has-text("Güemes 120")').innerText()).includes('Transferencia'));
+  await pg.click('[aria-label="Mes siguiente"]');
+  await pg.waitForTimeout(400);
+  ok('el mes siguiente ya trae los servicios (470.000 + 15.000 + 8.000)', (await pg.locator('tr:has-text("Güemes 120") td.num').innerText()).includes('493.000'));
+  await pg.click('[aria-label="Mes anterior"]');
+  await pg.waitForTimeout(400);
   // pago parcial
   const filaSar = pg.locator('tr:has-text("Sarmiento 342")');
   await filaSar.locator('[data-accion="cobrar"]').click();

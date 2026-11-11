@@ -42,7 +42,7 @@ export function cobroDelMes(contrato, periodo, pagos) {
   const exp = contrato.expensas && contrato.expensas.aplica ? contrato.expensas.monto || 0 : 0;
   return {
     id: idPago(contrato.id, periodo), contractId: contrato.id, periodo, moneda: contrato.moneda || 'ARS',
-    importe: alquilerDelPeriodo(contrato, periodo), expensas: exp, servicios: 0,
+    importe: alquilerDelPeriodo(contrato, periodo), expensas: exp, servicios: contrato.serviciosMes || 0,
     estado: 'Pendiente', vencimiento: `${periodo}-${String(contrato.diaVencimiento || 10).padStart(2, '0')}`, nuevo: true,
   };
 }
