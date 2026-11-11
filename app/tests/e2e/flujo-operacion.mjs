@@ -314,6 +314,9 @@ try {
   const prevAct = await pg.locator('#view').innerText();
   ok('vista previa: 1 cambio, 1 error (N° inexistente), con antes → después', prevAct.includes('$ 700.000') && prevAct.includes('No hay ningún contrato cargado con el N° 9999') && (await pg.locator('.stat-tile').first().innerText()).startsWith('1'));
   await pg.screenshot({ path: SHOTS + '/actualizar.png', fullPage: true });
+  ok('no deja aplicar sin elegir qué hacer con los que no tienen fecha', await pg.locator('[data-accion="importar-aplicar"]').isDisabled());
+  await pg.selectOption('#actSinFecha', 'inicio-mes-aplicado');
+  await pg.waitForTimeout(300);
   await pg.click('[data-accion="importar-aplicar"]');
   await pg.click('#confirmarBtn');
   await pg.waitForTimeout(800);

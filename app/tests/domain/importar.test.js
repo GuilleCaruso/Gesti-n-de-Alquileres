@@ -214,3 +214,31 @@ describe('actualizar contratos ya cargados (planilla de 4 columnas)', () => {
     expect(csv).not.toContain('2024');
   });
 });
+
+describe('actualizar sin "última actualización": calcula el próximo aumento desde el inicio', () => {
+  const mapeo = adivinarMapeo(['N° carpeta', 'Monto actual', 'Última actualización', 'Tipo de aumento'], CAMPOS_ACT);
+  const contratos = [
+    { id: 'a', numero: '1', estado: 'Activo', inicio: '2025-08-01', alquilerActual: 100, tipoAumento: 'ICL', frecuencia: 3, proxAct: '2026-11-01', revisarAumento: true },
+    { id: 'b', numero: '2', estado: 'Activo', inicio: '2025-08-20', alquilerActual: 100, tipoAumento: 'ICL', frecuencia: 3, proxAct: '2026-11-20', revisarAumento: true },
+    { id: 'c', numero: '3', estado: 'Activo', inicio: '2025-09-15', alquilerActual: 100, tipoAumento: 'IPC', frecuencia: 3, proxAct: '2026-12-15', revisarAumento: true },
+  ];
+  const filas = [['1', '', '', ''], ['2', '', '', ''], ['3', '', '', '']];
+  const armar = (sinFecha) => Object.fromEntries(armarActualizacion({ filas, mapeo, contratos, hoy: '2026-11-11', sinFecha }).cambios.map((c) => [c.id, c.nuevo]));
+  test('con los aumentos del mes ya aplicados: el próximo cae después de este mes', () => {
+    expect(armar('inicio-mes-aplicado')).toEqual({
+      a: { proxAct: '2027-02-01', revisarAumento: false },
+      b: { proxAct: '2027-02-20', revisarAumento: false },
+      c: { revisarAumento: false },
+    });
+  });
+  test('sin esa aclaración: el del 20/11, que todavía no llegó, queda pendiente para este mes', () => {
+    expect(armar('inicio')).toEqual({ a: { proxAct: '2027-02-01', revisarAumento: false }, b: { revisarAumento: false }, c: { revisarAumento: false } });
+  });
+  test('"no tocar": no cambia nada', () => {
+    expect(armar('no')).toEqual({});
+  });
+  test('si la fila trae la fecha del último aumento, manda esa', () => {
+    const r = armarActualizacion({ filas: [['1', '', '01/10/2026', '']], mapeo, contratos, hoy: '2026-11-11', sinFecha: 'inicio-mes-aplicado' });
+    expect(r.cambios[0].nuevo.proxAct).toBe('2027-01-01');
+  });
+});
