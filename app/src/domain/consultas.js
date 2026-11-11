@@ -48,12 +48,27 @@ export function cobroDelMes(contrato, periodo, pagos) {
 }
 
 // Todos los cobros del mes: contratos activos que cubren el período + cobros ya registrados de contratos que terminaron.
-export function cobrosDelMes(contratos, pagos, periodo) {
-  const activos = contratosActivos(contratos).filter((c) => cubrePeriodo(c, periodo));
+// Un contrato vencido que nadie finalizó ni renovó se sigue cobrando (marcado), hasta el mes actual:
+// el inquilino sigue en la propiedad y el alquiler no puede desaparecer de la lista.
+export const contratoVencido = (c, hoyIso) => c.estado === 'Activo' && !!c.fin && !!hoyIso && c.fin < hoyIso;
+export function diasParaVencer(c, hoyIso) {
+  return Math.round((new Date(c.fin + 'T00:00:00Z') - new Date(hoyIso + 'T00:00:00Z')) / 86400000);
+}
+// Contratos activos vencidos o que vencen dentro de `dias`, del más urgente al menos.
+export const contratosPorVencer = (contratos, hoyIso, dias = 60) =>
+  contratosActivos(contratos).filter((c) => c.fin && diasParaVencer(c, hoyIso) <= dias).sort((a, b) => a.fin.localeCompare(b.fin));
+
+export function cobrosDelMes(contratos, pagos, periodo, hoyIso) {
+  const sigueSinRenovar = (c) => contratoVencido(c, hoyIso) && c.inicio.slice(0, 7) <= periodo && periodo <= hoyIso.slice(0, 7);
+  const activos = contratosActivos(contratos).filter((c) => cubrePeriodo(c, periodo) || sigueSinRenovar(c));
   const lista = activos.map((c) => cobroDelMes(c, periodo, pagos));
   pagos.filter((p) => p.periodo === periodo && !activos.some((c) => c.id === p.contractId)).forEach((p) => lista.push(p));
   // los cobros guardados antes de que existiera la moneda toman la del contrato
-  return lista.map((p) => (p.moneda ? p : { ...p, moneda: contratos.find((c) => c.id === p.contractId)?.moneda || 'ARS' }));
+  return lista.map((p) => {
+    const c = contratos.find((x) => x.id === p.contractId);
+    const fuera = !!c && !cubrePeriodo(c, p.periodo) && c.estado === 'Activo';
+    return p.moneda && !fuera ? p : { ...p, moneda: p.moneda || c?.moneda || 'ARS', ...(fuera ? { contratoVencido: true } : {}) };
+  });
 }
 
 // Estado para mostrar: un pendiente con vencimiento pasado es "Vencido".

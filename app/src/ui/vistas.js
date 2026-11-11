@@ -1,6 +1,8 @@
 // Vistas generales: Inicio, Usuarios y Configuración.
 import { esc, periodoLabel, totalMonedas } from '../domain/formato.js';
-import { cobrosDelMes, contratosActivos, estadoCobro } from '../domain/consultas.js';
+import { cobrosDelMes, contratosActivos, contratosPorVencer, contratoVencido, estadoCobro } from '../domain/consultas.js';
+import { copiaCompleta, diasSinCopia, hojasCopia } from '../domain/copia.js';
+import { leerTodo } from '../services/datos.js';
 import { esAdmin } from '../domain/permisos.js';
 import { pagoTotal, pendienteActualizacion } from '../domain/negocio.js';
 import { actualizarUsuario, darAcceso, listarUsuarios } from '../services/usuarios.js';
@@ -11,7 +13,10 @@ import { toast } from './toast.js';
 export function vistaInicio(perfil, d) {
   const periodo = periodoActual();
   const hoy = hoyIso();
-  const cobros = cobrosDelMes(d.contratos, d.pagos, periodo);
+  const cobros = cobrosDelMes(d.contratos, d.pagos, periodo, hoy);
+  const porVencer = contratosPorVencer(d.contratos, hoy);
+  const yaVencidos = porVencer.filter((c) => contratoVencido(c, hoy)).length;
+  const sinCopia = diasSinCopia(ultimaCopia(), hoy);
   const pagados = cobros.filter((p) => p.estado === 'Pagado').length;
   const vencidos = cobros.filter((p) => estadoCobro(p, hoy) === 'Vencido').length;
   const falta = totalMonedas(cobros.map((p) => [p.estado === 'Pagado' ? 0 : pagoTotal(p) - (p.estado === 'Parcial' ? p.pagado || 0 : 0), p.moneda]));
@@ -26,11 +31,26 @@ export function vistaInicio(perfil, d) {
       ${esAdmin(perfil) ? tile(falta, 'Falta cobrar este mes', '/cobranzas', 'warn') : tile(cobros.length - pagados, 'Alquileres por cobrar este mes', '/cobranzas', 'warn')}
       ${tile(aumentos, 'Aumentos pendientes', '/aumentos', aumentos ? 'warn' : 'ok')}
     </div>
+    ${porVencer.length ? `<div class="note-banner ${yaVencidos ? '' : 'info'}" style="margin-bottom:12px;">${icon('alert')}<div>${yaVencidos ? `<b>${yaVencidos} contrato(s) vencido(s)</b> sin renovar ni finalizar` : ''}${yaVencidos && porVencer.length > yaVencidos ? ' y ' : ''}${porVencer.length > yaVencidos ? `<b>${porVencer.length - yaVencidos}</b> que vence(n) en los próximos 60 días` : ''}. <a data-nav="/contratos?filtro=porvencer" style="text-decoration:underline; cursor:pointer;">Ver la lista</a></div></div>` : ''}
+    ${esAdmin(perfil) && d.contratos.length && (sinCopia === null || sinCopia >= 7) ? `<div class="note-banner info" style="margin-bottom:12px;">${icon('alert')}<div>${sinCopia === null ? 'Todavía no hiciste ninguna copia de seguridad en esta computadora.' : `Hace ${sinCopia} días que no hacés una copia de seguridad.`} <a data-nav="/configuracion" style="text-decoration:underline; cursor:pointer;">Hacerla ahora</a> (un minuto).</div></div>` : ''}
     ${d.contratos.length ? '' : `<div class="note-banner info">${icon('alert')}<div>Todavía no hay contratos cargados. ${esAdmin(perfil) ? 'Podés importarlos desde <b>Importar datos</b> o cargarlos a mano en <b>Contratos</b>.' : 'Pedile al administrador que importe los datos.'}</div></div>`}`}
     <div class="page-sub" style="margin-top:18px;">Próximamente: liquidaciones a propietarios, deudores, arreglos, caja y bancos.</div>`;
 }
 
-export function vistaConfiguracion() {
+// La fecha de la última copia se recuerda en esta computadora.
+const CLAVE_COPIA = 'caruso.ultimaCopia';
+const ultimaCopia = () => { try { return localStorage.getItem(CLAVE_COPIA); } catch { return null; } };
+
+function descargar(blob, nombreArchivo) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = nombreArchivo;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+
+export function vistaConfiguracion(perfil) {
+  const ult = ultimaCopia();
   return `
     <div class="page-head"><div><h1 class="page-title">Configuración</h1><div class="page-sub">Datos de la inmobiliaria que aparecen en recibos y liquidaciones</div></div></div>
     <div class="card card-pad"><div class="form-grid">
@@ -40,6 +60,14 @@ export function vistaConfiguracion() {
       <div class="field"><label>Email</label><input value="info@carusopropiedades.com" disabled></div>
       <div class="field"><label>Honorarios por defecto</label><input value="5% (se define en cada contrato)" disabled></div>
     </div></div>
+    ${esAdmin(perfil) ? `<div class="card card-pad" style="margin-top:16px;">
+      <div class="section-title" style="margin-bottom:4px;">Copia de seguridad</div>
+      <div class="page-sub" style="margin-bottom:12px;">Baja todo lo cargado (contratos, cobros, propiedades y personas) a tu computadora. Hacela una vez por semana y guardá los dos archivos en un lugar seguro (por ejemplo, tu Google Drive). ${ult ? `Última copia en esta computadora: <b>${esc(ult.slice(0, 10).split('-').reverse().join('/'))}</b>.` : '<b>Todavía no hiciste ninguna en esta computadora.</b>'}</div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <button class="btn btn-primary" id="cfgCopia">${icon('doc')}Descargar copia de seguridad</button>
+        <span class="cell-sub">Son 2 archivos: un Excel para leer y un archivo ".json" que sirve para restaurar.</span>
+      </div>
+    </div>` : ''}
     <div class="card card-pad" style="margin-top:16px;">
       <div class="section-title" style="margin-bottom:4px;">WhatsApp en esta computadora</div>
       <div class="page-sub" style="margin-bottom:12px;">Dónde se abren los avisos de aumento. Se guarda en esta computadora: cada PC puede tener el suyo.</div>
@@ -51,7 +79,29 @@ export function vistaConfiguracion() {
     </div>`;
 }
 
-export function montarConfiguracion() {
+export function montarConfiguracion(alTerminar) {
+  const copia = document.getElementById('cfgCopia');
+  if (copia) copia.onclick = async () => {
+    copia.disabled = true;
+    try {
+      toast('Preparando la copia…');
+      const datos = await leerTodo();
+      const ahora = new Date();
+      const dia = hoyIso();
+      const { default: escribirExcel } = await import('write-excel-file/universal');
+      const excel = await escribirExcel(hojasCopia(datos)).toBlob();
+      descargar(excel, `caruso-copia-${dia}.xlsx`);
+      descargar(new Blob([copiaCompleta(datos, ahora.toISOString())], { type: 'application/json' }), `caruso-copia-${dia}.json`);
+      try { localStorage.setItem(CLAVE_COPIA, dia); } catch { /* sin almacenamiento: no se recuerda la fecha */ }
+      toast(`Copia lista: ${datos.contratos.length} contratos y ${datos.pagos.length} cobros`);
+      if (alTerminar) alTerminar();
+    } catch (e) {
+      console.error(e);
+      toast('No se pudo hacer la copia. Revisá la conexión e intentá de nuevo.');
+    } finally {
+      copia.disabled = false;
+    }
+  };
   const sel = document.getElementById('cfgWhatsapp');
   if (sel) sel.onchange = () => { fijarModoWhatsApp(sel.value); toast('Listo: WhatsApp se abre en ' + (sel.value === 'app' ? 'la aplicación de escritorio' : 'WhatsApp Web')); };
 }

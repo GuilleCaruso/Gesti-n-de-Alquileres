@@ -68,7 +68,7 @@ export function montarShell(root, perfil) {
     const editados = [...view.querySelectorAll('input[id]:not([data-filtro])')].filter((i) => i.type !== 'file' && i.value !== i.defaultValue).map((i) => [i.id, i.value]);
     if (seccion === 'inicio') view.innerHTML = vistaInicio(perfil, d);
     else if (seccion === 'usuarios') { view.innerHTML = vistaUsuarios(); montarUsuarios(perfil, () => render()); }
-    else if (seccion === 'configuracion') { view.innerHTML = vistaConfiguracion(); montarConfiguracion(); }
+    else if (seccion === 'configuracion') { view.innerHTML = vistaConfiguracion(perfil); montarConfiguracion(() => render()); }
     else if (seccion === 'propiedades' && id) view.innerHTML = propiedades.vistaFicha(ctx);
     else view.innerHTML = MODULOS[seccion].vista(ctx);
     if (MODULOS[seccion] && MODULOS[seccion].montar) MODULOS[seccion].montar(ctx);
