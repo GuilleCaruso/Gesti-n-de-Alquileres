@@ -331,6 +331,43 @@ try {
   await pg.locator('tr:has-text("Belgrano 1234") [data-accion="whatsapp-aumento"]').click();
   ok('con "aplicación" abre WhatsApp de escritorio', (await pg.evaluate(() => window.__abiertos.at(-1))).startsWith('whatsapp://send?phone=5491122117765'));
 
+  // ---------- contrato vencido sin renovar ----------
+  await ir('#/contratos');
+  await pg.click('#view tr:has-text("0149")');
+  await pg.click('.tab-btn:has-text("Contrato")');
+  await pg.click('[data-accion="editar-contrato"]');
+  await pg.fill('#ctFin', '01/10/2026');
+  await pg.click('#ctGuardar');
+  await pg.waitForTimeout(600);
+  ok('la ficha avisa que el contrato está vencido', (await pg.locator('.note-banner').first().innerText()).includes('Contrato vencido el 1/10/2026'));
+  await ir('#/');
+  ok('Inicio avisa los contratos vencidos y por vencer', (await pg.locator('#view').innerText()).includes('contrato(s) vencido(s)'));
+  await pg.click('#view [data-nav="/contratos?filtro=porvencer"]');
+  await pg.waitForSelector('.pill.active:has-text("Vencidos y por vencer")');
+  ok('lista de vencidos y por vencer con el 0149 primero', (await pg.locator('#view tbody tr').first().innerText()).includes('0149') && (await pg.locator('#view tbody tr').first().innerText()).includes('Vencido'));
+  await ir('#/cobranzas');
+  ok('el contrato vencido se sigue cobrando, marcado', (await pg.locator('#view tr:has-text("Sarmiento 340")').innerText()).includes('contrato vencido el 1/10/2026'));
+
+  // ---------- copia de seguridad ----------
+  await ir('#/');
+  ok('Inicio recuerda hacer la copia de seguridad', (await pg.locator('#view').innerText()).includes('copia de seguridad'));
+  await ir('#/configuracion');
+  const bajadas = [];
+  pg.on('download', (dl) => bajadas.push(dl));
+  await pg.click('#cfgCopia');
+  for (let i = 0; i < 40 && bajadas.length < 2; i++) await pg.waitForTimeout(250);
+  const nombres = bajadas.map((b) => b.suggestedFilename()).sort();
+  ok('descarga 2 archivos: ' + nombres.join(', '), nombres.length === 2 && nombres[0].endsWith('.json') && nombres[1].endsWith('.xlsx'));
+  const fsx = await import('node:fs/promises');
+  const copia = JSON.parse(await fsx.readFile(await bajadas.find((b) => b.suggestedFilename().endsWith('.json')).path(), 'utf8'));
+  ok(`la copia completa trae todo: ${copia.contratos.length} contratos, ${copia.pagos.length} cobros, ${copia.personas.length} personas`, copia.contratos.length >= 6 && copia.pagos.length >= 2 && copia.personas.length >= 8 && copia.propiedades.length >= 6);
+  const xlsx = await fsx.readFile(await bajadas.find((b) => b.suggestedFilename().endsWith('.xlsx')).path());
+  ok('el Excel es un .xlsx válido', xlsx.length > 2000 && xlsx.subarray(0, 2).toString() === 'PK');
+  await pg.waitForTimeout(300);
+  ok('queda anotada la fecha de la última copia', (await pg.locator('#view').innerText()).includes('Última copia en esta computadora'));
+  await ir('#/');
+  ok('con la copia hecha, Inicio deja de recordarla', !(await pg.locator('#view').innerText()).includes('copia de seguridad'));
+
   ok('sin errores en la página: ' + JSON.stringify(errores), errores.length === 0);
   await b.close();
 } finally {

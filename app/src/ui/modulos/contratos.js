@@ -1,6 +1,6 @@
 // Contratos: lista, alta/edición (N° interno, garante, honorarios, expensas, aumentos) y ficha.
 import { esc, fdate, money } from '../../domain/formato.js';
-import { addMonths, contratoVigente, deshacerUltimoAumento, finPorDefecto, nombreCompleto } from '../../domain/consultas.js';
+import { addMonths, contratosPorVencer, contratoVencido, contratoVigente, diasParaVencer, deshacerUltimoAumento, finPorDefecto, nombreCompleto } from '../../domain/consultas.js';
 import { HONORARIOS_DEFAULT, honorariosLabel, pendienteActualizacion } from '../../domain/negocio.js';
 import { actualizar, borrar, guardar, tieneCobros } from '../../services/datos.js';
 import { abrirModal, aviso, botonesModal, campo, cerrarModal, confirmar, hoyIso, intentar, lupa, numero, soyAdmin, tildado } from '../base.js';
@@ -23,20 +23,23 @@ export function vista({ d, params }) {
   if (filtro === 'activos') lista = lista.filter((c) => c.estado === 'Activo');
   if (filtro === 'pendiente') lista = lista.filter((c) => c.estado === 'Activo' && pendienteActualizacion(c, hoy));
   if (filtro === 'finalizados') lista = lista.filter((c) => c.estado !== 'Activo');
+  const porVencer = contratosPorVencer(d.contratos, hoy);
+  if (filtro === 'porvencer') lista = porVencer.slice();
   if (filtro === 'revisar') lista = lista.filter((c) => c.estado === 'Activo' && c.revisarAumento);
   const aRevisar = d.contratos.filter((c) => c.estado === 'Activo' && c.revisarAumento).length;
   if (q) lista = lista.filter((c) => [c.numero, PR(c.propertyId).direccion, PR(c.propertyId).localidad, nombreCompleto(P(c.tenantId)), nombreCompleto(P(c.ownerId))].join(' ').toLowerCase().includes(q));
-  lista.sort((a, b) => String(a.numero || '').localeCompare(String(b.numero || ''), undefined, { numeric: true }));
+  if (filtro === 'porvencer') lista.sort((a, b) => a.fin.localeCompare(b.fin));
+  else lista.sort((a, b) => String(a.numero || '').localeCompare(String(b.numero || ''), undefined, { numeric: true }));
   const filas = lista.map((c) => `
     <tr class="clickable" data-nav="/propiedades/${esc(c.propertyId)}?tab=contrato">
       <td class="cell-title tnum">${esc(c.numero || '—')}</td>
       <td><div class="cell-title">${esc(PR(c.propertyId).direccion)}</div><div class="cell-sub">${esc(PR(c.propertyId).localidad)}</div></td>
       <td>${esc(nombreCompleto(P(c.tenantId)))}</td>
       <td class="num tnum">${money(c.alquilerActual, c.moneda)}</td>
-      <td class="tnum">${fdate(c.fin)}</td>
+      <td class="tnum">${fdate(c.fin)}${c.estado === 'Activo' && c.fin && diasParaVencer(c, hoy) <= 60 ? `<div>${contratoVencido(c, hoy) ? '<span class="badge badge-danger">Vencido</span>' : `<span class="badge badge-warn">Vence en ${diasParaVencer(c, hoy)} días</span>`}</div>` : ''}</td>
       <td>${c.estado === 'Activo' && c.revisarAumento ? `<span class="badge badge-info">Revisar aumento</span> ` : ''}${c.estado !== 'Activo' ? badgeEstado(c.estado) : pendienteActualizacion(c, hoy) ? `<span class="badge badge-warn">${icon('alert')}Actualizar</span>` : `<span class="cell-sub">Próx. ${fdate(c.proxAct)}</span>`}</td>
     </tr>`).join('');
-  const pills = [['activos', 'Activos'], ['pendiente', 'Actualización pendiente'], ...(aRevisar ? [['revisar', `Revisar aumento (${aRevisar})`]] : []), ['finalizados', 'Finalizados']]
+  const pills = [['activos', 'Activos'], ['pendiente', 'Actualización pendiente'], ...(porVencer.length ? [['porvencer', `Vencidos y por vencer (${porVencer.length})`]] : []), ...(aRevisar ? [['revisar', `Revisar aumento (${aRevisar})`]] : []), ['finalizados', 'Finalizados']]
     .map(([k, l]) => `<button class="pill ${filtro === k ? 'active' : ''}" data-param="filtro" data-valor="${k}">${l}</button>`).join('');
   return `
     <div class="page-head">
@@ -63,6 +66,8 @@ export function fichaContratoHtml(d, c) {
       <button class="btn btn-ghost" data-accion="finalizar-contrato" data-id="${esc(c.id)}">Finalizar contrato</button>
       ${soyAdmin() ? `<button class="btn btn-ghost btn-danger" data-accion="borrar-contrato" data-id="${esc(c.id)}">Borrar contrato</button>` : ''}
     </div>
+    ${contratoVencido(c, hoyIso()) ? `<div class="note-banner" style="margin-bottom:14px;">${icon('alert')}<div><b>Contrato vencido el ${fdate(c.fin)}.</b> Se sigue cobrando hasta que lo resuelvas. Si se renovó, cargá la nueva fecha de fin con <b>Editar contrato</b>; si el inquilino se fue, tocá <b>Finalizar contrato</b>.</div></div>`
+      : c.estado === 'Activo' && c.fin && diasParaVencer(c, hoyIso()) <= 60 ? `<div class="note-banner info" style="margin-bottom:14px;">${icon('alert')}<div><b>Vence en ${diasParaVencer(c, hoyIso())} días</b> (${fdate(c.fin)}). Si se renueva, cargá la nueva fecha de fin con <b>Editar contrato</b>.</div></div>` : ''}
     ${c.revisarAumento && c.estado === 'Activo' ? `<div class="note-banner info" style="margin-bottom:14px;">${icon('alert')}<div><b>Revisar aumento:</b> este contrato vino de Arcomercial sin "cada cuántos meses" o sin la fecha del próximo aumento. Confirmá la frecuencia y la próxima actualización con <b>Editar contrato</b> y guardá.</div></div>` : ''}
     <div class="kv-grid">
       ${kv('N° de contrato', esc(c.numero || '—'))}${kv('Estado', badgeEstado(c.estado))}

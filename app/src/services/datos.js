@@ -50,6 +50,13 @@ export async function guardar(coleccion, id, data) {
 
 export const actualizar = (coleccion, id, cambios) => updateDoc(doc(db, coleccion, id), { ...cambios, ...firma() });
 
+// Todo lo que hay en la base, para la copia de seguridad (incluye los cobros de todos los años).
+export async function leerTodo() {
+  const leer = async (col) => (await getDocs(collection(db, col))).docs.map((x) => ({ id: x.id, ...x.data() }));
+  const [personas, propiedades, contratos, pagos, config] = await Promise.all(['personas', 'propiedades', 'contratos', 'pagos', 'config'].map(leer));
+  return { personas, propiedades, contratos, pagos, config };
+}
+
 // Borrado físico: solo el administrador, y solo lo que no tiene historia (lo controla cada pantalla).
 export const borrar = (coleccion, id) => deleteDoc(doc(db, coleccion, id));
 

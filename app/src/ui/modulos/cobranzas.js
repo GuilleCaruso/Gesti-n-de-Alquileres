@@ -17,7 +17,7 @@ export function vista({ d, params }) {
   const C = (id) => d.contratos.find((x) => x.id === id);
   const P = (id) => d.personas.find((x) => x.id === id);
   const PR = (id) => d.propiedades.find((x) => x.id === id) || { direccion: '—', localidad: '' };
-  let cobros = cobrosDelMes(d.contratos, d.pagos, periodo);
+  let cobros = cobrosDelMes(d.contratos, d.pagos, periodo, hoy);
   const cobradoDe = (p) => (p.estado === 'Pagado' ? pagoTotal(p) : p.estado === 'Parcial' ? p.pagado || 0 : 0);
   const total = totalMonedas(cobros.map((p) => [pagoTotal(p), p.moneda]));
   const cobrado = totalMonedas(cobros.map((p) => [cobradoDe(p), p.moneda]));
@@ -36,7 +36,7 @@ export function vista({ d, params }) {
       <td><div class="cell-title">${esc(pr.direccion)}</div><div class="cell-sub">${esc(pr.localidad)}</div></td>
       <td>${esc(nombreCompleto(P(c?.tenantId)))}</td>
       <td>${esc(nombreCompleto(P(c?.ownerId)))}</td>
-      <td class="num tnum">${$(pagoTotal(p))}${detalle ? `<div class="cell-sub">alquiler ${$(p.importe)} + ${detalle}</div>` : ''}${p.estado === 'Parcial' ? `<div class="cell-sub">pagó ${$(p.pagado)}</div>` : ''}${avisoAct}</td>
+      <td class="num tnum">${$(pagoTotal(p))}${detalle ? `<div class="cell-sub">alquiler ${$(p.importe)} + ${detalle}</div>` : ''}${p.estado === 'Parcial' ? `<div class="cell-sub">pagó ${$(p.pagado)}</div>` : ''}${avisoAct}${p.contratoVencido ? `<div class="cell-sub" style="color:var(--danger-600);">${icon('alert')} contrato vencido el ${fdate(c.fin)}</div>` : ''}</td>
       <td>${badgeEstado(est)}</td>
       <td class="tnum">${fdate(p.fechaPago)}${p.medio ? `<div class="cell-sub">${esc(p.medio)}</div>` : ''}</td>
       <td class="row-actions">${p.estado === 'Pagado'
@@ -83,7 +83,7 @@ export function cobrosContratoHtml(d, c) {
 
 // Busca el cobro por id (guardado o "a cobrar" armado desde el contrato).
 function cobroPorId(d, id, periodo) {
-  return d.pagos.find((x) => x.id === id) || cobrosDelMes(d.contratos, d.pagos, periodo).find((x) => x.id === id);
+  return d.pagos.find((x) => x.id === id) || cobrosDelMes(d.contratos, d.pagos, periodo, hoyIso()).find((x) => x.id === id);
 }
 
 // ---------- recibo ----------
@@ -213,7 +213,7 @@ function cobrarModal(d, p) {
 
 function recibosDelMesModal(d, periodo) {
   const hoy = hoyIso();
-  const cobros = cobrosDelMes(d.contratos, d.pagos, periodo);
+  const cobros = cobrosDelMes(d.contratos, d.pagos, periodo, hoy);
   const C = (id) => d.contratos.find((x) => x.id === id);
   const PR = (id) => d.propiedades.find((x) => x.id === id) || {};
   const pend = cobros.filter((p) => { const c = C(p.contractId); return c && c.estado === 'Activo' && pendienteActualizacion(c, hoy); });

@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { addMonths, alquilerDelPeriodo, deshacerUltimoAumento, finPorDefecto, buscar, cobrosDelMes, contratoVigente, datosAumento, estadoCobro, estadoPropiedad, saldoCobro } from '../../src/domain/consultas.js';
+import { contratosPorVencer, contratoVencido, diasParaVencer, addMonths, alquilerDelPeriodo, deshacerUltimoAumento, finPorDefecto, buscar, cobrosDelMes, contratoVigente, datosAumento, estadoCobro, estadoPropiedad, saldoCobro } from '../../src/domain/consultas.js';
 
 const personas = [
   { id: 'p1', nombre: 'Carlos', apellido: 'Pérez', dni: '18.334.221', roles: ['Propietario'] },
@@ -96,5 +96,34 @@ describe('buscador global', () => {
   test('personas por apellido o DNI', () => {
     expect(buscar('pérez', datos).personas.map((p) => p.id)).toEqual(['p1']);
     expect(buscar('36.774', datos).personas.map((p) => p.id)).toEqual(['p2']);
+  });
+});
+
+describe('contratos vencidos y por vencer', () => {
+  const hoy = '2026-11-11';
+  const contratos = [
+    { id: 'v', estado: 'Activo', inicio: '2024-10-01', fin: '2026-09-30', alquilerActual: 100, historial: [] },
+    { id: 'p', estado: 'Activo', inicio: '2025-01-01', fin: '2026-12-31', alquilerActual: 200, historial: [] },
+    { id: 'l', estado: 'Activo', inicio: '2026-01-01', fin: '2027-12-31', alquilerActual: 300, historial: [] },
+    { id: 'f', estado: 'Finalizado', inicio: '2023-01-01', fin: '2024-12-31', alquilerActual: 50, historial: [] },
+  ];
+  test('lista los vencidos y los que vencen en 60 días, el más urgente primero', () => {
+    expect(contratosPorVencer(contratos, hoy).map((c) => c.id)).toEqual(['v', 'p']);
+    expect(contratoVencido(contratos[0], hoy)).toBe(true);
+    expect(contratoVencido(contratos[1], hoy)).toBe(false);
+    expect(diasParaVencer(contratos[1], hoy)).toBe(50);
+  });
+  test('un contrato vencido sin finalizar se sigue cobrando, marcado', () => {
+    const cobros = cobrosDelMes(contratos, [], '2026-11', hoy);
+    expect(cobros.map((p) => p.contractId).sort()).toEqual(['l', 'p', 'v']);
+    expect(cobros.find((p) => p.contractId === 'v').contratoVencido).toBe(true);
+    expect(cobros.find((p) => p.contractId === 'p').contratoVencido).toBeUndefined();
+  });
+  test('no inventa cobros en meses futuros: ni del vencido ni del que todavía no venció', () => {
+    expect(cobrosDelMes(contratos, [], '2026-12', hoy).map((p) => p.contractId).sort()).toEqual(['l', 'p']);
+    expect(cobrosDelMes(contratos, [], '2027-01', hoy).map((p) => p.contractId)).toEqual(['l']);
+  });
+  test('los meses entre el vencimiento y hoy también se pueden cobrar', () => {
+    expect(cobrosDelMes(contratos, [], '2026-10', hoy).some((p) => p.contractId === 'v' && p.contratoVencido)).toBe(true);
   });
 });
