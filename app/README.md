@@ -44,3 +44,13 @@ Nada con historia se borra: se marca `anulado` (PROJECT_RULES, regla 12).
 - Publicación: secreto `FIREBASE_SERVICE_ACCOUNT` en GitHub (`.github/workflows/firebase.yml`).
 
 Importante: los links de vista previa usan la misma base de datos que la app publicada. Antes de importar datos reales hay que crear un segundo proyecto de Firebase para pruebas.
+
+## Dos proyectos de Firebase
+
+| | Proyecto | Cuándo se usa |
+|---|---|---|
+| Real | `caruso-propiedades` | App definitiva (`main`). Datos reales. |
+| Pruebas | `caruso-pruebas` | Links de vista previa de cada pull request. Datos de mentira. |
+
+`src/firebase-config.js` elige el proyecto con `VITE_ENTORNO` (`pruebas` o `produccion`); el workflow lo define solo.
+Secretos de GitHub: `FIREBASE_SERVICE_ACCOUNT` (real) y `FIREBASE_SERVICE_ACCOUNT_PRUEBAS` (pruebas).

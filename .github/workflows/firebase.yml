@@ -1,7 +1,8 @@
 # Pruebas y publicación automática en Firebase.
-# - Propuesta de cambio (pull request): corre las pruebas, publica un link de vista previa y las reglas de seguridad.
-# - Cambio aprobado en main: corre las pruebas y publica la app y las reglas de seguridad.
-# Necesita el secreto FIREBASE_SERVICE_ACCOUNT (instructivo, Paso 1-E). Sin él, solo corre las pruebas.
+# - Propuesta de cambio (pull request): corre las pruebas y publica la vista previa y las reglas en el proyecto
+#   de PRUEBAS (caruso-pruebas, datos de mentira). No toca la base real.
+# - Cambio aprobado en main: corre las pruebas y publica la app y las reglas en el proyecto real (caruso-propiedades).
+# Secretos: FIREBASE_SERVICE_ACCOUNT (real) y FIREBASE_SERVICE_ACCOUNT_PRUEBAS (pruebas).
 name: Pruebas y publicación
 
 on:
@@ -18,6 +19,7 @@ jobs:
       checks: write
     env:
       HAY_CREDENCIAL: ${{ secrets.FIREBASE_SERVICE_ACCOUNT != '' }}
+      HAY_PRUEBAS: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PRUEBAS != '' }}
     defaults:
       run:
         working-directory: app
@@ -41,31 +43,51 @@ jobs:
         run: |
           npx playwright install --with-deps chromium
           SHOTS=/tmp npm run test:e2e
+      # Pull request: se compila contra el proyecto de pruebas (caruso-pruebas, datos de mentira).
+      # main: se compila contra el proyecto real (caruso-propiedades).
       - name: Compilar
+        env:
+          VITE_ENTORNO: ${{ github.event_name == 'pull_request' && 'pruebas' || 'produccion' }}
         run: npm run build
 
-      - name: Vista previa (pull request)
-        if: github.event_name == 'pull_request' && env.HAY_CREDENCIAL == 'true'
+      # ---------- pull request → proyecto de pruebas ----------
+      - name: Reglas de seguridad (pruebas)
+        if: github.event_name == 'pull_request' && env.HAY_PRUEBAS == 'true'
+        env:
+          CREDENCIAL: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PRUEBAS }}
+        run: |
+          printf '%s' "$CREDENCIAL" > "$RUNNER_TEMP/sa.json"
+          trap 'rm -f "$RUNNER_TEMP/sa.json"' EXIT
+          GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json" npx firebase deploy --only firestore --project caruso-pruebas --non-interactive
+
+      - name: Vista previa (pruebas)
+        if: github.event_name == 'pull_request' && env.HAY_PRUEBAS == 'true'
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PRUEBAS }}
+          projectId: caruso-pruebas
           expires: 14d
 
-      - name: Publicar app (main)
-        if: github.event_name == 'push' && env.HAY_CREDENCIAL == 'true'
-        uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          channelId: live
+      - name: Falta la credencial de pruebas
+        if: github.event_name == 'pull_request' && env.HAY_PRUEBAS != 'true'
+        run: echo "::warning::Falta el secreto FIREBASE_SERVICE_ACCOUNT_PRUEBAS, no se publica la vista previa."
 
-      # La vista previa usa la misma base que la app definitiva: sin las reglas, la base rechaza todo.
-      - name: Publicar reglas de seguridad
-        if: env.HAY_CREDENCIAL == 'true'
+      # ---------- main → proyecto real ----------
+      - name: Reglas de seguridad (real)
+        if: github.event_name == 'push' && env.HAY_CREDENCIAL == 'true'
         env:
           CREDENCIAL: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
         run: |
           printf '%s' "$CREDENCIAL" > "$RUNNER_TEMP/sa.json"
           trap 'rm -f "$RUNNER_TEMP/sa.json"' EXIT
           GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json" npx firebase deploy --only firestore --project caruso-propiedades --non-interactive
+
+      - name: Publicar app (real)
+        if: github.event_name == 'push' && env.HAY_CREDENCIAL == 'true'
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: caruso-propiedades
+          channelId: live
