@@ -148,6 +148,7 @@ try {
   await filaGuemes.locator('[data-accion="cobrar"]').click();
   await pg.fill('#coServ', '8000');
   ok('el total se recalcula al sumar servicios', (await pg.inputValue('#coTotal')) === '$ 493.000');
+  ok('al cambiar servicios ofrece usarlos los próximos meses (tildado)', (await pg.locator('#coRecordarFila').isVisible()) && (await pg.isChecked('#coRecordar')));
   await pg.selectOption('#coMedio', 'Transferencia');
   await pg.click('#coOk');
   await pg.waitForSelector('.receipt-box');
@@ -159,6 +160,11 @@ try {
   await pg.click('[data-cerrar]');
   await pg.waitForSelector('tr:has-text("Güemes 120") .badge:has-text("Pagado")');
   ok('queda Pagado con medio de pago', (await pg.locator('tr:has-text("Güemes 120")').innerText()).includes('Transferencia'));
+  await pg.click('[aria-label="Mes siguiente"]');
+  await pg.waitForTimeout(400);
+  ok('el mes siguiente ya trae los servicios (470.000 + 15.000 + 8.000)', (await pg.locator('tr:has-text("Güemes 120") td.num').innerText()).includes('493.000'));
+  await pg.click('[aria-label="Mes anterior"]');
+  await pg.waitForTimeout(400);
   // pago parcial
   const filaSar = pg.locator('tr:has-text("Sarmiento 342")');
   await filaSar.locator('[data-accion="cobrar"]').click();
@@ -314,6 +320,9 @@ try {
   const prevAct = await pg.locator('#view').innerText();
   ok('vista previa: 1 cambio, 1 error (N° inexistente), con antes → después', prevAct.includes('$ 700.000') && prevAct.includes('No hay ningún contrato cargado con el N° 9999') && (await pg.locator('.stat-tile').first().innerText()).startsWith('1'));
   await pg.screenshot({ path: SHOTS + '/actualizar.png', fullPage: true });
+  ok('no deja aplicar sin elegir qué hacer con los que no tienen fecha', await pg.locator('[data-accion="importar-aplicar"]').isDisabled());
+  await pg.selectOption('#actSinFecha', 'inicio-mes-aplicado');
+  await pg.waitForTimeout(300);
   await pg.click('[data-accion="importar-aplicar"]');
   await pg.click('#confirmarBtn');
   await pg.waitForTimeout(800);
@@ -347,6 +356,34 @@ try {
   ok('lista de vencidos y por vencer con el 0149 primero', (await pg.locator('#view tbody tr').first().innerText()).includes('0149') && (await pg.locator('#view tbody tr').first().innerText()).includes('Vencido'));
   await ir('#/cobranzas');
   ok('el contrato vencido se sigue cobrando, marcado', (await pg.locator('#view tr:has-text("Sarmiento 340")').innerText()).includes('contrato vencido el 1/10/2026'));
+
+  // ---------- deudores ----------
+  const mesPasado = await pg.evaluate(async () => { const f = await import('/src/domain/formato.js'); const h = new Date(); const p = `${h.getFullYear()}-${String(h.getMonth() + 1).padStart(2, '0')}`; return { per: f.prevPeriodo(p), etiqueta: f.periodoLabel(f.prevPeriodo(p)) }; });
+  await ir('#/contratos');
+  await pg.click('#view tr:has-text("0154")');
+  await pg.click('.tab-btn:has-text("Contrato")');
+  await pg.click('[data-accion="editar-contrato"]');
+  await pg.selectOption('#ctDeuda', mesPasado.per);
+  await pg.click('#ctGuardar');
+  await pg.waitForTimeout(600);
+  await ir('#/deudores');
+  const filaDeuda = pg.locator('#view tr:has-text("Belgrano 1234")');
+  ok('Deudores lista al que debe el mes pasado: ' + (await filaDeuda.innerText()).replace(/\s+/g, ' '), (await filaDeuda.locator(`[data-nav*="p=${mesPasado.per}"]`).count()) === 1);
+  await filaDeuda.locator('[data-accion="whatsapp-deuda"]').click();
+  const waDeuda = decodeURIComponent(await pg.evaluate(() => window.__abiertos.at(-1)));
+  ok('WhatsApp de reclamo con el mes y el monto', waDeuda.includes('1122117765') && waDeuda.includes(mesPasado.etiqueta) && waDeuda.includes('pendiente de pago'));
+  await pg.screenshot({ path: SHOTS + '/deudores.png', fullPage: true });
+  await filaDeuda.locator(`[data-nav*="p=${mesPasado.per}"]`).click();
+  await pg.waitForSelector('.page-title:has-text("Cobranzas")');
+  ok('tocar el mes lleva a Cobranzas de ese mes, filtrado', (await pg.locator('#view').innerText()).includes(mesPasado.etiqueta) && (await pg.locator('#view tbody tr').count()) === 1);
+  await pg.click('#view [data-accion="cobrar"]');
+  await pg.click('#coOk');
+  await pg.waitForSelector('.receipt-box');
+  await pg.click('[data-cerrar]');
+  await ir('#/deudores');
+  ok('al cobrarlo, ese mes sale de Deudores', (await pg.locator(`#view tr:has-text("Belgrano 1234") [data-nav*="p=${mesPasado.per}"]`).count()) === 0);
+  await ir('#/');
+  ok('Inicio muestra inquilinos con deuda', (await pg.locator('.stat-grid').innerText()).includes('Inquilinos con deuda'));
 
   // ---------- copia de seguridad ----------
   await ir('#/');

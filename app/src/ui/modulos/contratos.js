@@ -1,6 +1,6 @@
 // Contratos: lista, alta/edición (N° interno, garante, honorarios, expensas, aumentos) y ficha.
-import { esc, fdate, money } from '../../domain/formato.js';
-import { addMonths, contratosPorVencer, contratoVencido, contratoVigente, diasParaVencer, deshacerUltimoAumento, finPorDefecto, nombreCompleto } from '../../domain/consultas.js';
+import { esc, fdate, money, periodoLabel, prevPeriodo } from '../../domain/formato.js';
+import { deudaDesde, addMonths, contratosPorVencer, contratoVencido, contratoVigente, diasParaVencer, deshacerUltimoAumento, finPorDefecto, nombreCompleto } from '../../domain/consultas.js';
 import { HONORARIOS_DEFAULT, honorariosLabel, pendienteActualizacion } from '../../domain/negocio.js';
 import { actualizar, borrar, guardar, tieneCobros } from '../../services/datos.js';
 import { abrirModal, aviso, botonesModal, campo, cerrarModal, confirmar, hoyIso, intentar, lupa, numero, soyAdmin, tildado } from '../base.js';
@@ -77,7 +77,7 @@ export function fichaContratoHtml(d, c) {
       ${kv('Alquiler actual', money(c.alquilerActual, c.moneda) + (c.moneda === 'USD' ? ' <span class="badge badge-info">Dólares</span>' : ''))}${kv('Depósito', c.deposito ? money(c.deposito, c.moneda) : '—')}
       ${kv('Actualización', `${esc(metodoLabel(c))} · cada ${c.frecuencia} meses`)}
       ${kv('Próxima actualización', fdate(c.proxAct) + (pendienteActualizacion(c, hoyIso()) ? ` <span class="badge badge-warn">${icon('alert')}Pendiente</span>` : ''))}
-      ${kv('Expensas', c.expensas && c.expensas.aplica ? money(c.expensas.monto || 0, c.moneda) : 'No')}${kv('Honorarios', esc(honorariosLabel(c.honorarios)))}
+      ${kv('Expensas', c.expensas && c.expensas.aplica ? money(c.expensas.monto || 0, c.moneda) : 'No')}${kv('Servicios por mes', c.serviciosMes ? money(c.serviciosMes, c.moneda) : 'No')}${kv('Honorarios', esc(honorariosLabel(c.honorarios)))}
       ${kv('Vence cada mes el día', esc(c.diaVencimiento || 10))}
     </div>
     ${c.obs ? `<div class="divider"></div><div class="kv-label">Observaciones</div><div style="margin-top:4px;">${esc(c.obs)}</div>` : ''}
@@ -98,6 +98,11 @@ export function contratoModal(d, id, propiedadId, borrador) {
     .sort((a, b) => a.direccion.localeCompare(b.direccion));
   const selPersona = (idSel, valor, rol) => `<div style="display:flex; gap:8px;">${comboPersona(idSel, d.personas, valor)}<button class="btn" type="button" data-nueva-persona="${idSel}" data-rol="${rol}">${icon('plus')}Nueva</button></div>`;
   const h = v.honorarios || HONORARIOS_DEFAULT;
+  // meses posibles para arrancar el control de deuda: los últimos 12 (y el que ya tenga, si es más viejo)
+  const deudaActual = id ? deudaDesde(c, hoyIso()) : null;
+  const mesesDeuda = [];
+  for (let m = hoyIso().slice(0, 7), i = 0; i < 13; m = prevPeriodo(m), i++) mesesDeuda.push(m);
+  if (deudaActual && !mesesDeuda.includes(deudaActual)) mesesDeuda.push(deudaActual);
   const box = abrirModal(`
     <div class="section-title" style="margin-bottom:4px;">${id ? 'Editar contrato N° ' + esc(c.numero || '') : 'Nuevo contrato'}</div>
     <div class="page-sub" style="margin-bottom:14px;">${id ? 'El alquiler se puede corregir acá si se cargó mal. Un aumento se aplica desde Aumentos, para que quede en el historial.' : 'Para un contrato que ya viene corriendo, cargá el alquiler actual y la fecha de la próxima actualización.'}</div>
@@ -121,10 +126,12 @@ export function contratoModal(d, id, propiedadId, borrador) {
       <div class="field"><label for="ctPct">% fijo (solo si aplica)</label><input type="number" id="ctPct" min="0" step="0.5" value="${v.pctFijo ?? ''}"></div>
       <div class="field"><label for="ctFrec">Cada cuántos meses</label><select id="ctFrec">${[3, 4, 6, 12].map((n) => `<option value="${n}" ${n === Number(v.frecuencia) ? 'selected' : ''}>Cada ${n} meses</option>`).join('')}</select></div>
       <div class="field"><label for="ctProx">Próxima actualización</label>${inputFecha('ctProx', v.proxAct)}<span class="cell-sub">Vacío = inicio + frecuencia</span></div>
+      ${id ? `<div class="field"><label for="ctDeuda">Controlar deuda desde</label><select id="ctDeuda">${mesesDeuda.map((m) => `<option value="${m}" ${m === deudaActual ? 'selected' : ''}>${periodoLabel(m)}</option>`).join('')}</select><span class="cell-sub">Desde ese mes, lo que no figure cobrado aparece en Deudores.</span></div>` : ''}
     </div>
     <div class="divider"></div>
     <div class="form-grid" style="margin-bottom:12px;">
       <div class="field"><label style="display:flex; gap:8px; align-items:center;"><input type="checkbox" id="ctExpAplica" ${v.expensas && v.expensas.aplica ? 'checked' : ''}> Paga expensas</label><input type="number" id="ctExpMonto" min="0" step="100" value="${(v.expensas && v.expensas.monto) || ''}" placeholder="Monto de expensas"></div>
+      <div class="field"><label for="ctServ">Servicios por mes (opcional)</label><input type="number" id="ctServ" min="0" step="100" value="${v.serviciosMes || ''}" placeholder="Monto fijo que se suma cada mes"></div>
       <div class="field"><label for="ctHonTipo">Honorarios</label><div style="display:flex; gap:8px;"><select id="ctHonTipo"><option value="porcentaje" ${h.tipo === 'porcentaje' ? 'selected' : ''}>Porcentaje</option><option value="fijo" ${h.tipo === 'fijo' ? 'selected' : ''}>Monto fijo</option></select><input type="number" id="ctHonValor" min="0" step="0.5" value="${h.valor}" style="flex:1;"></div></div>
       <div class="field" style="grid-column:1/-1;"><label for="ctObs">Observaciones</label><input id="ctObs" value="${esc(v.obs || '')}" placeholder="Opcional"></div>
     </div>
@@ -152,7 +159,7 @@ export function contratoModal(d, id, propiedadId, borrador) {
     guarantorId: campo('ctGarante') || null, diaVencimiento: Math.min(28, Math.max(1, numero('ctDia') || 10)),
     inicio: fecha('ctInicio'), fin: fecha('ctFin'), alquilerActual: numero('ctAlquiler'), deposito: numero('ctDeposito') || null,
     tipoAumento: campo('ctTipo'), pctFijo: numero('ctPct') || null, frecuencia: Number(campo('ctFrec')), proxAct: fecha('ctProx'),
-    expensas: { aplica: tildado('ctExpAplica'), monto: numero('ctExpMonto') }, honorarios: { tipo: campo('ctHonTipo'), valor: numero('ctHonValor') },
+    expensas: { aplica: tildado('ctExpAplica'), monto: numero('ctExpMonto') }, serviciosMes: numero('ctServ'), honorarios: { tipo: campo('ctHonTipo'), valor: numero('ctHonValor') },
     obs: campo('ctObs'), revisarAumento: false, moneda: campo('ctMoneda') || 'ARS',
   });
 
@@ -186,6 +193,7 @@ export function contratoModal(d, id, propiedadId, borrador) {
     x.ownerId = pr.ownerId;
     // en una edición el monto solo se corrige (un aumento se carga desde Aumentos, para que quede en el historial)
     if (id && x.alquilerActual === c.alquilerActual) delete x.alquilerActual;
+    if (id && campo('ctDeuda') && campo('ctDeuda') !== deudaActual) x.deudaDesde = campo('ctDeuda');
     const datosC = id ? x : { ...x, alquilerInicial: x.alquilerActual, historial: [], estado: 'Activo' };
     let nuevoId = id;
     const ok = await intentar(async () => {

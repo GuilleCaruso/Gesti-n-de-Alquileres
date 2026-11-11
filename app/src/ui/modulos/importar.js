@@ -15,6 +15,7 @@ let incluirVencidos = false;
 let modo = 'nuevos'; // 'nuevos' (alta desde Arcomercial) o 'actualizar' (corregir contratos ya cargados)
 let archivoAct = null;
 let mapeoAct = {};
+let sinFecha = ''; // hay que elegirlo antes de aplicar
 
 function resultado(d) {
   if (!archivo) return null;
@@ -51,9 +52,17 @@ function vistaActualizar({ d }) {
       <div class="table-wrap"><table><thead><tr><th>Dato</th><th>Columna del archivo</th><th>Ejemplo (fila 2)</th></tr></thead><tbody>
         ${CAMPOS_ACT.map((c) => `<tr><td class="cell-title">${esc(c.l)}${c.req ? ' *' : ''}</td><td><select data-mapeo-act="${c.k}">${opciones(c.k)}</select></td><td class="cell-sub">${ejemplo(c.k)}</td></tr>`).join('')}
       </tbody></table></div>
+      <div class="field" style="max-width:640px; margin-top:14px;"><label for="actSinFecha">Para los contratos de la planilla sin "última actualización"</label>
+        <select id="actSinFecha">
+          <option value="" ${sinFecha === '' ? 'selected' : ''}>Elegí una opción…</option>
+          <option value="inicio-mes-aplicado" ${sinFecha === 'inicio-mes-aplicado' ? 'selected' : ''}>Calcular el próximo aumento desde el inicio del contrato — los de ${esc(new Date().toLocaleDateString('es-AR', { month: 'long' }))} ya están aplicados</option>
+          <option value="inicio" ${sinFecha === 'inicio' ? 'selected' : ''}>Calcular el próximo aumento desde el inicio del contrato — los de este mes que todavía no llegaron quedan pendientes</option>
+          <option value="no" ${sinFecha === 'no' ? 'selected' : ''}>No tocar la fecha del próximo aumento</option>
+        </select>
+        <span class="cell-sub">Ejemplo: contrato que empezó el 1/8/2025 y aumenta cada 3 meses → 1/11/2025, 1/2/2026… Se toma la primera fecha que todavía no pasó. Al calcularla, el contrato deja de figurar en "Revisar aumento".</span></div>
     </div>`;
   if (mapeoAct.numero == null) return paso1 + paso2;
-  const r = armarActualizacion({ filas: archivoAct.filas, mapeo: mapeoAct, contratos: d.contratos, hoy: hoyIso() });
+  const r = armarActualizacion({ filas: archivoAct.filas, mapeo: mapeoAct, contratos: d.contratos, hoy: hoyIso(), sinFecha: sinFecha || 'no' });
   const flecha = (a, b, fmt = (x) => esc(x ?? '—')) => (a === b ? `<span class="cell-sub">${fmt(a)}</span>` : `<span class="cell-sub" style="text-decoration:line-through;">${fmt(a)}</span> → <b>${fmt(b)}</b>`);
   const lista = (items, clase) => (items.length ? `<div class="note-banner ${clase}" style="margin-bottom:10px; max-height:220px; overflow-y:auto;">${icon('alert')}<div>${items.map((e) => `Fila ${e.fila}: ${esc(e.msg)}`).join('<br>')}</div></div>` : '');
   const paso3 = `
@@ -72,7 +81,8 @@ function vistaActualizar({ d }) {
       </tbody></table></div>` : '<div class="page-sub" style="margin-bottom:14px;">No hay nada para cambiar: los datos de la planilla ya coinciden con lo cargado.</div>'}
       <div style="display:flex; gap:10px;">
         <button class="btn" data-accion="importar-cancelar">Cancelar</button>
-        <button class="btn btn-primary" data-accion="importar-aplicar" ${r.cambios.length ? '' : 'disabled'}>${icon('check')}Aplicar ${r.cambios.length} cambios</button>
+        <button class="btn btn-primary" data-accion="importar-aplicar" ${r.cambios.length && sinFecha ? '' : 'disabled'}>${icon('check')}Aplicar ${r.cambios.length} cambios</button>
+        ${sinFecha ? '' : '<span class="cell-sub" style="align-self:center;">Elegí arriba qué hacer con los que no tienen "última actualización".</span>'}
       </div>
     </div>`;
   return paso1 + paso2 + paso3;
@@ -176,6 +186,8 @@ export function montar() {
     mapeoAct = adivinarMapeo(r.encabezados, CAMPOS_ACT);
     refrescar();
   };
+  const sf = document.getElementById('actSinFecha');
+  if (sf) sf.onchange = () => { sinFecha = sf.value; refrescar(); };
   document.querySelectorAll('[data-mapeo-act]').forEach((sel) => {
     sel.onchange = () => { mapeoAct[sel.dataset.mapeoAct] = sel.value === '' ? undefined : Number(sel.value); refrescar(); };
   });
@@ -218,12 +230,13 @@ export const acciones = {
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   },
   'importar-aplicar': ({ d }) => {
-    const r = armarActualizacion({ filas: archivoAct.filas, mapeo: mapeoAct, contratos: d.contratos, hoy: hoyIso() });
+    if (!sinFecha) return;
+    const r = armarActualizacion({ filas: archivoAct.filas, mapeo: mapeoAct, contratos: d.contratos, hoy: hoyIso(), sinFecha });
     if (!r.cambios.length) return;
     confirmar(`Se van a modificar ${r.cambios.length} contratos. ${r.errores.length} filas con error quedan afuera. ¿Aplicar?`, async () => {
       try {
         await actualizarLote(r.cambios.map((c) => ({ coleccion: 'contratos', id: c.id, cambios: c.nuevo })));
-        archivoAct = null; mapeoAct = {};
+        archivoAct = null; mapeoAct = {}; sinFecha = '';
         aviso(`Listo: ${r.cambios.length} contratos actualizados`, () =>
           actualizarLote(r.cambios.map((c) => ({ coleccion: 'contratos', id: c.id, cambios: c.antes })))
             .then(() => aviso('Cambios deshechos')).catch(() => aviso('No se pudo deshacer. Revisá la conexión.')));
@@ -234,7 +247,7 @@ export const acciones = {
       }
     });
   },
-  'importar-cancelar': () => { archivo = null; mapeo = {}; archivoAct = null; mapeoAct = {}; refrescar(); },
+  'importar-cancelar': () => { archivo = null; mapeo = {}; archivoAct = null; mapeoAct = {}; sinFecha = ''; refrescar(); },
   'importar-confirmar': ({ d }) => {
     const r = armarImportacion({ filas: archivo.filas, mapeo, formatoNombre, existentes: d, generarId: nuevoId, hoy: hoyIso(), frecuenciaDefecto, incluirVencidos });
     confirmar(`Se van a crear ${r.contratos.length} contratos, ${r.propiedades.length} propiedades y ${r.personas.length} personas. ${r.errores.length} filas con error quedan afuera. ¿Importar?`, async () => {

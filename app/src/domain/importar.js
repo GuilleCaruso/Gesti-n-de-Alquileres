@@ -293,7 +293,12 @@ const TIPOS_TEXTO = { ICL: 'ICL', IPC: 'IPC', Fijo: '% fijo', Personalizado: 'Pe
 const etiquetaAumento = (c) => (c.tipoAumento === 'Fijo' ? `${c.pctFijo ?? '?'}% fijo` : TIPOS_TEXTO[c.tipoAumento] || c.tipoAumento || '—') + ` · cada ${c.frecuencia || 3}m`;
 
 // Devuelve los cambios a aplicar a contratos existentes, sin tocar la base.
-export function armarActualizacion({ filas, mapeo, contratos, hoy }) {
+// `sinFecha`: qué hacer con las filas que no traen "última actualización":
+//   'no' = no tocar la fecha · 'inicio' = próximo aumento contado desde el inicio del contrato (el primero desde hoy)
+//   'inicio-mes-aplicado' = igual, pero los aumentos del mes en curso ya están aplicados (el próximo cae después).
+export function armarActualizacion({ filas, mapeo, contratos, hoy, sinFecha = 'no' }) {
+  const [anio, mes] = hoy.split('-').map(Number);
+  const corte = sinFecha === 'inicio-mes-aplicado' ? (mes === 12 ? `${anio + 1}-01-01` : `${anio}-${String(mes + 1).padStart(2, '0')}-01`) : hoy;
   const val = (fila, k) => (mapeo[k] != null ? String(fila[mapeo[k]] ?? '').trim() : '');
   const cambios = []; const errores = []; const avisos = [];
   const vistos = new Set();
@@ -338,11 +343,14 @@ export function armarActualizacion({ filas, mapeo, contratos, hoy }) {
       const prox = addMonths(ult, frecuencia);
       if (prox !== c.proxAct) nuevo.proxAct = prox;
       if (prox <= hoy) avisos.push({ fila: n, msg: `N° ${numero}: el próximo aumento (${prox.split('-').reverse().join('/')}) ya venció, va a aparecer como pendiente en Aumentos` });
+    } else if (sinFecha !== 'no' && c.inicio) {
+      const prox = proximaDesde(c.inicio, frecuencia, corte);
+      if (prox !== c.proxAct) nuevo.proxAct = prox;
     } else if (nuevo.frecuencia && c.proxAct) {
       avisos.push({ fila: n, msg: `N° ${numero}: cambió la frecuencia pero sin "última actualización" la fecha del próximo aumento no se recalcula` });
     }
-    // con la fecha del último aumento confirmada, el contrato deja de estar "a revisar"
-    if (ultTxt && c.revisarAumento) nuevo.revisarAumento = false;
+    // con la fecha confirmada (escrita o calculada), el contrato deja de estar "a revisar"
+    if ((ultTxt || sinFecha !== 'no') && c.revisarAumento) nuevo.revisarAumento = false;
     if (!Object.keys(nuevo).length) return;
     const despues = { ...c, ...nuevo };
     const antes = {};

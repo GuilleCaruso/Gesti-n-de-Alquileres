@@ -1,8 +1,8 @@
 // Cobranzas del mes: se calculan desde los contratos activos; al cobrar se guarda el pago y se imprime el recibo.
 import { esc, fdate, money, nextPeriodo, nombreMoneda, numeroALetras, periodoLabel, totalMonedas } from '../../domain/formato.js';
-import { cobrosDelMes, estadoCobro, idPago, nombreCompleto } from '../../domain/consultas.js';
+import { deudas, cobrosDelMes, estadoCobro, idPago, nombreCompleto } from '../../domain/consultas.js';
 import { pagoTotal, pendienteActualizacion } from '../../domain/negocio.js';
-import { guardar } from '../../services/datos.js';
+import { actualizar, guardar } from '../../services/datos.js';
 import { abrirModal, aviso, botonesModal, campo, cerrarModal, docFoot, docHead, hoyIso, imprimir, INMOBILIARIA, intentar, LOGO, lupa, numero, periodoActual, soyAdmin } from '../base.js';
 import { fecha, inputFecha } from '../campos.js';
 import { icon } from '../icons.js';
@@ -26,6 +26,7 @@ export function vista({ d, params }) {
   const nVencidos = cobros.filter((p) => estadoCobro(p, hoy) === 'Vencido').length;
   if (q) cobros = cobros.filter((p) => { const c = C(p.contractId); return [c?.numero, PR(c?.propertyId).direccion, PR(c?.propertyId).localidad, nombreCompleto(P(c?.tenantId)), nombreCompleto(P(c?.ownerId))].join(' ').toLowerCase().includes(q); });
   cobros.sort((a, b) => PR(C(a.contractId)?.propertyId).direccion.localeCompare(PR(C(b.contractId)?.propertyId).direccion));
+  const debe = new Map(deudas(d.contratos, d.pagos, hoy).map((x) => [x.contrato.id, x.items.filter((i) => i.periodo < periodo).length]));
   const filas = cobros.map((p) => {
     const c = C(p.contractId); const pr = PR(c?.propertyId); const est = estadoCobro(p, hoy);
     const $ = (n) => money(n, p.moneda);
@@ -36,7 +37,7 @@ export function vista({ d, params }) {
       <td><div class="cell-title">${esc(pr.direccion)}</div><div class="cell-sub">${esc(pr.localidad)}</div></td>
       <td>${esc(nombreCompleto(P(c?.tenantId)))}</td>
       <td>${esc(nombreCompleto(P(c?.ownerId)))}</td>
-      <td class="num tnum">${$(pagoTotal(p))}${detalle ? `<div class="cell-sub">alquiler ${$(p.importe)} + ${detalle}</div>` : ''}${p.estado === 'Parcial' ? `<div class="cell-sub">pagó ${$(p.pagado)}</div>` : ''}${avisoAct}${p.contratoVencido ? `<div class="cell-sub" style="color:var(--danger-600);">${icon('alert')} contrato vencido el ${fdate(c.fin)}</div>` : ''}</td>
+      <td class="num tnum">${$(pagoTotal(p))}${detalle ? `<div class="cell-sub">alquiler ${$(p.importe)} + ${detalle}</div>` : ''}${p.estado === 'Parcial' ? `<div class="cell-sub">pagó ${$(p.pagado)}</div>` : ''}${avisoAct}${p.contratoVencido ? `<div class="cell-sub" style="color:var(--danger-600);">${icon('alert')} contrato vencido el ${fdate(c.fin)}</div>` : ''}${debe.get(p.contractId) ? `<div class="cell-sub" style="color:var(--danger-600);"><a data-nav="/deudores?q=${encodeURIComponent(c?.numero || '')}" style="cursor:pointer; text-decoration:underline; color:inherit;">debe ${debe.get(p.contractId)} ${debe.get(p.contractId) === 1 ? 'mes anterior' : 'meses anteriores'}</a></div>` : ''}</td>
       <td>${badgeEstado(est)}</td>
       <td class="tnum">${fdate(p.fechaPago)}${p.medio ? `<div class="cell-sub">${esc(p.medio)}</div>` : ''}</td>
       <td class="row-actions">${p.estado === 'Pagado'
@@ -165,7 +166,11 @@ function cobrarModal(d, p) {
       <div class="field"><label for="coMedio">Medio de pago</label><select id="coMedio"><option>Efectivo</option><option>Transferencia</option></select></div>
       <div class="field"><label for="coFecha">Fecha de pago</label>${inputFecha('coFecha', hoyIso())}</div>
     </div>
+    ${c.estado === 'Activo' ? `<label id="coRecordarFila" style="display:none; gap:8px; align-items:flex-start; font-weight:600; margin-bottom:12px;"><input type="checkbox" id="coRecordar" checked style="margin-top:3px;"> <span>Usar estas expensas y servicios también los próximos meses<br><span class="cell-sub" style="font-weight:400;">Destildalo si es un gasto solo de este mes.</span></span></label>` : ''}
     ${botonesModal('Confirmar cobro', 'coOk')}`, true);
+  const expContrato = c.expensas && c.expensas.aplica ? c.expensas.monto || 0 : 0;
+  // ¿cambiaron las expensas o los servicios respecto de lo que el contrato trae todos los meses?
+  const cambioFijos = () => numero('coExp') !== expContrato || numero('coServ') !== (c.serviciosMes || 0);
   const importe = () => numero('coAlq');
   const total = () => importe() + numero('coExp') + numero('coServ');
   const refrescar = () => {
@@ -173,6 +178,8 @@ function cobrarModal(d, p) {
     box.querySelector('#coTotal').value = money(total(), p.moneda);
     box.querySelector('#coMontoLabel').textContent = `Cobrado ahora (falta ${money(saldo, p.moneda)}${pagadoYa ? ', ya pagó ' + money(pagadoYa, p.moneda) : ''})`;
     box.querySelector('#coMonto').value = saldo;
+    const filaRec = box.querySelector('#coRecordarFila');
+    if (filaRec) filaRec.style.display = cambioFijos() ? 'flex' : 'none';
     box.querySelector('#coAlqNota').textContent = importe() !== p.importe ? `Solo para este mes (el contrato dice ${money(p.importe, p.moneda)}). Si el contrato está mal, corregilo en el contrato o en Aumentos.` : '';
   };
   ['coAlq', 'coExp', 'coServ'].forEach((i) => box.querySelector('#' + i).addEventListener('input', refrescar));
@@ -200,7 +207,9 @@ function cobrarModal(d, p) {
       cobros: [...(p.cobros || []), { fecha: fechaPago || hoyIso(), monto, medio: campo('coMedio') }],
     };
     const id = idPago(p.contractId, p.periodo);
-    const ok = await intentar(() => guardar('pagos', id, registro),
+    const recordar = c.estado === 'Activo' && cambioFijos() && box.querySelector('#coRecordar')?.checked;
+    const fijos = { expensas: { aplica: registro.expensas > 0, monto: registro.expensas }, serviciosMes: registro.servicios };
+    const ok = await intentar(async () => { await guardar('pagos', id, registro); if (recordar) await actualizar('contratos', c.id, fijos); },
       completo ? 'Cobro registrado' : `Pago parcial registrado — faltan ${money(nuevoTotal - pagado, p.moneda)}`,
       () => intentar(() => guardar('pagos', id, prev || { estado: 'Pendiente', pagado: 0, fechaPago: null, medio: null, cobros: [] }), 'Cobro deshecho'));
     if (ok) {

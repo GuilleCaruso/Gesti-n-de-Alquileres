@@ -42,7 +42,7 @@ export function cobroDelMes(contrato, periodo, pagos) {
   const exp = contrato.expensas && contrato.expensas.aplica ? contrato.expensas.monto || 0 : 0;
   return {
     id: idPago(contrato.id, periodo), contractId: contrato.id, periodo, moneda: contrato.moneda || 'ARS',
-    importe: alquilerDelPeriodo(contrato, periodo), expensas: exp, servicios: 0,
+    importe: alquilerDelPeriodo(contrato, periodo), expensas: exp, servicios: contrato.serviciosMes || 0,
     estado: 'Pendiente', vencimiento: `${periodo}-${String(contrato.diaVencimiento || 10).padStart(2, '0')}`, nuevo: true,
   };
 }
@@ -121,3 +121,46 @@ export function buscar(q, { personas, propiedades, contratos }) {
   });
   return { propiedades: props.slice(0, 8), personas: ppl.slice(0, 8) };
 }
+
+// ---------- deudores ----------
+// Mes desde el que se controla la deuda de un contrato. La app no sabe qué pasó antes de que el contrato
+// se cargara: por defecto arranca el mes en que se cargó (o el de inicio, si es posterior). Se puede cambiar
+// a mano en el contrato (`deudaDesde`) para registrar una deuda anterior.
+export function deudaDesde(c, hoyIso) {
+  if (c.deudaDesde) return c.deudaDesde;
+  const alta = c.creadoEn && typeof c.creadoEn.toDate === 'function' ? c.creadoEn.toDate() : null;
+  const mesAlta = alta ? `${alta.getFullYear()}-${String(alta.getMonth() + 1).padStart(2, '0')}` : hoyIso.slice(0, 7);
+  const mesInicio = (c.inicio || hoyIso).slice(0, 7);
+  return mesAlta > mesInicio ? mesAlta : mesInicio;
+}
+
+// Lo que debe cada contrato: meses anteriores con saldo, y el mes actual si ya pasó el día de vencimiento.
+// Contratos finalizados: solo lo que quedó registrado a medio pagar.
+export function deudas(contratos, pagos, hoyIso) {
+  const mesActual = hoyIso.slice(0, 7);
+  const lista = [];
+  contratos.forEach((c) => {
+    const items = [];
+    const sumar = (p) => {
+      const total = pagoTotal(p);
+      const pagado = p.estado === 'Pagado' ? total : p.estado === 'Parcial' ? p.pagado || 0 : 0;
+      if (total - pagado > 0) items.push({ id: p.id, periodo: p.periodo, total, pagado, saldo: total - pagado, parcial: pagado > 0 });
+    };
+    if (c.estado === 'Activo') {
+      const hasta = c.fin && c.fin >= hoyIso ? c.fin.slice(0, 7) : mesActual; // vencido sin renovar: se sigue cobrando
+      for (let per = deudaDesde(c, hoyIso), i = 0; per <= mesActual && per <= hasta && i < 240; per = sigPeriodo(per), i++) {
+        const p = cobroDelMes(c, per, pagos);
+        if (per < mesActual || (p.vencimiento && p.vencimiento < hoyIso)) sumar(p);
+      }
+    } else {
+      pagos.filter((p) => p.contractId === c.id && p.estado === 'Parcial').forEach(sumar);
+    }
+    if (items.length) {
+      items.sort((a, b) => a.periodo.localeCompare(b.periodo));
+      lista.push({ contrato: c, moneda: c.moneda || 'ARS', items, saldo: items.reduce((s, x) => s + x.saldo, 0) });
+    }
+  });
+  // primero los que deben más meses; a igualdad, la deuda más vieja
+  return lista.sort((a, b) => b.items.length - a.items.length || a.items[0].periodo.localeCompare(b.items[0].periodo));
+}
+const sigPeriodo = (p) => { const [y, m] = p.split('-').map(Number); return m === 12 ? `${y + 1}-01` : `${y}-${String(m + 1).padStart(2, '0')}`; };
