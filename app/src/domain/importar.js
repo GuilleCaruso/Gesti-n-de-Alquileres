@@ -125,7 +125,7 @@ export function normalizarFrecuencia(v) {
   if (s.includes('semes')) return 6;
   if (s.includes('anual')) return 12;
   const n = parseInt(s, 10);
-  return [3, 4, 6, 12].includes(n) ? n : 3;
+  return [3, 4, 6, 12, 24].includes(n) ? n : 3;
 }
 
 // Nombres en mayúsculas (como los exporta Arcomercial) → "Pérez Juan". Si ya vienen mezclados, no se tocan.

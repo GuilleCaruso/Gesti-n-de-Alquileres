@@ -410,6 +410,17 @@ try {
   ok('la ficha del contrato dice qué mes está cursando', /Mes \d+ de 24 \(este mes\)/.test(await pg.locator('.kv-grid').innerText()));
   await pg.screenshot({ path: SHOTS + '/mes-contrato.png', fullPage: true });
 
+  // ---------- contrato sin aumento: cada 24 meses ----------
+  await ir('#/contratos');
+  await pg.click('#view tr:has-text("473")');
+  await pg.click('.tab-btn:has-text("Contrato")');
+  await pg.click('[data-accion="editar-contrato"]');
+  await pg.selectOption('#ctFrec', '24');
+  await pg.click('#ctGuardar');
+  await pg.waitForTimeout(600);
+  const c473 = await pg.evaluate(async () => { const m = await import('/src/services/datos.js'); return m.datos().contratos.find((c) => c.numero === '473'); });
+  ok('cada 24 meses: el próximo aumento pasa al final del contrato (' + c473.proxAct + ')', c473.frecuencia === 24 && c473.proxAct === '2027-06-01');
+
   // ---------- copia de seguridad ----------
   await ir('#/');
   ok('Inicio recuerda hacer la copia de seguridad', (await pg.locator('#view').innerText()).includes('copia de seguridad'));

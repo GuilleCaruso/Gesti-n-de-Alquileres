@@ -242,3 +242,10 @@ describe('actualizar sin "última actualización": calcula el próximo aumento d
     expect(r.cambios[0].nuevo.proxAct).toBe('2027-01-01');
   });
 });
+
+describe('frecuencia de 24 meses (contratos sin aumento)', () => {
+  test('se acepta 24 en la planilla', () => {
+    expect(normalizarFrecuencia('24')).toBe(24);
+    expect(normalizarFrecuencia('36')).toBe(3);
+  });
+});

@@ -136,7 +136,7 @@ export function contratoModal(d, id, propiedadId, borrador) {
       <div class="field"><label for="ctDeposito">Depósito</label><input type="number" id="ctDeposito" min="0" step="500" value="${v.deposito ?? ''}" placeholder="Opcional"></div>
       <div class="field"><label for="ctTipo">Tipo de aumento</label><select id="ctTipo">${TIPOS_AUMENTO.map(([k, l]) => `<option value="${k}" ${k === v.tipoAumento ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
       <div class="field"><label for="ctPct">% fijo (solo si aplica)</label><input type="number" id="ctPct" min="0" step="0.5" value="${v.pctFijo ?? ''}"></div>
-      <div class="field"><label for="ctFrec">Cada cuántos meses</label><select id="ctFrec">${[3, 4, 6, 12].map((n) => `<option value="${n}" ${n === Number(v.frecuencia) ? 'selected' : ''}>Cada ${n} meses</option>`).join('')}</select></div>
+      <div class="field"><label for="ctFrec">Cada cuántos meses</label><select id="ctFrec">${[3, 4, 6, 12, 24].map((n) => `<option value="${n}" ${n === Number(v.frecuencia) ? 'selected' : ''}>${n === 24 ? 'Cada 24 meses (sin aumento en un contrato de 2 años)' : `Cada ${n} meses`}</option>`).join('')}</select></div>
       <div class="field"><label for="ctProx">Próxima actualización</label>${inputFecha('ctProx', v.proxAct)}<span class="cell-sub">Vacío = inicio + frecuencia</span></div>
       ${id ? `<div class="field"><label for="ctDeuda">Controlar deuda desde</label><select id="ctDeuda">${mesesDeuda.map((m) => `<option value="${m}" ${m === deudaActual ? 'selected' : ''}>${periodoLabel(m)}</option>`).join('')}</select><span class="cell-sub">Desde ese mes, lo que no figure cobrado aparece en Deudores.</span></div>` : ''}
     </div>
@@ -201,6 +201,8 @@ export function contratoModal(d, id, propiedadId, borrador) {
     if (x.tipoAumento === 'Fijo' && !x.pctFijo) { aviso('Cargá el % fijo de aumento'); return; }
     if (x.numero && d.contratos.some((o) => o.id !== id && o.numero === x.numero)) { aviso('Ya existe otro contrato con el N° ' + x.numero); return; }
     if (!(x.honorarios.valor >= 0)) { aviso('Revisá los honorarios'); return; }
+    // pasar a 24 meses sin tocar la fecha: el próximo aumento se recalcula desde el inicio (cae al terminar el contrato)
+    if (id && x.frecuencia === 24 && Number(c.frecuencia) !== 24 && x.proxAct === c.proxAct) x.proxAct = '';
     if (!x.proxAct) x.proxAct = addMonths(x.inicio, x.frecuencia);
     x.ownerId = pr.ownerId;
     // en una edición el monto solo se corrige (un aumento se carga desde Aumentos, para que quede en el historial)

@@ -110,7 +110,7 @@ function vistaNuevos({ d }) {
         <select id="impFormato"><option value="apellido-nombre" ${formatoNombre === 'apellido-nombre' ? 'selected' : ''}>Apellido Nombre (Pérez Juan)</option><option value="nombre-apellido" ${formatoNombre === 'nombre-apellido' ? 'selected' : ''}>Nombre Apellido (Juan Pérez)</option></select></div>
       <label style="display:flex; gap:8px; align-items:center; font-weight:600; margin-bottom:14px;"><input type="checkbox" id="impVencidos" ${incluirVencidos ? 'checked' : ''}> Importar también los contratos vencidos (como historial)</label>
       ${mapeo.frecuencia == null ? `<div class="field" style="max-width:340px; margin-bottom:14px;"><label for="impFrec">El archivo no dice cada cuántos meses aumentan. Cargarlos cada</label>
-        <select id="impFrec">${[3, 4, 6, 12].map((m) => `<option value="${m}" ${Number(frecuenciaDefecto) === m ? 'selected' : ''}>${m} meses</option>`).join('')}</select>
+        <select id="impFrec">${[3, 4, 6, 12, 24].map((m) => `<option value="${m}" ${Number(frecuenciaDefecto) === m ? 'selected' : ''}>${m} meses</option>`).join('')}</select>
         <span class="cell-sub">Quedan marcados "Revisar aumento" para confirmarlos uno por uno.</span></div>` : ''}
       <div class="table-wrap"><table><thead><tr><th>Dato</th><th>Columna del archivo</th><th>Ejemplo (fila 2)</th></tr></thead><tbody>
         ${CAMPOS.map((c) => `<tr><td class="cell-title">${esc(c.l)}${c.req ? ' *' : ''}</td><td><select data-mapeo="${c.k}">${opciones(c.k)}</select></td><td class="cell-sub">${ejemplo(c.k)}</td></tr>`).join('')}
