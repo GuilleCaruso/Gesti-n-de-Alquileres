@@ -385,6 +385,42 @@ try {
   await ir('#/');
   ok('Inicio muestra inquilinos con deuda', (await pg.locator('.stat-grid').innerText()).includes('Inquilinos con deuda'));
 
+  // ---------- ordenar listas y mes del contrato ----------
+  await ir('#/cobranzas');
+  await pg.selectOption('#ordenLista', 'numero');
+  await pg.waitForTimeout(300);
+  const nros = (await pg.locator('#view tbody tr td:first-child').allInnerTexts()).map((t) => t.split('\n')[0].trim());
+  const ordenados = [...nros].sort((a, b) => a.localeCompare(b, 'es', { numeric: true }));
+  ok('Cobranzas ordenada por N° de carpeta: ' + nros.join(', '), nros.length > 2 && nros.join() === ordenados.join());
+  await ir('#/contratos');
+  await ir('#/cobranzas');
+  ok('el orden elegido se recuerda al volver', (await pg.inputValue('#ordenLista')) === 'numero');
+  ok('Cobranzas muestra el mes del contrato', /mes \d+ de \d+/.test(await pg.locator('#view tbody').innerText()));
+  await pg.locator('#view tr:has-text("Sarmiento 342") [data-accion="ver-recibo"]').click();
+  await pg.waitForSelector('#modalOverlay.show .receipt-box');
+  ok('el recibo dice qué mes del contrato es', /Mes \d+ de \d+ del contrato/.test(await pg.locator('#modalOverlay.show .receipt-box').innerText()));
+  await pg.screenshot({ path: SHOTS + '/recibo-mes.png' });
+  await pg.click('#modalOverlay.show [data-cerrar]');
+  await ir('#/contratos');
+  await pg.selectOption('#ordenLista', 'inquilino');
+  await pg.waitForTimeout(300);
+  ok('Contratos se puede ordenar por inquilino', (await pg.inputValue('#ordenLista')) === 'inquilino');
+  await pg.click('#view tr:has-text("0172")');
+  await pg.click('.tab-btn:has-text("Contrato")');
+  ok('la ficha del contrato dice qué mes está cursando', /Mes \d+ de 24 \(este mes\)/.test(await pg.locator('.kv-grid').innerText()));
+  await pg.screenshot({ path: SHOTS + '/mes-contrato.png', fullPage: true });
+
+  // ---------- contrato sin aumento: cada 24 meses ----------
+  await ir('#/contratos');
+  await pg.click('#view tr:has-text("473")');
+  await pg.click('.tab-btn:has-text("Contrato")');
+  await pg.click('[data-accion="editar-contrato"]');
+  await pg.selectOption('#ctFrec', '24');
+  await pg.click('#ctGuardar');
+  await pg.waitForTimeout(600);
+  const c473 = await pg.evaluate(async () => { const m = await import('/src/services/datos.js'); return m.datos().contratos.find((c) => c.numero === '473'); });
+  ok('cada 24 meses: el próximo aumento pasa al final del contrato (' + c473.proxAct + ')', c473.frecuencia === 24 && c473.proxAct === '2027-06-01');
+
   // ---------- copia de seguridad ----------
   await ir('#/');
   ok('Inicio recuerda hacer la copia de seguridad', (await pg.locator('#view').innerText()).includes('copia de seguridad'));

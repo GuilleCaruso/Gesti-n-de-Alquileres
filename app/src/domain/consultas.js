@@ -164,3 +164,25 @@ export function deudas(contratos, pagos, hoyIso) {
   return lista.sort((a, b) => b.items.length - a.items.length || a.items[0].periodo.localeCompare(b.items[0].periodo));
 }
 const sigPeriodo = (p) => { const [y, m] = p.split('-').map(Number); return m === 12 ? `${y + 1}-01` : `${y}-${String(m + 1).padStart(2, '0')}`; };
+
+// ---------- mes del contrato ----------
+// Qué mes del contrato corresponde a un período: el mes de inicio es el 1.
+// Total = meses del contrato completo (1/8/2025 al 31/7/2027 → 24). Puede pasarse del total si venció y sigue.
+export function mesDelContrato(c, periodo) {
+  if (!c || !c.inicio || !periodo) return null;
+  const [yi, mi] = c.inicio.split('-').map(Number);
+  const [yp, mp] = periodo.split('-').map(Number);
+  const mes = (yp * 12 + mp) - (yi * 12 + mi) + 1;
+  let total = null;
+  if (c.fin) {
+    // duración en meses redondeada: 1/8/2025 al 31/7/2027 y 1/3/2026 al 28/2/2028 dan 24
+    const dias = (new Date(c.fin + 'T00:00:00Z') - new Date(c.inicio + 'T00:00:00Z')) / 86400000 + 1;
+    total = Math.round(dias / 30.4375);
+  }
+  return { mes, total };
+}
+export const textoMesContrato = (m) => (!m || m.mes < 1 ? '' : m.total ? `mes ${m.mes} de ${m.total}` : `mes ${m.mes}`);
+
+// Comparadores para ordenar listas: N° de carpeta con números (2 antes que 10) y textos sin importar tildes.
+export const compararNumero = (a, b) => String(a || '').localeCompare(String(b || ''), 'es', { numeric: true });
+export const compararTexto = (a, b) => String(a || '').localeCompare(String(b || ''), 'es', { sensitivity: 'base' });

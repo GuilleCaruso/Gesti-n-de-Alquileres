@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { deudas, deudaDesde, contratosPorVencer, contratoVencido, diasParaVencer, addMonths, alquilerDelPeriodo, deshacerUltimoAumento, finPorDefecto, buscar, cobrosDelMes, contratoVigente, datosAumento, estadoCobro, estadoPropiedad, saldoCobro } from '../../src/domain/consultas.js';
+import { mesDelContrato, textoMesContrato, compararNumero, deudas, deudaDesde, contratosPorVencer, contratoVencido, diasParaVencer, addMonths, alquilerDelPeriodo, deshacerUltimoAumento, finPorDefecto, buscar, cobrosDelMes, contratoVigente, datosAumento, estadoCobro, estadoPropiedad, saldoCobro } from '../../src/domain/consultas.js';
 
 const personas = [
   { id: 'p1', nombre: 'Carlos', apellido: 'Pérez', dni: '18.334.221', roles: ['Propietario'] },
@@ -180,5 +180,31 @@ describe('expensas y servicios fijos del contrato', () => {
     const c = { id: 'a', estado: 'Activo', inicio: '2026-01-01', fin: '2027-12-31', alquilerActual: 100, historial: [], serviciosMes: 20 };
     const [p] = cobrosDelMes([c], [{ id: 'a_2026-11', contractId: 'a', periodo: '2026-11', estado: 'Pagado', importe: 100, servicios: 5, moneda: 'ARS' }], '2026-11', '2026-11-11');
     expect(p.servicios).toBe(5);
+  });
+});
+
+describe('mes del contrato', () => {
+  const c = { inicio: '2025-08-01', fin: '2027-07-31' };
+  test('el mes de inicio es el 1 y el contrato de 2 años tiene 24', () => {
+    expect(mesDelContrato(c, '2025-08')).toEqual({ mes: 1, total: 24 });
+    expect(mesDelContrato(c, '2026-11')).toEqual({ mes: 16, total: 24 });
+    expect(mesDelContrato(c, '2027-07')).toEqual({ mes: 24, total: 24 });
+    expect(textoMesContrato(mesDelContrato(c, '2026-11'))).toBe('mes 16 de 24');
+  });
+  test('contrato que empieza a mitad de mes', () => {
+    expect(mesDelContrato({ inicio: '2025-08-15', fin: '2027-08-14' }, '2025-08')).toEqual({ mes: 1, total: 24 });
+    expect(mesDelContrato({ inicio: '2026-03-01', fin: '2028-02-28' }, '2026-03').total).toBe(24);
+  });
+  test('vencido y sin renovar: sigue contando (mes 26 de 24)', () => {
+    expect(textoMesContrato(mesDelContrato(c, '2027-09'))).toBe('mes 26 de 24');
+  });
+  test('antes de empezar no muestra nada', () => {
+    expect(textoMesContrato(mesDelContrato(c, '2025-07'))).toBe('');
+  });
+});
+
+describe('orden por N° de carpeta', () => {
+  test('2 va antes que 10 y que 100', () => {
+    expect(['100', '10', '2', '0154', '76'].sort(compararNumero)).toEqual(['2', '10', '76', '100', '0154']);
   });
 });

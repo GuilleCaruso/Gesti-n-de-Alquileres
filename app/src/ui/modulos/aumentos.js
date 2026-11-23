@@ -1,10 +1,10 @@
 // Aumentos: índices del mes, contratos por vencimiento, actualizar (con historial y deshacer),
 // aviso por WhatsApp y nota impresa para el inquilino.
 import { esc, fdate, money } from '../../domain/formato.js';
-import { contratosActivos, datosAumento, nombreCompleto } from '../../domain/consultas.js';
+import { compararNumero, compararTexto, contratosActivos, datosAumento, mesDelContrato, nombreCompleto, textoMesContrato } from '../../domain/consultas.js';
 import { computeNuevo, faltaIndice, pendienteActualizacion } from '../../domain/negocio.js';
 import { actualizar, guardarIndices } from '../../services/datos.js';
-import { aviso, confirmar, docFoot, docHead, hoyIso, imprimir, intentar, abrirWhatsApp } from '../base.js';
+import { aviso, confirmar, docFoot, docHead, hoyIso, imprimir, intentar, abrirWhatsApp, ordenElegido, selectorOrden } from '../base.js';
 import { icon } from '../icons.js';
 import { metodoLabel } from './contratos.js';
 
@@ -22,7 +22,15 @@ export function vista({ d, params }) {
   const hoy = hoyIso();
   const P = (id) => d.personas.find((x) => x.id === id);
   const PR = (id) => d.propiedades.find((x) => x.id === id) || { direccion: '—' };
-  let lista = contratosActivos(d.contratos).sort((a, b) => a.proxAct.localeCompare(b.proxAct));
+  const ORDENES = [['aumento', 'Próximo aumento'], ['numero', 'N° de carpeta'], ['direccion', 'Dirección'], ['inquilino', 'Inquilino']];
+  const orden = ordenElegido('aumentos', params, ORDENES, 'aumento');
+  const claves = {
+    aumento: (a, b) => String(a.proxAct || '').localeCompare(String(b.proxAct || '')),
+    numero: (a, b) => compararNumero(a.numero, b.numero),
+    direccion: (a, b) => compararTexto(PR(a.propertyId).direccion, PR(b.propertyId).direccion),
+    inquilino: (a, b) => compararTexto(nombreCompleto(P(a.tenantId)), nombreCompleto(P(b.tenantId))),
+  };
+  let lista = contratosActivos(d.contratos).sort((a, b) => claves[orden](a, b) || compararNumero(a.numero, b.numero));
   if (ver === 'proximos') lista = lista.filter((c) => diasHasta(c.proxAct) <= 45);
   const pendientes = contratosActivos(d.contratos).filter((c) => pendienteActualizacion(c, hoy));
   const filas = lista.map((c) => {
@@ -32,7 +40,7 @@ export function vista({ d, params }) {
     const sinIndice = faltaIndice(c, d.indices);
     const estado = dias <= 0 ? `<span class="badge badge-warn">${icon('alert')}Pendiente</span>` : dias <= 14 ? `<span class="badge badge-info">En ${dias} día${dias > 1 ? 's' : ''}</span>` : '';
     return `<tr>
-      <td><div class="cell-title">${esc(PR(c.propertyId).direccion)}</div><div class="cell-sub">N° ${esc(c.numero || '—')} · ${esc(nombreCompleto(t))}</div></td>
+      <td><div class="cell-title">${esc(PR(c.propertyId).direccion)}</div><div class="cell-sub">N° ${esc(c.numero || '—')} · ${esc(nombreCompleto(t))}${textoMesContrato(mesDelContrato(c, hoy.slice(0, 7))) ? ' · ' + textoMesContrato(mesDelContrato(c, hoy.slice(0, 7))) : ''}</div></td>
       <td>${esc(metodoLabel(c))}<div class="cell-sub">cada ${c.frecuencia} meses${c.revisarAumento ? ' · <span class="badge badge-info">Revisar</span>' : ''}</div></td>
       <td class="num tnum">${money(c.alquilerActual, c.moneda)}</td>
       <td class="num">${c.moneda === 'USD' ? '<span class="cell-sub">US$</span> ' : ''}<input type="number" step="${c.moneda === 'USD' ? 10 : 1000}" id="nuevo_${esc(c.id)}" value="${sinIndice ? '' : sugerido}" placeholder="${sinIndice ? 'Falta ' + c.tipoAumento : ''}" style="width:118px; padding:6px 8px; border:1px solid var(--border-strong); border-radius:7px; background:var(--paper-50); color:var(--ink-900); text-align:right;"></td>
@@ -59,7 +67,7 @@ export function vista({ d, params }) {
         <button class="btn" data-accion="notas-pendientes" ${pendientes.length ? '' : 'disabled'}>${icon('printer')}Notas de los pendientes</button>
       </div>
     </div>
-    <div class="pill-row" style="margin-bottom:12px;">${pills}</div>
+    <div style="display:flex; gap:14px; flex-wrap:wrap; align-items:center; margin-bottom:12px;"><div class="pill-row">${pills}</div>${selectorOrden(ORDENES, orden)}</div>
     <div class="table-wrap">${lista.length
       ? `<table><thead><tr><th>Contrato</th><th>Índice</th><th class="num">Alquiler actual</th><th class="num">Alquiler nuevo</th><th>Rige desde</th><th></th></tr></thead><tbody>${filas}</tbody></table>`
       : `<div class="empty-state">${icon('check')}<div class="empty-state-title">No hay actualizaciones en los próximos 45 días</div></div>`}</div>`;

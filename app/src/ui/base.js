@@ -17,6 +17,20 @@ let perfilActual = null;
 export const fijarPerfil = (p) => { perfilActual = p; };
 export const soyAdmin = () => !!perfilActual && perfilActual.rol === 'admin' && perfilActual.activo === true;
 
+// ---------- orden de las listas ----------
+// El orden elegido va en la dirección (?orden=) y se recuerda por sección en esta computadora.
+export function ordenElegido(seccion, params, opciones, porDefecto) {
+  const clave = 'caruso.orden.' + seccion;
+  let o = params.get('orden');
+  if (o && opciones.some(([k]) => k === o)) { try { localStorage.setItem(clave, o); } catch { /* sin almacenamiento */ } return o; }
+  try { o = localStorage.getItem(clave); } catch { o = null; }
+  return o && opciones.some(([k]) => k === o) ? o : porDefecto;
+}
+export const selectorOrden = (opciones, actual) => `
+  <label class="orden-wrap"><span>Ordenar por</span>
+    <select data-filtro="orden" id="ordenLista">${opciones.map(([k, l]) => `<option value="${k}" ${k === actual ? 'selected' : ''}>${l}</option>`).join('')}</select>
+  </label>`;
+
 // ---------- ventanas emergentes ----------
 export function abrirModal(html, ancho) {
   const m = document.getElementById('modalOverlay');

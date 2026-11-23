@@ -1,7 +1,7 @@
 // Deudores: lo que quedó sin pagar de meses anteriores (y del mes actual, si ya venció), por contrato.
 import { esc, money, periodoLabel, totalMonedas } from '../../domain/formato.js';
-import { deudas, nombreCompleto } from '../../domain/consultas.js';
-import { abrirWhatsApp, aviso, hoyIso, lupa, soyAdmin } from '../base.js';
+import { compararNumero, compararTexto, deudas, nombreCompleto } from '../../domain/consultas.js';
+import { abrirWhatsApp, aviso, hoyIso, lupa, ordenElegido, selectorOrden, soyAdmin } from '../base.js';
 import { icon } from '../icons.js';
 
 const mesCorto = (per) => periodoLabel(per).replace(/^(\p{L}{3})\p{L}*\s(\d{2})(\d{2})$/u, '$1 $3');
@@ -12,6 +12,16 @@ export function vista({ d, params }) {
   const PR = (id) => d.propiedades.find((x) => x.id === id) || { direccion: '—', localidad: '' };
   const todas = deudas(d.contratos, d.pagos, hoyIso());
   const lista = todas.filter(({ contrato: c }) => !q || [c.numero, PR(c.propertyId).direccion, nombreCompleto(P(c.tenantId)), nombreCompleto(P(c.ownerId))].join(' ').toLowerCase().includes(q));
+  const ORDENES = [['meses', 'Más meses adeudados'], ['numero', 'N° de carpeta'], ['inquilino', 'Inquilino'], ['direccion', 'Dirección'], ['monto', 'Mayor deuda']];
+  const orden = ordenElegido('deudores', params, ORDENES, 'meses');
+  const claves = {
+    meses: () => 0, // ya vienen así
+    numero: (a, b) => compararNumero(a.contrato.numero, b.contrato.numero),
+    inquilino: (a, b) => compararTexto(nombreCompleto(P(a.contrato.tenantId)), nombreCompleto(P(b.contrato.tenantId))),
+    direccion: (a, b) => compararTexto(PR(a.contrato.propertyId).direccion, PR(b.contrato.propertyId).direccion),
+    monto: (a, b) => b.saldo - a.saldo,
+  };
+  lista.sort(claves[orden]);
   const meses = todas.reduce((s, x) => s + x.items.length, 0);
   const filas = lista.map(({ contrato: c, items, saldo, moneda }) => {
     const t = P(c.tenantId);
@@ -31,7 +41,10 @@ export function vista({ d, params }) {
       <div class="stat-tile"><div class="stat-value tnum">${meses}</div><div class="stat-label">Meses adeudados</div></div>
       ${soyAdmin() ? `<div class="stat-tile"><div class="stat-value tnum">${totalMonedas(todas.map((x) => [x.saldo, x.moneda]))}</div><div class="stat-label">Deuda total</div></div>` : ''}
     </div>
-    <div class="search-wrap" style="max-width:340px; margin-bottom:16px;">${lupa}<input class="search-input" data-filtro="q" id="filtroDeudores" placeholder="Buscar N°, propiedad, inquilino o propietario..." value="${esc(params.get('q') || '')}"></div>
+    <div style="display:flex; gap:14px; flex-wrap:wrap; align-items:center; margin-bottom:16px;">
+      <div class="search-wrap" style="max-width:340px;">${lupa}<input class="search-input" data-filtro="q" id="filtroDeudores" placeholder="Buscar N°, propiedad, inquilino o propietario..." value="${esc(params.get('q') || '')}"></div>
+      ${selectorOrden(ORDENES, orden)}
+    </div>
     <div class="table-wrap">${lista.length
       ? `<table><thead><tr><th>N°</th><th>Propiedad</th><th>Inquilino</th><th>Debe</th><th class="num">Total</th><th></th></tr></thead><tbody>${filas}</tbody></table>`
       : `<div class="empty-state">${icon('check')}<div class="empty-state-title">${todas.length ? 'Nadie coincide con la búsqueda' : 'No hay deudas registradas'}</div></div>`}</div>
