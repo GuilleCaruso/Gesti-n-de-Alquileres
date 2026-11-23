@@ -1,9 +1,9 @@
 // Contratos: lista, alta/edición (N° interno, garante, honorarios, expensas, aumentos) y ficha.
 import { esc, fdate, money, periodoLabel, prevPeriodo } from '../../domain/formato.js';
-import { deudaDesde, addMonths, contratosPorVencer, contratoVencido, contratoVigente, diasParaVencer, deshacerUltimoAumento, finPorDefecto, nombreCompleto } from '../../domain/consultas.js';
+import { compararNumero, compararTexto, mesDelContrato, textoMesContrato, deudaDesde, addMonths, contratosPorVencer, contratoVencido, contratoVigente, diasParaVencer, deshacerUltimoAumento, finPorDefecto, nombreCompleto } from '../../domain/consultas.js';
 import { HONORARIOS_DEFAULT, honorariosLabel, pendienteActualizacion } from '../../domain/negocio.js';
 import { actualizar, borrar, guardar, tieneCobros } from '../../services/datos.js';
-import { abrirModal, aviso, botonesModal, campo, cerrarModal, confirmar, hoyIso, intentar, lupa, numero, soyAdmin, tildado } from '../base.js';
+import { abrirModal, aviso, botonesModal, campo, cerrarModal, confirmar, hoyIso, intentar, lupa, numero, ordenElegido, selectorOrden, soyAdmin, tildado } from '../base.js';
 import { comboPersona, fecha, inputFecha, ponerFecha } from '../campos.js';
 import { icon } from '../icons.js';
 import { personaModal } from './personas.js';
@@ -28,15 +28,25 @@ export function vista({ d, params }) {
   if (filtro === 'revisar') lista = lista.filter((c) => c.estado === 'Activo' && c.revisarAumento);
   const aRevisar = d.contratos.filter((c) => c.estado === 'Activo' && c.revisarAumento).length;
   if (q) lista = lista.filter((c) => [c.numero, PR(c.propertyId).direccion, PR(c.propertyId).localidad, nombreCompleto(P(c.tenantId)), nombreCompleto(P(c.ownerId))].join(' ').toLowerCase().includes(q));
-  if (filtro === 'porvencer') lista.sort((a, b) => a.fin.localeCompare(b.fin));
-  else lista.sort((a, b) => String(a.numero || '').localeCompare(String(b.numero || ''), undefined, { numeric: true }));
+  const ORDENES = [['numero', 'N° de carpeta'], ['direccion', 'Dirección'], ['inquilino', 'Inquilino'], ['propietario', 'Propietario'], ['vence', 'Fecha de fin'], ['aumento', 'Próximo aumento']];
+  const orden = ordenElegido('contratos', params, ORDENES, filtro === 'porvencer' ? 'vence' : 'numero');
+  const claves = {
+    numero: (a, b) => compararNumero(a.numero, b.numero),
+    direccion: (a, b) => compararTexto(PR(a.propertyId).direccion, PR(b.propertyId).direccion),
+    inquilino: (a, b) => compararTexto(nombreCompleto(P(a.tenantId)), nombreCompleto(P(b.tenantId))),
+    propietario: (a, b) => compararTexto(nombreCompleto(P(a.ownerId)), nombreCompleto(P(b.ownerId))),
+    vence: (a, b) => String(a.fin || '').localeCompare(String(b.fin || '')),
+    aumento: (a, b) => String(a.proxAct || '').localeCompare(String(b.proxAct || '')),
+  };
+  lista.sort((a, b) => claves[orden](a, b) || compararNumero(a.numero, b.numero));
+  const mesHoy = hoy.slice(0, 7);
   const filas = lista.map((c) => `
     <tr class="clickable" data-nav="/propiedades/${esc(c.propertyId)}?tab=contrato">
       <td class="cell-title tnum">${esc(c.numero || '—')}</td>
       <td><div class="cell-title">${esc(PR(c.propertyId).direccion)}</div><div class="cell-sub">${esc(PR(c.propertyId).localidad)}</div></td>
       <td>${esc(nombreCompleto(P(c.tenantId)))}</td>
       <td class="num tnum">${money(c.alquilerActual, c.moneda)}</td>
-      <td class="tnum">${fdate(c.fin)}${c.estado === 'Activo' && c.fin && diasParaVencer(c, hoy) <= 60 ? `<div>${contratoVencido(c, hoy) ? '<span class="badge badge-danger">Vencido</span>' : `<span class="badge badge-warn">Vence en ${diasParaVencer(c, hoy)} días</span>`}</div>` : ''}</td>
+      <td class="tnum">${fdate(c.fin)}${c.estado === 'Activo' && textoMesContrato(mesDelContrato(c, mesHoy)) ? `<div class="mes-contrato">${textoMesContrato(mesDelContrato(c, mesHoy))}</div>` : ''}${c.estado === 'Activo' && c.fin && diasParaVencer(c, hoy) <= 60 ? `<div>${contratoVencido(c, hoy) ? '<span class="badge badge-danger">Vencido</span>' : `<span class="badge badge-warn">Vence en ${diasParaVencer(c, hoy)} días</span>`}</div>` : ''}</td>
       <td>${c.estado === 'Activo' && c.revisarAumento ? `<span class="badge badge-info">Revisar aumento</span> ` : ''}${c.estado !== 'Activo' ? badgeEstado(c.estado) : pendienteActualizacion(c, hoy) ? `<span class="badge badge-warn">${icon('alert')}Actualizar</span>` : `<span class="cell-sub">Próx. ${fdate(c.proxAct)}</span>`}</td>
     </tr>`).join('');
   const pills = [['activos', 'Activos'], ['pendiente', 'Actualización pendiente'], ...(porVencer.length ? [['porvencer', `Vencidos y por vencer (${porVencer.length})`]] : []), ...(aRevisar ? [['revisar', `Revisar aumento (${aRevisar})`]] : []), ['finalizados', 'Finalizados']]
@@ -49,6 +59,7 @@ export function vista({ d, params }) {
     <div style="display:flex; gap:14px; flex-wrap:wrap; align-items:center; margin-bottom:16px;">
       <div class="search-wrap" style="max-width:340px;">${lupa}<input class="search-input" data-filtro="q" id="filtroContratos" placeholder="Buscar N°, propiedad, inquilino, propietario..." value="${esc(params.get('q') || '')}"></div>
       <div class="pill-row">${pills}</div>
+      ${selectorOrden(ORDENES, orden)}
     </div>
     <div class="table-wrap">${lista.length
       ? `<table><thead><tr><th>N°</th><th>Propiedad</th><th>Inquilino</th><th class="num">Alquiler</th><th>Vence</th><th>Actualización</th></tr></thead><tbody>${filas}</tbody></table>`
@@ -74,6 +85,7 @@ export function fichaContratoHtml(d, c) {
       ${kv('Inquilino', persona(c.tenantId))}${kv('Inquilino 2', persona(c.tenantId2))}
       ${kv('Garante', persona(c.guarantorId))}${kv('Propietario', persona(c.ownerId))}
       ${kv('Inicio', fdate(c.inicio))}${kv('Fin', fdate(c.fin))}
+      ${c.estado === 'Activo' && textoMesContrato(mesDelContrato(c, hoyIso().slice(0, 7))) ? kv('Mes del contrato', esc(textoMesContrato(mesDelContrato(c, hoyIso().slice(0, 7))).replace(/^mes/, 'Mes')) + ' (este mes)') : ''}
       ${kv('Alquiler actual', money(c.alquilerActual, c.moneda) + (c.moneda === 'USD' ? ' <span class="badge badge-info">Dólares</span>' : ''))}${kv('Depósito', c.deposito ? money(c.deposito, c.moneda) : '—')}
       ${kv('Actualización', `${esc(metodoLabel(c))} · cada ${c.frecuencia} meses`)}
       ${kv('Próxima actualización', fdate(c.proxAct) + (pendienteActualizacion(c, hoyIso()) ? ` <span class="badge badge-warn">${icon('alert')}Pendiente</span>` : ''))}

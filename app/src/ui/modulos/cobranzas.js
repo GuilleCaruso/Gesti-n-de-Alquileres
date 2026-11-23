@@ -1,9 +1,9 @@
 // Cobranzas del mes: se calculan desde los contratos activos; al cobrar se guarda el pago y se imprime el recibo.
 import { esc, fdate, money, nextPeriodo, nombreMoneda, numeroALetras, periodoLabel, totalMonedas } from '../../domain/formato.js';
-import { deudas, cobrosDelMes, estadoCobro, idPago, nombreCompleto } from '../../domain/consultas.js';
+import { compararNumero, compararTexto, mesDelContrato, textoMesContrato, deudas, cobrosDelMes, estadoCobro, idPago, nombreCompleto } from '../../domain/consultas.js';
 import { pagoTotal, pendienteActualizacion } from '../../domain/negocio.js';
 import { actualizar, guardar } from '../../services/datos.js';
-import { abrirModal, aviso, botonesModal, campo, cerrarModal, docFoot, docHead, hoyIso, imprimir, INMOBILIARIA, intentar, LOGO, lupa, numero, periodoActual, soyAdmin } from '../base.js';
+import { abrirModal, aviso, botonesModal, campo, cerrarModal, docFoot, docHead, hoyIso, imprimir, INMOBILIARIA, intentar, LOGO, lupa, numero, ordenElegido, periodoActual, selectorOrden, soyAdmin } from '../base.js';
 import { fecha, inputFecha } from '../campos.js';
 import { icon } from '../icons.js';
 import { badgeEstado } from './propiedades.js';
@@ -25,7 +25,17 @@ export function vista({ d, params }) {
   const nPagados = cobros.filter((p) => p.estado === 'Pagado').length;
   const nVencidos = cobros.filter((p) => estadoCobro(p, hoy) === 'Vencido').length;
   if (q) cobros = cobros.filter((p) => { const c = C(p.contractId); return [c?.numero, PR(c?.propertyId).direccion, PR(c?.propertyId).localidad, nombreCompleto(P(c?.tenantId)), nombreCompleto(P(c?.ownerId))].join(' ').toLowerCase().includes(q); });
-  cobros.sort((a, b) => PR(C(a.contractId)?.propertyId).direccion.localeCompare(PR(C(b.contractId)?.propertyId).direccion));
+  const ORDENES = [['direccion', 'Dirección'], ['numero', 'N° de carpeta'], ['inquilino', 'Inquilino'], ['propietario', 'Propietario'], ['estado', 'Estado (pendientes primero)']];
+  const orden = ordenElegido('cobranzas', params, ORDENES, 'direccion');
+  const peso = { Vencido: 0, Pendiente: 1, Parcial: 2, Pagado: 3 };
+  const claves = {
+    direccion: (a, b) => compararTexto(PR(C(a.contractId)?.propertyId).direccion, PR(C(b.contractId)?.propertyId).direccion),
+    numero: (a, b) => compararNumero(C(a.contractId)?.numero, C(b.contractId)?.numero),
+    inquilino: (a, b) => compararTexto(nombreCompleto(P(C(a.contractId)?.tenantId)), nombreCompleto(P(C(b.contractId)?.tenantId))),
+    propietario: (a, b) => compararTexto(nombreCompleto(P(C(a.contractId)?.ownerId)), nombreCompleto(P(C(b.contractId)?.ownerId))),
+    estado: (a, b) => peso[estadoCobro(a, hoy)] - peso[estadoCobro(b, hoy)],
+  };
+  cobros.sort((a, b) => claves[orden](a, b) || compararNumero(C(a.contractId)?.numero, C(b.contractId)?.numero));
   const debe = new Map(deudas(d.contratos, d.pagos, hoy).map((x) => [x.contrato.id, x.items.filter((i) => i.periodo < periodo).length]));
   const filas = cobros.map((p) => {
     const c = C(p.contractId); const pr = PR(c?.propertyId); const est = estadoCobro(p, hoy);
@@ -33,7 +43,7 @@ export function vista({ d, params }) {
     const detalle = [p.expensas ? 'exp ' + $(p.expensas) : null, p.servicios ? 'serv ' + $(p.servicios) : null].filter(Boolean).join(' + ');
     const avisoAct = c && c.estado === 'Activo' && pendienteActualizacion(c, hoy) && p.estado !== 'Pagado' ? `<div class="cell-sub" style="color:var(--warn-600);">${icon('alert')} actualización pendiente</div>` : '';
     return `<tr>
-      <td class="cell-title tnum">${esc(c?.numero || '—')}</td>
+      <td class="cell-title tnum">${esc(c?.numero || '—')}${textoMesContrato(mesDelContrato(c, periodo)) ? `<div class="mes-contrato">${textoMesContrato(mesDelContrato(c, periodo))}</div>` : ''}</td>
       <td><div class="cell-title">${esc(pr.direccion)}</div><div class="cell-sub">${esc(pr.localidad)}</div></td>
       <td>${esc(nombreCompleto(P(c?.tenantId)))}</td>
       <td>${esc(nombreCompleto(P(c?.ownerId)))}</td>
@@ -63,7 +73,10 @@ export function vista({ d, params }) {
       <div class="stat-tile"><div class="stat-value tnum">${cobros.length - nPagados}</div><div class="stat-label">Falta cobrar</div></div>
       <div class="stat-tile"><div class="stat-value tnum">${nVencidos}</div><div class="stat-label">Vencidos</div></div>`}
     </div>
-    <div class="search-wrap" style="max-width:340px; margin-bottom:16px;">${lupa}<input class="search-input" data-filtro="q" id="filtroCobranzas" placeholder="Buscar N°, propiedad, inquilino o propietario..." value="${esc(params.get('q') || '')}"></div>
+    <div style="display:flex; gap:14px; flex-wrap:wrap; align-items:center; margin-bottom:16px;">
+      <div class="search-wrap" style="max-width:340px;">${lupa}<input class="search-input" data-filtro="q" id="filtroCobranzas" placeholder="Buscar N°, propiedad, inquilino o propietario..." value="${esc(params.get('q') || '')}"></div>
+      ${selectorOrden(ORDENES, orden)}
+    </div>
     <div class="table-wrap">${cobros.length
       ? `<table><thead><tr><th>N°</th><th>Propiedad</th><th>Inquilino</th><th>Propietario</th><th class="num">Importe</th><th>Estado</th><th>Pago</th><th></th></tr></thead><tbody>${filas}</tbody></table>`
       : `<div class="empty-state">${icon('cobranzas')}<div class="empty-state-title">No hay alquileres para cobrar en ${periodoLabel(periodo)}</div><div>Se arman solos a partir de los contratos activos.</div></div>`}</div>`;
@@ -131,7 +144,7 @@ export function reciboHtml(d, p, opc) {
         <div class="receipt-row"><span class="rl">La suma de ${p.moneda === 'USD' ? 'US$' : '$'}</span><span class="rv tnum">${Math.round(monto).toLocaleString('es-AR')}${nota}</span></div>
         <div class="receipt-row"><span class="rl" style="white-space:normal;">${esc(letras.charAt(0).toUpperCase() + letras.slice(1))} ${nombreMoneda(p.moneda)}</span></div>
         <div class="receipt-row"><span class="rl">Por alquiler de</span><span class="rv">${esc(pr.direccion)}, ${esc(pr.localidad)}</span></div>
-        <div class="receipt-row"><span class="rl">Correspondiente a</span><span class="rv">${periodoLabel(p.periodo)} (del ${desde} al ${hasta})</span></div>
+        <div class="receipt-row"><span class="rl">Correspondiente a</span><span class="rv">${periodoLabel(p.periodo)} (del ${desde} al ${hasta})${textoMesContrato(mesDelContrato(c, p.periodo)) ? ` · <b>${textoMesContrato(mesDelContrato(c, p.periodo)).replace(/^mes/, 'Mes')} del contrato</b>` : ''}</span></div>
         <div class="receipt-breakdown">${desglose}
         </div>
         <div class="receipt-sign">Firma _______________________________</div>

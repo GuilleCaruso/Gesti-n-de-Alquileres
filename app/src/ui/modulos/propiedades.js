@@ -1,9 +1,9 @@
 // Propiedades: lista con filtros, alta/edición y ficha con pestañas (Información, Contrato, Cobros).
 import { esc, money } from '../../domain/formato.js';
-import { contratoVigente, estadoPropiedad, nombreCompleto } from '../../domain/consultas.js';
+import { compararNumero, compararTexto, contratoVigente, estadoPropiedad, nombreCompleto } from '../../domain/consultas.js';
 import { pendienteActualizacion } from '../../domain/negocio.js';
 import { borrar, guardar } from '../../services/datos.js';
-import { abrirModal, aviso, botonesModal, campo, cerrarModal, confirmar, hoyIso, intentar, lupa, numero, soyAdmin, tildado } from '../base.js';
+import { abrirModal, aviso, botonesModal, campo, cerrarModal, confirmar, hoyIso, intentar, lupa, numero, ordenElegido, selectorOrden, soyAdmin, tildado } from '../base.js';
 import { comboPersona, elegirPersona } from '../campos.js';
 import { icon } from '../icons.js';
 import { personaModal } from './personas.js';
@@ -27,7 +27,16 @@ export function vista({ d, params }) {
   if (filtro === 'alquiladas') lista = lista.filter((x) => x.estado === 'Alquilada');
   if (filtro === 'disponibles') lista = lista.filter((x) => x.estado === 'Disponible');
   if (q) lista = lista.filter(({ pr, c }) => [pr.tipo, pr.direccion, pr.localidad, nombreCompleto(P(pr.ownerId)), c ? nombreCompleto(P(c.tenantId)) : '', c ? c.numero : ''].join(' ').toLowerCase().includes(q));
-  lista.sort((a, b) => a.pr.direccion.localeCompare(b.pr.direccion));
+  const ORDENES = [['direccion', 'Dirección'], ['numero', 'N° de carpeta'], ['propietario', 'Propietario'], ['inquilino', 'Inquilino'], ['localidad', 'Localidad']];
+  const orden = ordenElegido('propiedades', params, ORDENES, 'direccion');
+  const claves = {
+    direccion: (a, b) => compararTexto(a.pr.direccion, b.pr.direccion),
+    numero: (a, b) => compararNumero(a.c?.numero || '~', b.c?.numero || '~'),
+    propietario: (a, b) => compararTexto(nombreCompleto(P(a.pr.ownerId)), nombreCompleto(P(b.pr.ownerId))),
+    inquilino: (a, b) => compararTexto(a.c ? nombreCompleto(P(a.c.tenantId)) : '~', b.c ? nombreCompleto(P(b.c.tenantId)) : '~'),
+    localidad: (a, b) => compararTexto(a.pr.localidad, b.pr.localidad),
+  };
+  lista.sort((a, b) => claves[orden](a, b) || compararTexto(a.pr.direccion, b.pr.direccion));
   const filas = lista.map(({ pr, c, estado }) => `
     <tr class="clickable" data-nav="/propiedades/${esc(pr.id)}">
       <td><div class="cell-title">${esc(pr.direccion)}</div><div class="cell-sub">${esc(pr.tipo)} · ${esc(pr.localidad)}</div></td>
@@ -46,6 +55,7 @@ export function vista({ d, params }) {
     <div style="display:flex; gap:14px; flex-wrap:wrap; align-items:center; margin-bottom:16px;">
       <div class="search-wrap" style="max-width:340px;">${lupa}<input class="search-input" data-filtro="q" id="filtroPropiedades" placeholder="Buscar dirección, propietario, inquilino..." value="${esc(params.get('q') || '')}"></div>
       <div class="pill-row">${pills}</div>
+      ${selectorOrden(ORDENES, orden)}
     </div>
     <div class="table-wrap">${lista.length
       ? `<table><thead><tr><th>Propiedad</th><th>Propietario</th><th>Inquilino</th><th class="num">Alquiler</th><th>Estado</th></tr></thead><tbody>${filas}</tbody></table>`
