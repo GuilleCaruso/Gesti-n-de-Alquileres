@@ -1,0 +1,123 @@
+{
+  "proyecto": "App de gestión de alquileres de Caruso Propiedades",
+  "actualizado": "2026-11-25",
+  "para_que_sirve": "Reemplaza a Arcomercial (costaba $950.000 al año) para administrar unos 200 alquileres: contratos, aumentos, cobros con recibo y deudores. En uso diario desde el 10/11/2026 por el administrador (Guillermo Caruso) y dos empleados.",
+  "como_leer_este_archivo": "Resumen para darle contexto a una IA. La fuente completa es el repositorio: el código en app/, las decisiones con fecha en notas.md y las reglas de negocio en PROJECT_RULES.md. Este archivo NO contiene datos de clientes ni credenciales.",
+  "enlaces": {
+    "app_real": "https://caruso-propiedades.web.app",
+    "repositorio": "github.com/GuilleCaruso/Gesti-n-de-Alquileres",
+    "carpeta_de_la_app": "app/",
+    "decisiones": "notas.md",
+    "reglas_de_negocio": "PROJECT_RULES.md",
+    "documentacion_tecnica": "app/README.md"
+  },
+  "stack": {
+    "front": "Vite 7 + JavaScript (módulos ES), sin framework. Ruteo por hash: #/seccion/id?params",
+    "datos": "Firebase Firestore en tiempo real (onSnapshot)",
+    "usuarios": "Firebase Authentication con mail y clave",
+    "hosting": "Firebase Hosting",
+    "seguridad": "firestore.rules, con roles admin y empleado",
+    "excel": [
+      "read-excel-file 9.3.12 (importar)",
+      "write-excel-file 4.1.1 (copia de seguridad)"
+    ],
+    "pruebas": {
+      "logica": "Vitest, 97 pruebas (app/tests/domain)",
+      "reglas_de_seguridad": "@firebase/rules-unit-testing contra el emulador, 29 pruebas (app/tests/rules)",
+      "punta_a_punta": "Playwright contra emuladores de Auth y Firestore, 107 chequeos (app/tests/e2e)"
+    },
+    "costo_mensual": "0 (plan gratuito de Firebase)"
+  },
+  "estructura_del_codigo": {
+    "app/src/domain": "Lógica pura y probada: formato.js (moneda, fechas), negocio.js (honorarios, aumentos, redondeo), consultas.js (cobros del mes, deudas, vencimientos, mes del contrato), importar.js (Excel de Arcomercial y planilla de actualización), copia.js (copia de seguridad), permisos.js (menú por rol)",
+    "app/src/services": "Conexión con Firebase: firebase.js, sesion.js, datos.js (lectura en vivo y escrituras), usuarios.js",
+    "app/src/ui": "shell.js (menú, rutas, buscador), base.js (ventanas, avisos, impresión, WhatsApp, orden de listas), campos.js (fecha dd/mm/aaaa, selector de personas), vistas.js (Inicio, Usuarios, Configuración)",
+    "app/src/ui/modulos": "Una pantalla por archivo: cobranzas, deudores, aumentos, contratos, propiedades, personas, importar",
+    "app/src/firebase-config.js": "Configuración pública de los dos proyectos Firebase; se elige con VITE_ENTORNO",
+    "firestore.rules": "Reglas de seguridad (raíz del repo)",
+    ".github/workflows/firebase.yml": "Pruebas y publicación automáticas"
+  },
+  "modelo_de_datos": {
+    "usuarios/{uid}": "nombre, email, rol (admin | empleado), activo",
+    "personas": "nombre, apellido, dni, cuit, telefono, email, domicilio, roles [Propietario, Inquilino, Garante, Contacto]",
+    "propiedades": "direccion, localidad, tipo, estado, ownerId, ambientes, dormitorios, banos, m2, cuentas de servicios, obs",
+    "contratos": "numero (N° de carpeta), propertyId, ownerId, tenantId, tenantId2, guarantorId, inicio, fin, moneda (ARS | USD), alquilerActual, alquilerInicial, deposito, tipoAumento (ICL | IPC | Fijo | Personalizado), pctFijo, frecuencia (3 | 4 | 6 | 12 | 24 meses), proxAct, historial [{fecha, anterior, nuevo, indice, registrado}], expensas {aplica, monto}, serviciosMes, honorarios {tipo: porcentaje | fijo, valor}, diaVencimiento, estado (Activo | Finalizado), revisarAumento, deudaDesde, obs",
+    "pagos/{contractId_periodo}": "contractId, periodo (aaaa-mm), moneda, importe, expensas, servicios, estado (Pendiente | Parcial | Pagado), pagado, fechaPago, medio, cobros [{fecha, monto, medio}]",
+    "config/indices": "ICL y IPC del mes (%)",
+    "cuentas y movimientos": "Previstos para caja y bancos; las reglas ya existen, la pantalla todavía no"
+  },
+  "funciones": {
+    "inicio": "Cobrados del mes, inquilinos con deuda, aumentos pendientes, contratos vencidos o por vencer (60 días), recordatorio de copia de seguridad",
+    "cobranzas": "Cobros del mes armados desde los contratos activos; cobro total o a cuenta; alquiler del mes editable; expensas y servicios que se repiten; recibo con monto en letras, 'Mes N de M del contrato' y 'documento no válido como factura'; recibos del mes 2 por hoja A4; deshacer cobro",
+    "deudores": "Meses impagos por contrato (anteriores y el actual si venció), saldos de pagos a cuenta, reclamo por WhatsApp, acceso directo a cobrar",
+    "aumentos": "Índices del mes, monto sugerido redondeado a $1.000 (US$ 10), confirmación, deshacer desde la ficha, aviso por WhatsApp y nota impresa",
+    "contratos": "Alta y edición, pesos o dólares, honorarios, vencidos y por vencer, 'revisar aumento', finalizar, borrar solo lo cargado por error",
+    "propiedades_y_personas": "Fichas, búsqueda por descarte, una persona con varios roles",
+    "importar": "Excel de Arcomercial tal cual (renovaciones con la misma carpeta, vencidos opcionales, nombres en mayúsculas); planilla corta para corregir monto, tipo de aumento, fechas y moneda con vista previa y deshacer",
+    "configuracion": "Copia de seguridad (Excel + .json), WhatsApp Web o app de escritorio por computadora",
+    "listas": "Selector 'Ordenar por' (N° de carpeta, dirección, inquilino, propietario, etc.), recordado por computadora"
+  },
+  "permisos": {
+    "admin": "Ve y hace todo, incluidos Usuarios, Importar, totales de plata y borrar lo cargado por error",
+    "empleado": "Opera cobros, aumentos, contratos, propiedades y personas; no ve totales de plata, ni Usuarios, ni Importar; no borra"
+  },
+  "reglas_de_negocio_clave": [
+    "Los aumentos rigen desde proxAct; sin índice cargado no se actualiza un contrato ICL o IPC.",
+    "Casi todos los contratos aumentan cada 3 meses; los de dólares sin aumento usan 24.",
+    "Cada recibo certifica un pago; los pagos a cuenta muestran total, pagado y saldo. No se cobra más de lo que se debe.",
+    "Un contrato va entero en una moneda; los totales en pesos y dólares se muestran separados.",
+    "La deuda se controla desde el mes de carga de cada contrato (nov-2026), ajustable con deudaDesde.",
+    "Un contrato vencido y no finalizado se sigue cobrando y aparece marcado.",
+    "Honorarios por contrato: 5% por defecto, 10% o monto fijo. Hoy todos están en 5%.",
+    "Nada con historia se borra: se finaliza o se anula."
+  ],
+  "flujo_de_trabajo": {
+    "cambios": "Siempre en una rama y por pull request. Nunca directo a main.",
+    "pull_request": "GitHub Actions corre las pruebas, compila con VITE_ENTORNO=pruebas y publica un link de prueba y las reglas en el proyecto Firebase caruso-pruebas (datos de mentira).",
+    "aprobacion": "Guillermo prueba el link y aprueba. Recién ahí se mergea a main.",
+    "main": "Publica la app y las reglas en caruso-propiedades (datos reales).",
+    "secretos_de_github": [
+      "FIREBASE_SERVICE_ACCOUNT (proyecto real)",
+      "FIREBASE_SERVICE_ACCOUNT_PRUEBAS (proyecto de pruebas)"
+    ],
+    "correr_local": "cd app && npm ci && npm run dev. Pruebas: npm test, npm run test:rules, npm run test:e2e (requieren Java para los emuladores)."
+  },
+  "planeado": [
+    {
+      "orden": 1,
+      "que": "Número correlativo de recibo",
+      "estado": "pendiente, no urgente"
+    },
+    {
+      "orden": 2,
+      "que": "Honorarios reales por contrato (Excel propiedades(1) de Arcomercial)",
+      "estado": "pendiente"
+    },
+    {
+      "orden": 3,
+      "que": "Liquidaciones a propietarios: cobrado menos honorarios menos arreglos, con impresión",
+      "estado": "pendiente; falta relevar cómo se hacen hoy"
+    },
+    {
+      "orden": 4,
+      "que": "Arreglos: se pagan al profesional y se descuentan en la liquidación del mes, o del siguiente si ya se liquidó",
+      "estado": "pendiente"
+    },
+    {
+      "orden": 5,
+      "que": "Caja y bancos: caja chica, caja grande (solo admin), ICBC, Provincia, Mercado Pago, BBVA; el empleado no paga en efectivo",
+      "estado": "reglas de seguridad listas, falta la pantalla"
+    },
+    {
+      "orden": 6,
+      "que": "Mejoras: WhatsApp automático con la API oficial, e-mails de inquilinos, copropietarios con %, restaurar copia desde la app",
+      "estado": "ideas"
+    }
+  ],
+  "cuidados": [
+    "No compartir ni subir las copias de seguridad ni las exportaciones de Arcomercial: tienen DNI y teléfonos de clientes.",
+    "No hace falta acceso a Firebase para programar: se trabaja con los emuladores y el proyecto de pruebas.",
+    "Leer notas.md antes de cambiar algo: ahí está lo que Guillermo pidió, aprobó y descartó.",
+    "Pendiente: verificación en dos pasos en Google y GitHub, y protección de la rama main."
+  ]
+}
